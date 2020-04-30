@@ -5,7 +5,6 @@
 
 #include "common.h"
 #include "utils.h"
-using namespace Rcpp;
 
 // A misc file that contains all the duplicated code
 

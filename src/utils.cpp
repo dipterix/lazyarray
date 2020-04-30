@@ -2,6 +2,41 @@
 #include "common.h"
 #include "util.h"
 
+template <class T, typename I>
+Rcpp::DataFrame cpp_array_to_list_template(T x, Rcpp::IntegerVector cutoff){
+  
+  Rcpp::Timer _rcpp_timer;
+  _rcpp_timer.step("enter cpp_array_to_list_integer");
+  
+  if(Rcpp::max(cutoff) > x.size()){
+    Rcpp::stop("Index set exceed max length of input.");
+  } else if (Rcpp::min(cutoff) < 0){
+    Rcpp::stop("Index set less than 1 is dis-allowed.");
+  }
+  
+  Rcpp::DataFrame re = Rcpp::DataFrame::create();
+  I ptr = x.begin() + cutoff[0];
+  I ptr2 = ptr;
+  Rcpp::String colname;
+  for( R_xlen_t ii = 0; ii < cutoff.size() - 1; ii++ ){
+    ptr2 += cutoff[ii + 1] - cutoff[ii];
+    colname = "V" + std::to_string(ii + 1);
+    re.push_back(Shield<SEXP>(T(ptr, ptr2)), colname);
+    ptr = ptr2;
+    _rcpp_timer.step("split-" + std::to_string(ii));
+  }
+  
+  _rcpp_timer.step("split-finished");
+  
+  if( LAZYARRAY_DEBUG ){
+    
+    NumericVector _res(_rcpp_timer);
+    _res = _res / 1000000.0;
+    Rcpp::print(_res);
+  }
+  
+  return re;
+}
 
 Rcpp::DataFrame cpp_array_to_list(SEXP x, IntegerVector cutoff){
   // User explicitly tells which storage type of x should be
@@ -184,45 +219,6 @@ IntegerVector cpp_index_to_index(IntegerVector& idx, List& locations, IntegerVec
 }
 
 
-
-
-template <class T, typename I>
-Rcpp::DataFrame cpp_array_to_list_template(T x, Rcpp::IntegerVector cutoff){
-  
-  Rcpp::Timer _rcpp_timer;
-  _rcpp_timer.step("enter cpp_array_to_list_integer");
-  
-  if(Rcpp::max(cutoff) > x.size()){
-    Rcpp::stop("Index set exceed max length of input.");
-  } else if (Rcpp::min(cutoff) < 0){
-    Rcpp::stop("Index set less than 1 is dis-allowed.");
-  }
-  
-  Rcpp::DataFrame re = Rcpp::DataFrame::create();
-  I ptr = x.begin() + cutoff[0];
-  I ptr2 = ptr;
-  Rcpp::String colname;
-  for( R_xlen_t ii = 0; ii < cutoff.size() - 1; ii++ ){
-    ptr2 += cutoff[ii + 1] - cutoff[ii];
-    colname = "V" + std::to_string(ii + 1);
-    re.push_back(Shield<SEXP>(T(ptr, ptr2)), colname);
-    ptr = ptr2;
-    _rcpp_timer.step("split-" + std::to_string(ii));
-  }
-  
-  _rcpp_timer.step("split-finished");
-  
-  if( LAZYARRAY_DEBUG ){
-    
-    NumericVector _res(_rcpp_timer);
-    _res = _res / 1000000.0;
-    Rcpp::print(_res);
-  }
-  
-  return re;
-}
-
- 
 
 
 /*** R
