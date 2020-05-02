@@ -105,23 +105,29 @@ SEXP test_fstcore_write(String filename){
 
 
 /*** R
-f <- normalizePath(tempfile(), mustWork = FALSE)
-unlink(f)
-dim <- c(10,20,50);
-x <- rnorm(10000); dim(x) <- dim
-x[sample(10000, 2000)] = NA
-
-lazyarray:::cpp_create_lazyarray(x, dim, f, 100L, TRUE);
-
-expect_true(file.exists(f), label = "cpp_create_lazyarray can write to file")
-
-
-# Make sure we have invalid indices
-idx_loc <- list(
-  as.integer(sample(12) - 1),
-  as.integer(sample(22)-1),
-  as.integer(sample(52)-1)
-)
-target_dim = sapply(idx_loc, length)
-cpp_load_lazyarray(f, idx_loc, dim, length(dim), 0.1)
+# a = 1:3; b = 4:6+0.5
+# pryr::address(a)
+# c =join_vectors(a, b)
+# a
+# pryr::address(a)
+# 
+# f <- normalizePath(tempfile(), mustWork = FALSE)
+# unlink(f)
+# dim <- c(10,20,50);
+# x <- rnorm(10000); dim(x) <- dim
+# x[sample(10000, 2000)] = NA
+# 
+# lazyarray:::cpp_create_lazyarray(x, dim, f, 100L, TRUE);
+# 
+# expect_true(file.exists(f), label = "cpp_create_lazyarray can write to file")
+# 
+# 
+# # Make sure we have invalid indices
+# idx_loc <- list(
+#   as.integer(sample(12) - 1),
+#   as.integer(sample(22)-1),
+#   as.integer(sample(52)-1)
+# )
+# target_dim = sapply(idx_loc, length)
+# cpp_load_lazyarray(f, idx_loc, dim, length(dim), 0.1)
 */
