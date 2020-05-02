@@ -8,9 +8,9 @@
 
 // A misc file that contains all the duplicated code
 
-SEXP cpp_load_lazyarray_base_real(
-    Rcpp::String& fileName, IntegerVector& target_dim,
-    IntegerVector& first_indices, IntegerVector& second_indices);
+SEXP cpp_load_lazyarray_base(
+    CharacterVector& files, IntegerVector& partition_dim, IntegerVector& target_dim,
+    IntegerVector& first_indices, IntegerVector& second_indices, int type);
 
 
 #endif // LAZYARRAY_MISC_H

@@ -2,11 +2,21 @@
 #include "common.h"
 #include "util.h"
 
+template <typename T, typename I>
+bool contains(T vec, SEXP el){
+  for(I ptr = vec.begin(); ptr != vec.end(); vec++ ){
+    if(*ptr == el){
+      return true;
+    }
+  }
+  return false;
+}
+
 template <class T, typename I>
-Rcpp::DataFrame cpp_array_to_list_template(T x, Rcpp::IntegerVector cutoff){
+Rcpp::List cpp_array_to_list_template(T x, Rcpp::IntegerVector cutoff){
   
-  Rcpp::Timer _rcpp_timer;
-  _rcpp_timer.step("enter cpp_array_to_list_integer");
+  // Rcpp::Timer _rcpp_timer;
+  // _rcpp_timer.step("enter cpp_array_to_list_integer");
   
   if(Rcpp::max(cutoff) > x.size()){
     Rcpp::stop("Index set exceed max length of input.");
@@ -14,31 +24,78 @@ Rcpp::DataFrame cpp_array_to_list_template(T x, Rcpp::IntegerVector cutoff){
     Rcpp::stop("Index set less than 1 is dis-allowed.");
   }
   
-  Rcpp::DataFrame re = Rcpp::DataFrame::create();
+  Rcpp::List re = Rcpp::List::create();
   I ptr = x.begin() + cutoff[0];
   I ptr2 = ptr;
   Rcpp::String colname;
   for( R_xlen_t ii = 0; ii < cutoff.size() - 1; ii++ ){
     ptr2 += cutoff[ii + 1] - cutoff[ii];
     colname = "V" + std::to_string(ii + 1);
-    re.push_back(Shield<SEXP>(T(ptr, ptr2)), colname);
-    ptr = ptr2;
-    _rcpp_timer.step("split-" + std::to_string(ii));
-  }
-  
-  _rcpp_timer.step("split-finished");
-  
-  if( LAZYARRAY_DEBUG ){
     
-    NumericVector _res(_rcpp_timer);
-    _res = _res / 1000000.0;
-    Rcpp::print(_res);
+    const I p1 = ptr;
+    const I p2 = ptr2;
+    
+    re.push_back(Armor<T>(T(p1, p2)), colname);
+    ptr = ptr2;
+    // _rcpp_timer.step("split-" + std::to_string(ii));
   }
+  
+  // _rcpp_timer.step("split-finished");
+  
+  // if( LAZYARRAY_DEBUG ){
+  //   
+  //   NumericVector _res(_rcpp_timer);
+  //   _res = _res / 1000000.0;
+  //   Rcpp::print(_res);
+  // }
   
   return re;
 }
 
-Rcpp::DataFrame cpp_array_to_list(SEXP x, IntegerVector cutoff){
+
+Rcpp::List cpp_array_to_list_complex(ComplexVector x, Rcpp::IntegerVector cutoff){
+  
+  // Rcpp::Timer _rcpp_timer;
+  // _rcpp_timer.step("enter cpp_array_to_list_integer");
+  
+  if(Rcpp::max(cutoff) > x.size()){
+    Rcpp::stop("Index set exceed max length of input.");
+  } else if (Rcpp::min(cutoff) < 0){
+    Rcpp::stop("Index set less than 1 is dis-allowed.");
+  }
+  
+  Rcpp::List re = Rcpp::List::create();
+  ComplexVector::iterator ptr = x.begin() + cutoff[0];
+  ComplexVector::iterator ptr2 = ptr;
+  Rcpp::String colname;
+  for( R_xlen_t ii = 0; ii < cutoff.size() - 1; ii++ ){
+    ptr2 += cutoff[ii + 1] - cutoff[ii];
+    const ComplexVector tmp(ptr, ptr2);
+    
+    colname = "V" + std::to_string(ii + 1) + "R";
+    re.push_back(Armor<NumericVector>(Rcpp::Re(tmp)), colname);
+    
+    colname = "V" + std::to_string(ii + 1) + "I";
+    re.push_back(Armor<NumericVector>(Rcpp::Im(tmp)), colname);
+    
+    ptr = ptr2;
+    // _rcpp_timer.step("split-" + std::to_string(ii));
+  }
+  
+  // _rcpp_timer.step("split-finished");
+  
+  // if( LAZYARRAY_DEBUG ){
+  //   
+  //   NumericVector _res(_rcpp_timer);
+  //   _res = _res / 1000000.0;
+  //   Rcpp::print(_res);
+  // }
+  
+  return re;
+}
+
+
+Rcpp::List cpp_array_to_list(SEXP &x, IntegerVector &cutoff){
   // User explicitly tells which storage type of x should be
   // 9	CHARSXP	internal character strings
   // 10	LGLSXP	logical vectors
@@ -48,7 +105,7 @@ Rcpp::DataFrame cpp_array_to_list(SEXP x, IntegerVector cutoff){
   // 16	STRSXP	character vectors
   // 24	RAWSXP	raw vector
   // 
-  Rcpp::DataFrame re; 
+  Rcpp::List re; 
   switch (TYPEOF(x)) {
   case STRSXP:
   case CHARSXP:
@@ -60,14 +117,14 @@ Rcpp::DataFrame cpp_array_to_list(SEXP x, IntegerVector cutoff){
   case INTSXP:
     re = cpp_array_to_list_template<IntegerVector, IntegerVector::iterator>(x, cutoff);
     break;
-  case RAWSXP:
-    re = cpp_array_to_list_template<RawVector, RawVector::iterator>(x, cutoff);
+  case REALSXP:
+    re = cpp_array_to_list_template<NumericVector, NumericVector::iterator>(x, cutoff);
     break;
   case CPLXSXP:
-    re = cpp_array_to_list_template<ComplexVector, ComplexVector::iterator>(x, cutoff);
+    re = cpp_array_to_list_complex(x, cutoff);
     break;
   default:
-    Rcpp::stop("Unsupported data type. Only numeric, complex, character, raw types are supported.");
+    Rcpp::stop("Unsupported data type. Only logical, numeric, complex, character types are supported.");
   }
   return re;
 }

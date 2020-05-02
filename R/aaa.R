@@ -3,5 +3,3 @@
 #' @useDynLib lazyarray, .registration = TRUE
 NULL
 
-#' @export
-dododo <- function(){}

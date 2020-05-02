@@ -4,8 +4,14 @@
 #include <vector>
 #include <iostream>
 #include <iterator>
+#include <complex>
+#include <cmath>
+
 #include <Rcpp.h>
 #include <Rcpp/Benchmark/Timer.h>
+
+//  #include <omp.h>
+//# // [[Rcpp::plugins(openmp)]]
 
 // [[Rcpp::depends(fstcore)]]
 #include <fstcore.h>

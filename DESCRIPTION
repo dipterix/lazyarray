@@ -11,10 +11,14 @@ License: GPL-3
 Encoding: UTF-8
 SystemRequirements: C++11
 Imports: 
-  methods,
-  Rcpp (>= 1.0.4),
-  fstcore
+    methods,
+    Rcpp (>= 1.0.4),
+    fstcore,
+    yaml
 LinkingTo: 
   Rcpp,
   fstcore
 RoxygenNote: 7.1.0
+Suggests: 
+    testthat,
+    fst
