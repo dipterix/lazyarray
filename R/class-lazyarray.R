@@ -28,6 +28,21 @@ LazyArray <- R6::R6Class(
           stop("Invalid internal storage format")
         }
       )
+    },
+    save_meta = function(){
+      meta = list(
+        lazyarray_version = private$lazyarray_version,
+        file_format = private$file_format,
+        storage_format = private$storage_format,
+        dim = private$.dim,
+        dimnames = private$.dimnames,
+        partitioned = private$partitioned,
+        prefix = private$prefix,
+        part_dimension = private$part_dimension,
+        postfix = private$postfix,
+        compress_level = private$compress_level
+      )
+      save_yaml(meta, private$.path)
     }
   ),
   public = list(
@@ -176,6 +191,7 @@ LazyArray <- R6::R6Class(
         dimnames[[ii]] <- dimnames[[ii]][seq_len(dim[[ii]])]
       }
       private$.dimnames = dimnames
+      private$save_meta()
     },
     
     get_file_format = function(){
@@ -289,6 +305,7 @@ LazyArray <- R6::R6Class(
     set_compress_level = function(level){
       stopifnot(level >= 0 & level <= 100)
       private$compress_level = level
+      private$save_meta()
     },
     
     get_compress_level = function(){

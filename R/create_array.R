@@ -89,6 +89,7 @@ create_lazyarray <- function(path, storage_format, dim, dimnames = NULL,
   )
   
   dir.create(path, showWarnings = TRUE, recursive = TRUE)
+  path <- normalizePath(path, mustWork = TRUE)
   
   meta_path = file.path(path, 'lazyarray.meta')
   save_yaml(meta, meta_path)
@@ -172,5 +173,6 @@ create_lazyarray <- function(path, storage_format, dim, dimnames = NULL,
 #' 
 #' @export
 load_lazyarray <- function(path, read_only = TRUE){
+  path <- normalizePath(path, mustWork = TRUE)
   LazyArray$new(path = path, read_only = read_only)
 }
