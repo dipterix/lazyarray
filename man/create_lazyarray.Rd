@@ -45,7 +45,7 @@ Create a lazy-array with given format and dimension
 Lazy array stores array into hard drive, and load them on
 demand. It differs from other packages such as \code{"bigmemory"}
 that the internal reading uses multi-thread, which gains significant 
-speed boost on SSD drives. 
+speed boost on solid state drives. 
 
 One lazy array contains two parts: data file(s) and a meta file.
 The data files can be stored in two ways: non-partitioned and 
@@ -54,7 +54,7 @@ partitioned.
 For non-partitioned data array, the dimension is 
 set at the creation of the array and cannot be mutable once created
 
-For partitioned data array, there are also two parition modes, 
+For partitioned data array, there are also two partition modes, 
 defined by \code{`multipart_mode`}. For mode 1, each partition 
 has the same dimension size as the array, with the last dimension
 to be one. For example, a data with dimension \code{c(2,3,5)} 

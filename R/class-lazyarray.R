@@ -236,7 +236,7 @@ LazyArray <- R6::R6Class(
       }
       
       x <- NULL
-      if(is.null(dim(value)) || length(dim(value)) != length(val_dim) ){
+      if(is.null(dim(value)) || length(dim(value)) != length(val_dim) || !all(dim(value) == val_dim) ){
         dim(value) = val_dim
       }
       
@@ -251,8 +251,13 @@ LazyArray <- R6::R6Class(
         
         # We save for each file
         ii <- 1
-        last_idx <- idx[[self$ndim]]
-        apply(value, ndim, function(value){
+        last_idx <- idx[[ndim]]
+        
+        partial_len <- prod(val_dim[-ndim])
+        lapply(seq_len(val_dim[[ndim]]), function(ii){
+          value <- value[partial_len * (ii-1) + seq_len(partial_len)]
+        # })
+        # apply(value, ndim, function(value){
           # get partition file
           part <- last_idx[[ii]]
           if(part > self$dim[ndim]){
@@ -260,7 +265,11 @@ LazyArray <- R6::R6Class(
           }
           fname = self$get_partition_fpath(part, full_path = TRUE)
           x <- cpp_load_lazyarray(fname, partition_locations, part_dimension, self$ndim, private$sample_data())
-          x <- do.call('[<-', args)
+          # x <- do.call('[<-', args)
+          # make a call instead of do.call
+          call <- as.call(c(list(quote(`[<-`)), args))
+          x <- eval(call)
+          
           cpp_create_lazyarray(x, part_dimension, fname, compression = private$compress_level, uniformEncoding = TRUE)
           ii <<- ii+1
           return(TRUE)

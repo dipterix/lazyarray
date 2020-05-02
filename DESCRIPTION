@@ -1,24 +1,29 @@
 Package: lazyarray
 Type: Package
-Title: What the Package Does in One 'Title Case' Line
+Title: Persistent Large Data Array with Lazy Load on Demand
 Version: 1.0
-Date: 2020-04-28
-Author: Your Name
-Maintainer: Your Name <your@email.com>
-Description: One paragraph description of what the package does as one
-        or more full sentences.
-License: GPL-3
+Language: en-US
+License: AGPL-3 | file LICENSE
 Encoding: UTF-8
 SystemRequirements: C++11
+RoxygenNote: 7.1.0
+Authors@R: c(
+    person("Zhengjia", "Wang", email = "dipterix0000@gmail.com", role = c("aut", "cre", "cph")),
+    person("Mark", "Klik", email = "markklik@gmail.com", role = c("ctb", "cph"),
+      comment = "Copyright holder of fstcore package")
+    )
+Description: Multi-threaded serialization of compressed array that 
+    fully utilizes modern solid state drives. It allows 
+    to store and load extremely large data on demand within seconds
+    without occupying too much memories. 
 Imports: 
     methods,
     Rcpp (>= 1.0.4),
     fstcore,
     yaml
 LinkingTo: 
-  Rcpp,
-  fstcore
-RoxygenNote: 7.1.0
+    Rcpp,
+    fstcore
 Suggests: 
     testthat,
     fst
