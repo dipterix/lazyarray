@@ -40,9 +40,9 @@ test_that("Getter/Setter mode = 2", {
 
 
 
-context("Getter/Setter mode = 2")
+context("Getter/Setter mode = 1")
 
-test_that("Getter/Setter mode = 2", {
+test_that("Getter/Setter mode = 1", {
   
   self = create_lazyarray(tempfile(), 'double', c(1,3,4), multipart = TRUE, multipart_mode = 1)
   private = self$.__enclos_env__$private

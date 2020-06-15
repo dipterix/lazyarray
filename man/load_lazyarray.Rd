@@ -4,12 +4,14 @@
 \alias{load_lazyarray}
 \title{Load Lazy Array from Given Path}
 \usage{
-load_lazyarray(path, read_only = TRUE)
+load_lazyarray(path, read_only = TRUE, meta_name = "lazyarray.meta")
 }
 \arguments{
 \item{path}{character, path of the array}
 
 \item{read_only}{whether setting data is allowed}
+
+\item{meta_name}{header file name, default is \code{"lazyarray.meta"}}
 }
 \value{
 A \code{LazyArray} object
@@ -42,7 +44,8 @@ x$remove_data()
 
 \donttest{
 
-# This example needs at lease 4 GB hard disk space
+# This example needs at least 4 GB hard disk space and it takes
+# time to run for performance profile
 
 # Speed test
 path <- tempfile()

@@ -12,7 +12,8 @@ create_lazyarray(
   multipart = FALSE,
   prefix = "",
   multipart_mode = 1,
-  compress_level = 50L
+  compress_level = 50L,
+  meta_name = "lazyarray.meta"
 )
 }
 \arguments{
@@ -34,12 +35,14 @@ create_lazyarray(
 \item{compress_level}{0 to 100, level of compression. 0 means
 no compression, 100 means maximum compression. For persistent data,
 it's recommended to set 100. Default is 50.}
+
+\item{meta_name}{header file name, default is \code{"lazyarray.meta"}}
 }
 \value{
 A \code{LazyArray} object
 }
 \description{
-Create a lazy-array with given format and dimension
+Create a directory to store lazy-array. The path must be missing. See \code{\link{load_lazyarray}} for more details
 }
 \details{
 Lazy array stores array into hard drive, and load them on

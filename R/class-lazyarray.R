@@ -1,3 +1,6 @@
+#' @title Internal Class definition for \code{LazyArray}
+#' @author Zhengjia Wang
+#' @description Internal class definition of lazy array objects
 LazyArray <- R6::R6Class(
   classname = "LazyArray",
   portable = TRUE,
@@ -7,6 +10,7 @@ LazyArray <- R6::R6Class(
     .path = character(0),
     .dim = integer(0),
     .dimnames = NULL,
+    .meta_name = 'lazyarray.meta',
     lazyarray_version = 0,
     file_format = 'fst',
     storage_format = character(0),
@@ -46,6 +50,9 @@ LazyArray <- R6::R6Class(
     }
   ),
   public = list(
+    #' @description Override print method
+    #' @param ... ignored
+    #' @return self instance
     print = function(...){
       cat("<LazyArray> (", private$storage_format, ')\n', sep = '')
       cat('Dimension:\t', paste(sprintf('%d ', private$.dim), collapse = 'x '), '\n')
@@ -53,7 +60,13 @@ LazyArray <- R6::R6Class(
       cat('File format:\t', sprintf('%s[part]%s', private$prefix, private$postfix), '\n')
       invisible(self)
     },
-    initialize = function(path, read_only = TRUE){
+    
+    #' @description Constructor
+    #' @param path directory to store data into
+    #' @param read_only whether modification is allowed
+    #' @param meta_name meta file to store the data into
+    initialize = function(path, read_only = TRUE, meta_name = 'lazyarray.meta'){
+      private$.meta_name = meta_name
       private$read_only = read_only
       stopifnot(dir.exists(path))
       private$.dir = normalizePath(path, mustWork = TRUE)
@@ -121,16 +134,22 @@ LazyArray <- R6::R6Class(
       
     },
     
+    #' @description Set auto clean flag
+    #' @param auto logical whether the data on hard disk will be automatically cleaned
     flag_auto_clean = function(auto){
       private$auto_clean = auto
     },
     
+    #' @description Override finallize method
     finalize = function(){
       if(private$auto_clean){
         self$remove_data(warn = FALSE)
       }
     },
     
+    #' @description Remove data on hard disk
+    #' @param force whether to force unlink the data
+    #' @param warn whether to show warning if not fully cleaned
     remove_data = function(force = FALSE, warn = TRUE){
       if(dir.exists(private$.dir)){
         if(force || file.exists(private$.path)){
@@ -146,14 +165,19 @@ LazyArray <- R6::R6Class(
       return(!private$.valid)
     },
     
+    #' @description Make instance writable
     make_writable = function(){
       private$read_only = FALSE
     },
     
+    #' @description Make instance read-only
     make_readonly = function(){
       private$read_only = TRUE
     },
     
+    #' @description Set \code{\link[base]{dim}} and \code{\link[base]{dimnames}} of the array
+    #' @param dim integer vector of the array dimension; see \code{\link[base]{dim}}
+    #' @param dimnames named list of dimension names; see \code{\link[base]{dimnames}}
     set_dim = function(dim, dimnames){
       stopifnot(!private$read_only && private$.valid)
       if(length(dim) != length(private$.dim)){
@@ -194,18 +218,23 @@ LazyArray <- R6::R6Class(
       private$save_meta()
     },
     
+    #' @description Partition format, currently only \code{'fst'} is supported
     get_file_format = function(){
       private$file_format
     },
     
+    #' @description Data storage format, expected to be one of the 
+    #' followings: 'double', 'integer', 'character', or 'complex'
     get_storage_format = function(){
       private$storage_format
     },
     
+    #' @description Whether partitioned based on the last dimension
     is_multi_part = function(){
       private$partitioned
     },
     
+    #' @description Returns dimension of each partition
     partition_dim = function(){
       if(private$partitioned){
         private$part_dimension
@@ -214,6 +243,10 @@ LazyArray <- R6::R6Class(
       }
     },
     
+    #' @description Get partition path
+    #' @param part integer representing the partition
+    #' @param full_path whether return the full system path
+    #' @return Charactor file name or full path
     get_partition_fpath = function(part, full_path = TRUE){
       if(private$partitioned){
         res <- sprintf('%s%d%s', private$prefix, part, private$postfix)
@@ -227,6 +260,9 @@ LazyArray <- R6::R6Class(
       res
     },
     
+    #' @description Internal method to set data
+    #' @param value vector of data to be set
+    #' @param ... index set
     `@set_data` = function(value, ...){
       stopifnot(!private$read_only && private$.valid)
       
@@ -302,17 +338,22 @@ LazyArray <- R6::R6Class(
       invisible(self)
     },
     
+    #' @description Set compression level
+    #' @param level from 0 to 100. 0 means no compression, 100 means max compression
     set_compress_level = function(level){
       stopifnot(level >= 0 & level <= 100)
       private$compress_level = level
       private$save_meta()
     },
     
+    #' @description Get compression level
     get_compress_level = function(){
       private$compress_level
     },
     
-    
+    #' @description Internal method to read data
+    #' @param ... index set
+    #' @param drop whether to drop dimension after subset, default is true
     `@get_data` = function(..., drop = TRUE){
       stopifnot(private$.valid)
       idx = list(...)
@@ -351,28 +392,42 @@ LazyArray <- R6::R6Class(
     },
     
     
+    #' @description Internal method to obtain a sample data to be used to determine storage mode
     `@sample_data` = function(){
       private$sample_data()
     }
     
   ),
   active = list(
+    #' @field meta_name file name to store meta information
     meta_name = function(){
-      'lazyarray.meta'
+      private$.meta_name
     },
+    
+    #' @field min_version minimal version supported, for backward compatibility concerns
     min_version = function(){
       0
     },
+    
+    #' @field version current version of lazy data instance
     version = function(){
       private$lazyarray_version
     },
+    
+    #' @field dim dimension of the data
     dim = function(){
       private$.dim
     },
+    
+    #' @field dimnames dimension names of the data
     dimnames = function(){
       private$.dimnames
     },
+    
+    #' @field ndim length of dimensions
     ndim = function(){ length(private$.dim) },
+    
+    #' @field can_write is array read-only or writable
     can_write = function(){
       !private$read_only
     }

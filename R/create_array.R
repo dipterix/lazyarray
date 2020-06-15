@@ -1,6 +1,7 @@
 # create arrays on disk
 
 #' @title Create a lazy-array with given format and dimension
+#' @description Create a directory to store lazy-array. The path must be missing. See \code{\link{load_lazyarray}} for more details
 #' @param path path to a local drive to store array data
 #' @param storage_format data type, choices are \code{"double"}, 
 #' \code{"integer"}, \code{"character"}, and \code{"complex"}
@@ -12,6 +13,7 @@
 #' @param compress_level 0 to 100, level of compression. 0 means
 #' no compression, 100 means maximum compression. For persistent data,
 #' it's recommended to set 100. Default is 50.
+#' @param meta_name header file name, default is \code{"lazyarray.meta"}
 #' @return A \code{LazyArray} object
 #' @details Lazy array stores array into hard drive, and load them on
 #' demand. It differs from other packages such as \code{"bigmemory"}
@@ -36,7 +38,8 @@
 #' @export
 create_lazyarray <- function(path, storage_format, dim, dimnames = NULL, 
                                  multipart = FALSE, prefix = "",
-                                 multipart_mode = 1, compress_level = 50L){
+                                 multipart_mode = 1, compress_level = 50L,
+                             meta_name = 'lazyarray.meta'){
   
   if(dir.exists(path)){
     stop("Path already exists.")
@@ -91,10 +94,10 @@ create_lazyarray <- function(path, storage_format, dim, dimnames = NULL,
   dir.create(path, showWarnings = TRUE, recursive = TRUE)
   path <- normalizePath(path, mustWork = TRUE)
   
-  meta_path = file.path(path, 'lazyarray.meta')
+  meta_path = file.path(path, meta_name)
   save_yaml(meta, meta_path)
   
-  LazyArray$new(path = path, read_only = FALSE)
+  LazyArray$new(path = path, read_only = FALSE, meta_name = meta_name)
   
 }
 
@@ -103,6 +106,7 @@ create_lazyarray <- function(path, storage_format, dim, dimnames = NULL,
 #' @title Load Lazy Array from Given Path
 #' @param path character, path of the array
 #' @param read_only whether setting data is allowed
+#' @param meta_name header file name, default is \code{"lazyarray.meta"}
 #' @return A \code{LazyArray} object
 #' @examples 
 #' 
@@ -129,7 +133,8 @@ create_lazyarray <- function(path, storage_format, dim, dimnames = NULL,
 #' 
 #' \donttest{
 #' 
-#' # This example needs at lease 4 GB hard disk space
+#' # This example needs at least 4 GB hard disk space and it takes
+#' # time to run for performance profile
 #' 
 #' # Speed test
 #' path <- tempfile()
@@ -172,7 +177,7 @@ create_lazyarray <- function(path, storage_format, dim, dimnames = NULL,
 #' }
 #' 
 #' @export
-load_lazyarray <- function(path, read_only = TRUE){
+load_lazyarray <- function(path, read_only = TRUE, meta_name = 'lazyarray.meta'){
   path <- normalizePath(path, mustWork = TRUE)
-  LazyArray$new(path = path, read_only = read_only)
+  LazyArray$new(path = path, read_only = read_only, meta_name = meta_name)
 }

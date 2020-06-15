@@ -1,9 +1,9 @@
 Package: lazyarray
 Type: Package
-Title: Persistent Large Data Array with Lazy Load on Demand
+Title: Persistent Large Data Array with Lazy-Loading on Demand
 Version: 1.0
 Language: en-US
-License: AGPL-3 | file LICENSE
+License: AGPL-3
 Encoding: UTF-8
 SystemRequirements: C++11
 RoxygenNote: 7.1.0
@@ -15,7 +15,10 @@ Authors@R: c(
 Description: Multi-threaded serialization of compressed array that 
     fully utilizes modern solid state drives. It allows 
     to store and load extremely large data on demand within seconds
-    without occupying too much memories. 
+    without occupying too much memories. With data stored on hard drive, 
+    a lazy-array data can be loaded, shared across multiple R sessions.
+    For arrays with partition mode on, multiple R sessions can write to 
+    a same array simultaneously along the last dimension (partition).
 Imports: 
     methods,
     Rcpp (>= 1.0.4),
@@ -26,7 +29,7 @@ LinkingTo:
     fstcore
 Suggests: 
     testthat,
-    fst,
     knitr,
+    fst,
     rmarkdown
 VignetteBuilder: knitr
