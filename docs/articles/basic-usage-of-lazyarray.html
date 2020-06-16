@@ -95,8 +95,8 @@
 <h3 class="hasAnchor">
 <a href="#initialize" class="anchor"></a>Initialize</h3>
 <p>Create a blank array and assign R object</p>
-<div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="co"># Sample data (~240 MB)</span>
-<span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">rnorm</a></span>(<span class="fl">3e7</span>); <span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span>(<span class="no">x</span>) <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">100</span>, <span class="fl">100</span>, <span class="fl">100</span>, <span class="fl">30</span>)
+<div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="co"># Sample data (~24 MB)</span>
+<span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">rnorm</a></span>(<span class="fl">3e6</span>); <span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span>(<span class="no">x</span>) <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">10</span>, <span class="fl">100</span>, <span class="fl">100</span>, <span class="fl">30</span>)
 
 <span class="co"># Save array to a path</span>
 <span class="no">path</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html">tempfile</a></span>()
@@ -119,7 +119,7 @@
 </ol>
 <div class="sourceCode" id="cb5"><html><body><pre class="r"><span class="no">arr</span>$<span class="fu">make_writable</span>()
 <span class="fu"><a href="https://rdrr.io/r/base/dimnames.html">dimnames</a></span>(<span class="no">arr</span>) <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(
-  <span class="kw">A</span> <span class="kw">=</span> <span class="fl">1</span>:<span class="fl">100</span>,
+  <span class="kw">A</span> <span class="kw">=</span> <span class="fl">1</span>:<span class="fl">10</span>,
   <span class="kw">B</span> <span class="kw">=</span> <span class="fl">1</span>:<span class="fl">100</span>,
   <span class="kw">C</span> <span class="kw">=</span> <span class="fl">1</span>:<span class="fl">100</span>,
   <span class="kw">D</span> <span class="kw">=</span> <span class="fl">1</span>:<span class="fl">30</span>
@@ -128,12 +128,12 @@
 <li>Subset and subset assign</li>
 </ol>
 <div class="sourceCode" id="cb6"><html><body><pre class="r"><span class="co"># Subset/read array</span>
-<span class="no">y1</span> <span class="kw">&lt;-</span> <span class="no">arr</span>[]              <span class="co"># 400 ms</span>
-<span class="no">y2</span> <span class="kw">&lt;-</span> <span class="no">arr</span>[,,,<span class="fl">3</span>]          <span class="co"># 45 ms</span>
+<span class="no">y1</span> <span class="kw">&lt;-</span> <span class="no">arr</span>[]
+<span class="no">y2</span> <span class="kw">&lt;-</span> <span class="no">arr</span>[,,,<span class="fl">3</span>]
 
 <span class="co"># Write to slice of data, writing to slices along the </span>
 <span class="co"># last dimension is optimized</span>
-<span class="no">arr</span>[,,,<span class="fl">1</span>] <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq_len</a></span>(<span class="fl">1e6</span>)</pre></body></html></div>
+<span class="no">arr</span>[,,,<span class="fl">1</span>] <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq_len</a></span>(<span class="fl">1e5</span>)</pre></body></html></div>
 <ol start="3" style="list-style-type: decimal">
 <li>Subset by formula</li>
 </ol>

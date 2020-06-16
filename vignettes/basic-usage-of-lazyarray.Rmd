@@ -24,8 +24,8 @@ library(lazyarray)
 Create a blank array and assign R object
 
 ```{r}
-# Sample data (~240 MB)
-x <- rnorm(3e7); dim(x) <- c(100, 100, 100, 30)
+# Sample data (~24 MB)
+x <- rnorm(3e6); dim(x) <- c(10, 100, 100, 30)
 
 # Save array to a path
 path <- tempfile()
@@ -55,7 +55,7 @@ arr$can_write
 ```{r}
 arr$make_writable()
 dimnames(arr) <- list(
-  A = 1:100,
+  A = 1:10,
   B = 1:100,
   C = 1:100,
   D = 1:30
@@ -66,12 +66,12 @@ dimnames(arr) <- list(
 
 ```{r}
 # Subset/read array
-y1 <- arr[]              # 400 ms
-y2 <- arr[,,,3]          # 45 ms
+y1 <- arr[]              
+y2 <- arr[,,,3]          
 
 # Write to slice of data, writing to slices along the 
 # last dimension is optimized
-arr[,,,1] <- seq_len(1e6)
+arr[,,,1] <- seq_len(1e5)
 ```
 
 3. Subset by formula
