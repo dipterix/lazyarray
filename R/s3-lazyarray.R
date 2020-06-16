@@ -11,8 +11,8 @@
         tmp <- ...elt(ii)
         if(is.logical(tmp)){
           if(length(tmp) < dim[ii]){
-            tmp = rep(tmp, floor(dim[ii] / length(tmp)))
-            tmp = tmp[seq_len(dim[ii])]
+            tmp <- rep(tmp, floor(dim[ii] / length(tmp)))
+            tmp <- tmp[seq_len(dim[ii])]
           }
           if(length(tmp) > dim[ii]){
             stop("index out of bound at index ", ii)
@@ -22,7 +22,7 @@
           tmp
         } else if (is.character(tmp)){
           unlist(lapply(tmp, function(s){
-            re = which(x$dimnames[[ii]] == s)
+            re <- which(x$dimnames[[ii]] == s)
             if(length(re)){ re[[1]] } else { -1 }
           }))
         }
@@ -30,7 +30,7 @@
         seq_len(dim[[ii]])
       })
     }
-    target_dim = sapply(idx, length)
+    target_dim <- sapply(idx, length)
     if(prod(target_dim) == 0){
       if(drop){
         return(x$`@sample_data`()[NULL])
@@ -40,7 +40,7 @@
       
     }
     
-    idx$drop = drop
+    idx$drop <- drop
     return(do.call(x$`@get_data`, idx))
   }
   if(...length() == 1){
@@ -72,8 +72,8 @@
         tmp <- ...elt(ii)
         if(is.logical(tmp)){
           if(length(tmp) < dim[ii]){
-            tmp = rep(tmp, floor(dim[ii] / length(tmp)))
-            tmp = tmp[seq_len(dim[ii])]
+            tmp <- rep(tmp, floor(dim[ii] / length(tmp)))
+            tmp <- tmp[seq_len(dim[ii])]
           }
           if(length(tmp) > dim[ii]){
             stop("index out of bound at index ", ii)
@@ -90,7 +90,7 @@
         seq_len(dim[[ii]])
       })
     }
-    target_dim = sapply(idx, length)
+    target_dim <- sapply(idx, length)
     if(prod(target_dim) == 0){
       return(x)
     }
@@ -145,10 +145,10 @@ length.LazyArray <- function(x){
 subset.LazyArray <- function(x, ..., env = parent.frame(), drop = FALSE){
   formats <- list(...)
   dnams <- x$dimnames
-  nms = names(dnams)
+  nms <- names(dnams)
   d_env <- new.env(parent = env)
   sel <- lapply(x$dim, function(n){ rep(TRUE, n) })
-  names(sel) = nms
+  names(sel) <- nms
   for(nm in nms){
     if(nm != ''){
       d_env[[nm]] <- dnams[[nm]]
@@ -162,13 +162,13 @@ subset.LazyArray <- function(x, ..., env = parent.frame(), drop = FALSE){
     if(!identical(fmt[[1]], quote(`~`))){
       stop("Subset formula ", deparse1(fmt), " is invalid for subsetting a lazy array. Use some thing like 'var ~ var < 2'")
     }
-    fmt[[1]] = quote(`=`)
+    fmt[[1]] <- quote(`=`)
     tmp_env <- new.env(parent = d_env)
     eval(fmt, envir = tmp_env)
     for(nm in names(tmp_env)){
       if(nm %in% nms){
         if(is.logical(tmp_env[[nm]])){
-          sel[[nm]] = sel[[nm]] & tmp_env[[nm]]
+          sel[[nm]] <- sel[[nm]] & tmp_env[[nm]]
         } else{
           stop("Subset formula ", deparse1(fmt), "does not return TRUE/FALSE results")
         }
@@ -176,9 +176,9 @@ subset.LazyArray <- function(x, ..., env = parent.frame(), drop = FALSE){
     }
   }
   
-  sel = lapply(sel, which)
+  sel <- lapply(sel, which)
   names(sel) <- NULL
-  sel$drop = drop
+  sel$drop <- drop
   
   do.call(x$`@get_data`, sel)
   

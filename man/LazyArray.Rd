@@ -116,7 +116,7 @@ Set auto clean flag
 \if{html}{\out{<a id="method-finalize"></a>}}
 \if{latex}{\out{\hypertarget{method-finalize}{}}}
 \subsection{Method \code{finalize()}}{
-Override finallize method
+Override finalize method
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{LazyArray$finalize()}\if{html}{\out{</div>}}
 }
@@ -134,7 +134,7 @@ Remove data on hard disk
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{force}}{whether to force unlink the data}
+\item{\code{force}}{whether to force remove the data}
 
 \item{\code{warn}}{whether to show warning if not fully cleaned}
 }
@@ -240,7 +240,7 @@ Get partition path
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-Charactor file name or full path
+Character file name or full path
 }
 }
 \if{html}{\out{<hr>}}

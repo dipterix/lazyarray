@@ -34,7 +34,7 @@ LazyArray <- R6::R6Class(
       )
     },
     save_meta = function(){
-      meta = list(
+      meta <- list(
         lazyarray_version = private$lazyarray_version,
         file_format = private$file_format,
         storage_format = private$storage_format,
@@ -66,30 +66,30 @@ LazyArray <- R6::R6Class(
     #' @param read_only whether modification is allowed
     #' @param meta_name meta file to store the data into
     initialize = function(path, read_only = TRUE, meta_name = 'lazyarray.meta'){
-      private$.meta_name = meta_name
-      private$read_only = read_only
+      private$.meta_name <- meta_name
+      private$read_only <- read_only
       stopifnot(dir.exists(path))
-      private$.dir = normalizePath(path, mustWork = TRUE)
-      private$.path = normalizePath(file.path(path, self$meta_name), mustWork = TRUE)
+      private$.dir <- normalizePath(path, mustWork = TRUE)
+      private$.path <- normalizePath(file.path(path, self$meta_name), mustWork = TRUE)
       
       # load yaml
-      meta = load_yaml(private$.path)
+      meta <- load_yaml(private$.path)
       
       # check format version
       if(is.null(meta$lazyarray_version)){
         if(!isTRUE(meta$lazyarray_version >= self$min_version)){
           stop("Minimal version ", self$min_version, " required, but the file version is ", private$.meta$lazyarray_version)
         }
-        private$lazyarray_version = meta$lazyarray_version
+        private$lazyarray_version <- meta$lazyarray_version
       } else {
-        private$lazyarray_version = self$min_version
+        private$lazyarray_version <- self$min_version
       }
       
       # check format: fst? hdf5?
       if(length(meta$file_format) != 1){
         stop("File format not found.")
       }
-      private$file_format = meta$file_format
+      private$file_format <- meta$file_format
       
       # check data format
       if(length(meta$storage_format) != 1 ||
@@ -97,50 +97,50 @@ LazyArray <- R6::R6Class(
         stop(sprintf("Cannot find valid storage format. Supported data formats are %s, %s, %s, and %s",
              sQuote('double'), sQuote('integer'), sQuote('character'), sQuote('complex')))
       }
-      private$storage_format = meta$storage_format
+      private$storage_format <- meta$storage_format
       
       # get dimension information
       if(length(meta$dim) < 2){
         stop("Invalid dimension information.")
       }
-      private$.dim = meta$dim
+      private$.dim <- meta$dim
       
       # get dimension names
       if(!is.null(meta$dimnames) && length(meta$dimnames) != length(meta$dim)){
         stop("Dimension name does not match.")
       }
-      private$.dimnames = meta$dimnames
+      private$.dimnames <- meta$dimnames
       
       # check whether the file is partitioned
       if(isTRUE(meta$partitioned)){
-        private$partitioned = TRUE
-        private$part_dimension = meta$part_dimension
+        private$partitioned <- TRUE
+        private$part_dimension <- meta$part_dimension
       }
       
       if(length(meta$prefix) != 1){
         stop('Invalid prefix')
       }
-      private$prefix = meta$prefix
+      private$prefix <- meta$prefix
       
       if(!length(meta$postfix) || !is.character(meta$postfix)){
         stop("Cannot find file postfix")
       }
-      private$postfix = meta$postfix
+      private$postfix <- meta$postfix
       
       if(!isTRUE(is.numeric(meta$compress_level))){
-        meta$compress_level = 50
+        meta$compress_level <- 50
       }
-      private$compress_level = meta$compress_level
+      private$compress_level <- meta$compress_level
       
     },
     
     #' @description Set auto clean flag
     #' @param auto logical whether the data on hard disk will be automatically cleaned
     flag_auto_clean = function(auto){
-      private$auto_clean = auto
+      private$auto_clean <- auto
     },
     
-    #' @description Override finallize method
+    #' @description Override finalize method
     finalize = function(){
       if(private$auto_clean){
         self$remove_data(warn = FALSE)
@@ -148,16 +148,16 @@ LazyArray <- R6::R6Class(
     },
     
     #' @description Remove data on hard disk
-    #' @param force whether to force unlink the data
+    #' @param force whether to force remove the data
     #' @param warn whether to show warning if not fully cleaned
     remove_data = function(force = FALSE, warn = TRUE){
       if(dir.exists(private$.dir)){
         if(force || file.exists(private$.path)){
           unlink(private$.dir, recursive = TRUE)
-          private$.valid = FALSE
+          private$.valid <- FALSE
         }
       } else {
-        private$.valid = FALSE
+        private$.valid <- FALSE
       }
       if(warn && dir.exists(private$.dir)){
         warning("LazyArray not fully cleaned at: ", private$.dir)
@@ -167,12 +167,12 @@ LazyArray <- R6::R6Class(
     
     #' @description Make instance writable
     make_writable = function(){
-      private$read_only = FALSE
+      private$read_only <- FALSE
     },
     
     #' @description Make instance read-only
     make_readonly = function(){
-      private$read_only = TRUE
+      private$read_only <- TRUE
     },
     
     #' @description Set \code{\link[base]{dim}} and \code{\link[base]{dimnames}} of the array
@@ -184,7 +184,7 @@ LazyArray <- R6::R6Class(
         stop('Cannot set dimension from ', deparse1(private$.dim), ' to ', 
              deparse1(private$.dim), '. Different # of dimensions.')
       }
-      dif = private$.dim - dim
+      dif <- private$.dim - dim
       if(prod(dim) == 0){
         stop("zero length array is not supported.")
       }
@@ -197,9 +197,9 @@ LazyArray <- R6::R6Class(
         stop("For single data file arrays, you cannot change dimension once initialized")
       }
       # check dimension vs dim
-      mis_dimnames = missing(dimnames)
+      mis_dimnames <- missing(dimnames)
       if(mis_dimnames){
-        dimnames = private$.dimnames
+        dimnames <- private$.dimnames
       }
       if(!mis_dimnames && length(dimnames)){
         if(!is.list(dimnames)){
@@ -210,11 +210,11 @@ LazyArray <- R6::R6Class(
           stop("dim does not matches with dimnames")
         }
       }
-      private$.dim = dim
+      private$.dim <- dim
       for(ii in seq_along(dimnames)){
         dimnames[[ii]] <- dimnames[[ii]][seq_len(dim[[ii]])]
       }
-      private$.dimnames = dimnames
+      private$.dimnames <- dimnames
       private$save_meta()
     },
     
@@ -246,7 +246,7 @@ LazyArray <- R6::R6Class(
     #' @description Get partition path
     #' @param part integer representing the partition
     #' @param full_path whether return the full system path
-    #' @return Charactor file name or full path
+    #' @return Character file name or full path
     get_partition_fpath = function(part, full_path = TRUE){
       if(private$partitioned){
         res <- sprintf('%s%d%s', private$prefix, part, private$postfix)
@@ -266,15 +266,15 @@ LazyArray <- R6::R6Class(
     `@set_data` = function(value, ...){
       stopifnot(!private$read_only && private$.valid)
       
-      idx = list(...)
-      ndim = self$ndim
+      idx <- list(...)
+      ndim <- self$ndim
       stopifnot(length(idx) == ndim)
-      idx = lapply(idx, function(ii){
+      idx <- lapply(idx, function(ii){
         # ii = ii[!is.na(ii)]
         as.integer(ii)
       })
       
-      val_dim = sapply(idx, length)
+      val_dim <- sapply(idx, length)
       
       if(any(val_dim <= 0)){
         # no change
@@ -282,22 +282,22 @@ LazyArray <- R6::R6Class(
       }
       
       if(length(value) == 1){
-        value = array(value, dim = val_dim)
+        value <- array(value, dim = val_dim)
       } else{
         stopifnot(length(value) == prod(val_dim))
       }
       
       x <- NULL
       if(is.null(dim(value)) || length(dim(value)) != length(val_dim) || !all(dim(value) == val_dim) ){
-        dim(value) = val_dim
+        dim(value) <- val_dim
       }
       
       if(private$partitioned){
         part_dimension <- private$part_dimension
         partition_locations <-  lapply(part_dimension, seq_len)
         
-        part_idx = idx
-        part_idx[[ndim]] = 1
+        part_idx <- idx
+        part_idx[[ndim]] <- 1
         args <- c(list(x = quote(x)), part_idx, list(value = quote(value)))
         
         
@@ -315,7 +315,7 @@ LazyArray <- R6::R6Class(
           if(part > self$dim[ndim]){
             return(FALSE)
           }
-          fname = self$get_partition_fpath(part, full_path = TRUE)
+          fname <- self$get_partition_fpath(part, full_path = TRUE)
           x <- cpp_load_lazyarray(fname, partition_locations, part_dimension, self$ndim, private$sample_data())
           # x <- do.call('[<-', args)
           # make a call instead of do.call
@@ -342,7 +342,7 @@ LazyArray <- R6::R6Class(
     #' @param level from 0 to 100. 0 means no compression, 100 means max compression
     set_compress_level = function(level){
       stopifnot(level >= 0 & level <= 100)
-      private$compress_level = level
+      private$compress_level <- level
       private$save_meta()
     },
     
@@ -356,7 +356,7 @@ LazyArray <- R6::R6Class(
     #' @param drop whether to drop dimension after subset, default is true
     `@get_data` = function(..., drop = TRUE){
       stopifnot(private$.valid)
-      idx = list(...)
+      idx <- list(...)
       if(!length(idx)){
         # case 1 x[], get all the data
         idx <- lapply(self$dim, seq_len)
@@ -365,9 +365,9 @@ LazyArray <- R6::R6Class(
         stop("subset with length is not supported right now")
       } else {
         stopifnot(length(idx) == self$ndim)
-        idx = lapply(idx, function(id){
-          id = as.integer(id)
-          id[is.na(id)] = -1L
+        idx <- lapply(idx, function(id){
+          id <- as.integer(id)
+          id[is.na(id)] <- -1L
           id
         })
       }

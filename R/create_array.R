@@ -58,13 +58,13 @@ create_lazyarray <- function(path, storage_format, dim, dimnames = NULL,
   
   # check if dim matches with dimnames
   if(!is.null(dimnames)){
-    dnl = sapply(dimnames, length)
+    dnl <- sapply(dimnames, length)
     if(length(dnl) != length(dim) || !all(dnl - dim == 0)){
       stop("Invalid dimension")
     }
   }
   
-  multipart = as.logical(multipart)
+  multipart <- as.logical(multipart)
   if(multipart && multipart_mode == 2 && length(dim) == 2){
     warning("multipart_mode must be 1 for matrix")
   }
@@ -72,14 +72,14 @@ create_lazyarray <- function(path, storage_format, dim, dimnames = NULL,
   stopifnot(storage_format %in% c('character', 'double', 'int', 'complex'))
   
   if( multipart_mode == 1 ){
-    part_dimension = dim
-    part_dimension[length(dim)] = 1
+    part_dimension <- dim
+    part_dimension[length(dim)] <- 1
   } else if(multipart_mode == 2){
-    part_dimension = dim[-length(dim)]
+    part_dimension <- dim[-length(dim)]
   }
   
   #####
-  meta = list(
+  meta <- list(
     lazyarray_version = 0,
     file_format = 'fst',
     storage_format = storage_format,
@@ -95,7 +95,7 @@ create_lazyarray <- function(path, storage_format, dim, dimnames = NULL,
   dir.create(path, showWarnings = TRUE, recursive = TRUE)
   path <- normalizePath(path, mustWork = TRUE)
   
-  meta_path = file.path(path, meta_name)
+  meta_path <- file.path(path, meta_name)
   save_yaml(meta, meta_path)
   
   LazyArray$new(path = path, read_only = FALSE, meta_name = meta_name)

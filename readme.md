@@ -4,7 +4,7 @@ Zhengjia Wang
 
 ## Overview
 
-The `lazyarray` package for R provides a fast way to serialize arrays. With reading speeds of Giga-byte levels, `lazyarray` unlocks the potential of high speed solid state drive.
+The `lazyarray` package for R provides a fast way to serialize arrays. With reading speeds of Gigabyte levels, `lazyarray` unlocks the potential of high speed solid state drive.
 
 The figure below compares the read performance of the `lazyarray` package to alternatives. Original array size is 1 GB. 
 
@@ -13,7 +13,7 @@ The figure below compares the read performance of the `lazyarray` package to alt
 |Read the entire array|      1.2 s|    1.6s |    6.1 s|
 |Read 300 MB slice    |      0.5 s|    0.8s |    6.2 s|
 
-With multi-thread (OpenMP) support, the reading speed can be even faster. Since all subset process are handled within C++ code, when slicing partial data, `lazyarray` calculates indices first, and only read in the slice itself while `readRDS` needs to load all data first and slice the data. This results in a more memory-efficient approach when only partial data are needed.
+With multi-thread ("OpenMP") support, the reading speed can be even faster. Since all subset process are handled within C++ code, when slicing partial data, `lazyarray` calculates indices first, and only read in the slice itself while `readRDS` needs to load all data first and slice the data. This results in a more memory-efficient approach when only partial data are needed.
 
 ## Installation
 
@@ -52,7 +52,7 @@ arr[,,,1] <- seq_len(1e6)
 
 ## Multipart array and its shared property
 
-Lazy arrays can be shared across multiple R sessions and is compatible with `future` package. For example, we want to perform some complicated tasks along the last dimension. Normally, we can use `sapply` to interate through each slices as:
+Lazy arrays can be shared across multiple R sessions and is compatible with `future` package. For example, we want to perform some complicated tasks along the last dimension. Normally, we can use `sapply` and iterate through each slice as:
 
 ```r
 t(sapply(1:10, function(i){
@@ -80,7 +80,7 @@ It only takes about *3.4 seconds* with 4 cores.
 
 ## Remove Arrays
 
-Data created via `lazyarray` package does not unlink automatically. You need to finalize array by yourself. This is because multiple lazy array instances might point to a same dataset. If one of the object is garbage collected, you might not want to remove the data on hard drive as this will invalidate the other instances. 
+Data created via `lazyarray` does not remove automatically. You need to finalize array by yourself. This is because multiple lazy array instances might point to a same dataset. If one of the object is garbage collected, you might not want to remove the data on hard drive as this will invalidate the other instances. 
 
 
 To manually remove data, use
@@ -124,7 +124,7 @@ rm(arr_another); gc()
 # To test if array is still valid
 arr[1:10,1,1,1]
 
-# removing arr will trigger 
+# removing arr will trigger gc()
 rm(arr); gc()
 
 # path is removed

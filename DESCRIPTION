@@ -7,6 +7,8 @@ License: AGPL-3
 Encoding: UTF-8
 SystemRequirements: C++11
 RoxygenNote: 7.1.0
+URL: https://github.com/dipterix/lazyarray
+BugReports: https://github.com/dipterix/lazyarray/issues
 Authors@R: c(
     person("Zhengjia", "Wang", email = "dipterix.wang@gmail.com", role = c("aut", "cre", "cph")),
     person("Mark", "Klik", email = "markklik@gmail.com", role = c("ctb", "cph"),
@@ -20,7 +22,6 @@ Description: Multi-threaded serialization of compressed array that
     For arrays with partition mode on, multiple R sessions can write to 
     a same array simultaneously along the last dimension (partition).
 Imports: 
-    methods,
     Rcpp (>= 1.0.4),
     fstcore,
     yaml
