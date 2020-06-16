@@ -65,3 +65,6 @@ partitioned with mode 1 will have each partition dimension stored
 with \code{c(2,3,1)}. For mode 2, the last dimension will be dropped
 when storing each partitions.
 }
+\author{
+Zhengjia Wang
+}

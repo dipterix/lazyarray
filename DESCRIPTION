@@ -8,7 +8,7 @@ Encoding: UTF-8
 SystemRequirements: C++11
 RoxygenNote: 7.1.0
 Authors@R: c(
-    person("Zhengjia", "Wang", email = "dipterix0000@gmail.com", role = c("aut", "cre", "cph")),
+    person("Zhengjia", "Wang", email = "dipterix.wang@gmail.com", role = c("aut", "cre", "cph")),
     person("Mark", "Klik", email = "markklik@gmail.com", role = c("ctb", "cph"),
       comment = "Copyright holder of fstcore package")
     )

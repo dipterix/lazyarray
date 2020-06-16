@@ -1,6 +1,7 @@
 # create arrays on disk
 
 #' @title Create a lazy-array with given format and dimension
+#' @author Zhengjia Wang
 #' @description Create a directory to store lazy-array. The path must be missing. See \code{\link{load_lazyarray}} for more details
 #' @param path path to a local drive to store array data
 #' @param storage_format data type, choices are \code{"double"}, 
@@ -104,6 +105,7 @@ create_lazyarray <- function(path, storage_format, dim, dimnames = NULL,
 
 
 #' @title Load Lazy Array from Given Path
+#' @author Zhengjia Wang
 #' @param path character, path of the array
 #' @param read_only whether setting data is allowed
 #' @param meta_name header file name, default is \code{"lazyarray.meta"}
