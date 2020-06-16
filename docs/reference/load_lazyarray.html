@@ -210,14 +210,14 @@
     <span class='kw'>NULL</span>
   })
 })</div><div class='output co'>#&gt;    user  system elapsed 
-#&gt;  57.086  14.750  34.549 </div><div class='input'>
+#&gt;  74.456  13.578  31.814 </div><div class='input'>
 <span class='co'># Reading 64 MB data using 4 cores</span>
 <span class='co'># ~0.25 seconds</span>
 
 <span class='fu'><a href='https://rdrr.io/r/base/system.time.html'>system.time</a></span>({
   <span class='no'>x</span>[<span class='fl'>1</span>:<span class='fl'>100</span>, <span class='fu'><a href='https://rdrr.io/r/base/sample.html'>sample</a></span>(<span class='fl'>200</span>, <span class='fl'>200</span>), <span class='fl'>100</span>:<span class='fl'>1</span>, <span class='fl'>2</span>:<span class='fl'>4</span>]
 })</div><div class='output co'>#&gt;    user  system elapsed 
-#&gt;   0.658   0.172   0.280 </div><div class='input'>
+#&gt;   0.933   0.106   0.183 </div><div class='input'>
 <span class='co'># This call requires 4GB of RAM</span>
 <span class='co'># Reading all 4GB data using 4 cores</span>
 <span class='co'># ~4 seconds (1 GB/s)</span>
@@ -225,7 +225,7 @@
 <span class='fu'><a href='https://rdrr.io/r/base/system.time.html'>system.time</a></span>({
   <span class='no'>x</span>[]
 })</div><div class='output co'>#&gt;    user  system elapsed 
-#&gt;  14.969   4.318   5.943 </div><div class='input'>
+#&gt;  19.236   3.926   4.874 </div><div class='input'>
 # }
 
 </div></pre>

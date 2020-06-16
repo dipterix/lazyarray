@@ -23,6 +23,7 @@ Description: Multi-threaded serialization of compressed array that
     a same array simultaneously along the last dimension (partition).
 Imports: 
     Rcpp (>= 1.0.4),
+    R6,
     fstcore,
     yaml
 LinkingTo: 
