@@ -3,3 +3,4 @@
 ^experiment/
 ^docs/
 ^readme\.md$
+^cran-comments\.md$
