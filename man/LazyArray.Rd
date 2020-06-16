@@ -25,6 +25,8 @@ Zhengjia Wang
 \item{\code{ndim}}{length of dimensions}
 
 \item{\code{can_write}}{is array read-only or writable}
+
+\item{\code{storage_path}}{directory where the data is stored at}
 }
 \if{html}{\out{</div>}}
 }

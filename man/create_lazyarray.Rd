@@ -9,7 +9,7 @@ create_lazyarray(
   storage_format,
   dim,
   dimnames = NULL,
-  multipart = FALSE,
+  multipart = TRUE,
   prefix = "",
   multipart_mode = 1,
   compress_level = 50L,
@@ -26,7 +26,7 @@ create_lazyarray(
 
 \item{dimnames}{list of vectors, names of each dimension, see \code{\link{dimnames}}}
 
-\item{multipart}{whether split array into multiple partitions}
+\item{multipart}{whether to split array into multiple partitions, default is true}
 
 \item{prefix}{character prefix of array partition}
 

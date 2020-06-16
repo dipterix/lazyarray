@@ -430,6 +430,11 @@ LazyArray <- R6::R6Class(
     #' @field can_write is array read-only or writable
     can_write = function(){
       !private$read_only
+    },
+    
+    #' @field storage_path directory where the data is stored at
+    storage_path = function(){
+      private$.path
     }
   )
 )

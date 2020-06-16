@@ -8,7 +8,7 @@
 #' \code{"integer"}, \code{"character"}, and \code{"complex"}
 #' @param dim integer vector, dimension of array, see \code{\link{dim}}
 #' @param dimnames list of vectors, names of each dimension, see \code{\link{dimnames}}
-#' @param multipart whether split array into multiple partitions
+#' @param multipart whether to split array into multiple partitions, default is true
 #' @param prefix character prefix of array partition
 #' @param multipart_mode 1, or 2, mode of partition, see details.
 #' @param compress_level 0 to 100, level of compression. 0 means
@@ -38,7 +38,7 @@
 #' 
 #' @export
 create_lazyarray <- function(path, storage_format, dim, dimnames = NULL, 
-                                 multipart = FALSE, prefix = "",
+                                 multipart = TRUE, prefix = "",
                                  multipart_mode = 1, compress_level = 50L,
                              meta_name = 'lazyarray.meta'){
   
