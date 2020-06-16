@@ -1,6 +1,6 @@
 
 #include "common.h"
-#include "util.h"
+#include "utils.h"
 
 template <typename T, typename I>
 bool contains(T vec, SEXP el){

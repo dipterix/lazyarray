@@ -1,7 +1,7 @@
 // [[Rcpp::plugins("cpp11")]]
 
 #include "common.h"
-#include "util.h"
+#include "utils.h"
 #include "misc.h"
 
 // [[Rcpp::export]]

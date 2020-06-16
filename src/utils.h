@@ -6,7 +6,7 @@
 
 // [[Rcpp::plugins("cpp11")]]
 
-Rcpp::DataFrame cpp_array_to_list(SEXP &x, IntegerVector &cutoff);
+Rcpp::List cpp_array_to_list(SEXP &x, IntegerVector &cutoff);
 
 // SEXP cpp_create_lazyarray(SEXP x, IntegerVector dim, SEXP fileName, SEXP compression, SEXP uniformEncoding);
 
