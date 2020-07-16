@@ -186,16 +186,40 @@ LazyArray <- R6::R6Class(
     #' @param force whether to force remove the data
     #' @param warn whether to show warning if not fully cleaned
     remove_data = function(force = FALSE, warn = TRUE){
+      if(!private$.valid){ return(FALSE) }
       if(dir.exists(private$.dir)){
         if(force || file.exists(private$.path)){
-          unlink(private$.dir, recursive = TRUE)
+          
+          # list all files within .dir
+          fs <- c(self$get_partition_fpath(full_path = FALSE), private$.meta_name)
+          all_fs <- list.files(private$.dir, all.files = TRUE, 
+                               recursive = FALSE, full.names = FALSE, 
+                               include.dirs = TRUE)
+          
+          rest <- all_fs[!all_fs %in% c(fs, '.', '..')]
+          sel_metas <- grepl('\\.meta$', rest)
+          
+          if(!length(rest) || all(sel_metas)){
+            # cannot remove all files because some other files exist, 
+            # not created by me
+            unlink(private$.dir, recursive = TRUE)
+          } else {
+            lapply(fs, function(f){
+              f <- file.path(private$.dir, f)
+              if(file.exists(f)){
+                unlink(f)
+              }
+            })
+          }
           private$.valid <- FALSE
         }
       } else {
         private$.valid <- FALSE
       }
       if(warn && dir.exists(private$.dir)){
-        warning("LazyArray not fully cleaned at: ", private$.dir)
+        warning("LazyArray not fully cleaned at: ", private$.dir, 
+                '. Some files noted created by this array were detected. ',
+                'Please manually remove them if they are no longer used.')
       }
       return(!private$.valid)
     },

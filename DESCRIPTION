@@ -33,5 +33,6 @@ Suggests:
     testthat,
     knitr,
     fst,
-    rmarkdown
+    rmarkdown,
+    dipsaus
 VignetteBuilder: knitr

@@ -143,9 +143,10 @@
 #' 
 #' @export
 lazyarray <- function(
-  path, file_names, storage_format, dim, dimnames = NULL, 
+  path, storage_format, dim, dimnames = NULL, 
   multipart = TRUE, prefix = "",
   multipart_mode = 1, compress_level = 50L,
+  file_names = list('', seq_len(dim[[length(dim)]]))[[multipart + 1]],
   meta_name = 'lazyarray.meta', 
   read_only = FALSE, quiet = FALSE, ...
 ){
@@ -153,7 +154,6 @@ lazyarray <- function(
     stop('lazyarray path must be a directory path, but a file was found.')
   }
   
-  if(missing(file_names)){ file_names <- NULL }
   if(!dir.exists(path)){
     # not exists, create a new one
     arr <- create_lazyarray(
@@ -314,3 +314,65 @@ lazyarray <- function(
   LazyArray$new(path = path, read_only = read_only, meta_name = meta_name)
   
 }
+
+
+#' Automatically remove array data 
+#' @author Zhengjia Wang
+#' @description Remove the files containing array data once no
+#' 'lazyarray' instance is using the folder. Require
+#' installation of \code{dipsaus} package (at least version 0.0.8).
+#' @param x 'lazyarray' instance
+#' @param onexit passed to \code{\link{reg.finalizer}}
+#' 
+#' @details \code{auto_clear_lazyarray} attempts to remove the entire folder
+#' containing array data. However, if some files are not created by the
+#' array, only partition data and meta file will be removed, all the 
+#' artifacts will remain and warning will be displayed. One exception is
+#' if all files left in the array directory are \code{*.meta} files, 
+#' all these meta files will be removed along with the folder.
+#' 
+#' @examples 
+#' 
+#' path <- tempfile()
+#' arr_dbl <- lazyarray(path, storage_format = 'double',
+#'                      dim = 2:4, meta_name = 'meta-dbl.meta')
+#' arr_dbl[] <- 1:24
+#' auto_clear_lazyarray(arr_dbl)
+#' 
+#' arr_chr <- lazyarray(path, storage_format = 'character',
+#'                      dim = 2:4, meta_name = 'meta-chr.meta',
+#'                      quiet = TRUE)
+#' auto_clear_lazyarray(arr_chr)
+#' 
+#' # remove either one, the directory still exists
+#' rm(arr_dbl); invisible(gc(verbose = FALSE))
+#' 
+#' arr_chr[1,1,1]
+#' 
+#' # Remove the other one, and path will be removed
+#' rm(arr_chr); invisible(gc(verbose = FALSE))
+#' 
+#' dir.exists(path)
+#' arr_check <- lazyarray(path, storage_format = 'character',
+#'                        dim = 2:4, meta_name = 'meta-chr',
+#'                        quiet = TRUE)
+#' 
+#' # data is removed, so there should be no data (NAs)
+#' arr_check[]
+#' 
+#' @export
+auto_clear_lazyarray <- function(x, onexit = FALSE){
+  if(requireNamespace('dipsaus', quietly = TRUE)){
+    path <- dirname(x$storage_path)
+    path <- normalizePath(path)
+    dipsaus::shared_finalizer(x, key = path, function(e){
+      e$remove_data(force = TRUE)
+    }, onexit = onexit)
+    rm(path)
+  }
+  rm(x, onexit)
+  invisible()
+}
+
+
+

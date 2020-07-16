@@ -6,7 +6,6 @@
 \usage{
 lazyarray(
   path,
-  file_names,
   storage_format,
   dim,
   dimnames = NULL,
@@ -14,6 +13,7 @@ lazyarray(
   prefix = "",
   multipart_mode = 1,
   compress_level = 50L,
+  file_names = list("", seq_len(dim[[length(dim)]]))[[multipart + 1]],
   meta_name = "lazyarray.meta",
   read_only = FALSE,
   quiet = FALSE,
@@ -22,8 +22,6 @@ lazyarray(
 }
 \arguments{
 \item{path}{path to a local drive where array data is stored}
-
-\item{file_names}{partition names without prefix nor extension; see details}
 
 \item{storage_format}{data type, choices are \code{"double"}, 
 \code{"integer"}, \code{"character"}, and \code{"complex"}; see details}
@@ -41,6 +39,8 @@ lazyarray(
 \item{compress_level}{0 to 100, level of compression. 0 means
 no compression, 100 means maximum compression. For persistent data,
 it's recommended to set 100. Default is 50.}
+
+\item{file_names}{partition names without prefix nor extension; see details}
 
 \item{meta_name}{header file name, default is \code{"lazyarray.meta"}}
 
