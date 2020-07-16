@@ -4,3 +4,4 @@
 ^docs/
 ^readme\.md$
 ^cran-comments\.md$
+^CRAN-RELEASE$

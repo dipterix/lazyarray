@@ -55,6 +55,7 @@ SEXP cpp_load_lazyarray(StringVector& files, List& partition_locations,
   if( part_dim != partition_locations.size() || part_dim < 2 ){
     stop("Dimension not match for cpp_load_lazyarray");
   }
+  
   IntegerVector first_dim = no_init(part_dim - 1);
   R_xlen_t first_len = 1;
   R_xlen_t max_first_len = 1;
@@ -88,9 +89,9 @@ SEXP cpp_load_lazyarray(StringVector& files, List& partition_locations,
   IntegerVector tmp = seq_len(first_len);
   IntegerVector first_indices = cpp_index_to_index(tmp, first_loc, first_dim);
 
-
   // print(partition_dim);
-  SEXP re = cpp_load_lazyarray_base(files, partition_dim, target_dim, first_indices, last_indices, TYPEOF(value_type));
+  SEXP re = cpp_load_lazyarray_base(files, partition_dim, target_dim, 
+                                    first_indices, last_indices, TYPEOF(value_type));
  
   return re;
 }
@@ -100,6 +101,11 @@ SEXP cpp_load_lazyarray(StringVector& files, List& partition_locations,
 SEXP test_fstcore_write(String filename){
   DataFrame data = DataFrame::create(_["V1"] = 1);
   return fstcore::fststore(filename, data, wrap(100), wrap(true));
+}
+
+// [[Rcpp::export]]
+SEXP cpp_fst_meta_orig(Rcpp::String fileName){
+  return fstcore::fstmetadata(fileName);
 }
 
 

@@ -10,6 +10,12 @@ SEXP cpp_load_lazyarray_base_internal(
     StringVector& files, IntegerVector& first_indices, IntegerVector& second_indices, IntegerVector& target_dim,
     R_xlen_t& n_rows, R_xlen_t& n_cols, R_xlen_t& n_rows_sub, R_xlen_t& n_cols_sub){
   
+  // Rcpp::print(files);
+  // Rcpp::print(first_indices);
+  // Rcpp::print(second_indices);
+  // Rcpp::print(target_dim);
+  // Rcout << n_rows << " " << n_cols << " " << n_rows_sub << " \n";
+  
   R_xlen_t block_size = n_rows_sub * n_cols_sub;
   T re = no_init(block_size * files.size());
   I ptr_first = re.begin();
@@ -41,6 +47,7 @@ SEXP cpp_load_lazyarray_base_internal(
     }
     
     // Rcout << "meta valid" << "\n";
+    // Rcpp::print(meta);
     
     // check if meta matches with given information
     tmp1 = meta["nrOfRows"];
@@ -50,7 +57,6 @@ SEXP cpp_load_lazyarray_base_internal(
       std::string msg = fileName.get_cstring();
       stop("File " + msg + " has inconsistent dimension");
     }
-    
     
     for(IntegerVector::iterator ptr_sec = second_indices.begin(); 
         ptr_sec != second_indices.end(); ptr_sec++ ){
@@ -88,7 +94,6 @@ SEXP cpp_load_lazyarray_base_internal(
       }
     }
   }
-  
   
   
   re.attr("dim") = target_dim;

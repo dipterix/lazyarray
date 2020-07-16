@@ -11,6 +11,7 @@
 #' @param multipart whether to split array into multiple partitions, default is true
 #' @param prefix character prefix of array partition
 #' @param multipart_mode 1, or 2, mode of partition, see details.
+#' @param file_names data file names without prefix/extensions; see details.
 #' @param compress_level 0 to 100, level of compression. 0 means
 #' no compression, 100 means maximum compression. For persistent data,
 #' it's recommended to set 100. Default is 50.
@@ -30,17 +31,28 @@
 #' 
 #' For partitioned data array, there are also two partition modes, 
 #' defined by \code{`multipart_mode`}. For mode 1, each partition 
-#' has the same dimension size as the array, with the last dimension
-#' to be one. For example, a data with dimension \code{c(2,3,5)} 
+#' has the same dimension size as the array. The last dimension is \code{1}.
+#' For example, a data with dimension \code{c(2,3,5)} 
 #' partitioned with mode 1 will have each partition dimension stored
 #' with \code{c(2,3,1)}. For mode 2, the last dimension will be dropped
 #' when storing each partitions.
 #' 
+#' \code{file_names} is used when irregular partition names should be used.
+#' If \code{multipart=FALSE}, the whole array is stored in a single file under
+#' \code{path}. The file name is \code{<prefix><file_name>.fst}. For example,
+#' by default \code{prefix=""}, and \code{file_name=""}, then \code{path/.fst}
+#' stores the array data. If \code{multipart=TRUE}, then \code{file_names}
+#' should be a character vector of length equal to array's last dimension. A
+#' \code{3x4x5} array has 5 partitions, each partition name follows 
+#' \code{<prefix><file_name>.fst} convention, and one can always use
+#' \code{arr$get_partition_fpath()} to find location of partition files.
+#' For examples, see \code{\link{lazyarray}}.
+#' 
 #' @export
-create_lazyarray <- function(path, storage_format, dim, dimnames = NULL, 
-                                 multipart = TRUE, prefix = "",
-                                 multipart_mode = 1, compress_level = 50L,
-                             meta_name = 'lazyarray.meta'){
+create_lazyarray <- function(
+  path, storage_format, dim, dimnames = NULL, compress_level = 50L, prefix = "",
+  multipart = TRUE, multipart_mode = 1, file_names = NULL,
+  meta_name = 'lazyarray.meta'){
   
   if(dir.exists(path)){
     stop("Path already exists.")
@@ -54,6 +66,29 @@ create_lazyarray <- function(path, storage_format, dim, dimnames = NULL,
   
   if(!is.list(dimnames) && !is.null(dimnames)){
     stop("dimnames must be a list or NULL")
+  }
+  
+  if( multipart ){
+    if(length(file_names) == 0){
+      file_names <- seq_len(dim[[length(dim)]])
+    } else if(length(file_names) != dim[[length(dim)]]){
+      stop(sprintf(
+        'file_names must be either NULL or length of %d when multipart=TRUE',
+        dim[[length(dim)]]
+      ))
+    }
+  } else {
+    if(!length(file_names)){
+      file_names <- ''
+    } else {
+      if(length(file_names) > 1 || !isTRUE(is.character(file_names))){
+        stop('file_names must be either NULL or character(1) when multipart=FALSE')
+      }
+    }
+  }
+  
+  if(any(duplicated(file_names))){
+    stop('file_names has duplicated values. Please rename them.')
   }
   
   # check if dim matches with dimnames
@@ -89,7 +124,8 @@ create_lazyarray <- function(path, storage_format, dim, dimnames = NULL,
     prefix = prefix,
     part_dimension = part_dimension,
     postfix = '.fst',
-    compress_level = compress_level
+    compress_level = compress_level,
+    file_names = file_names
   )
   
   dir.create(path, showWarnings = TRUE, recursive = TRUE)

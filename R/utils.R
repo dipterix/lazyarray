@@ -15,3 +15,8 @@ save_yaml <- function(x, path, ...){
 deparse1 <- function(..., collapse = ''){
   paste0(deparse(...), collapse = collapse)
 }
+
+rand_string <- function(length = 10){
+  paste(sample(c(letters, LETTERS, 0:9), length, replace = TRUE), collapse = '')
+}
+

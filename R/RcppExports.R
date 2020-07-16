@@ -13,6 +13,10 @@ test_fstcore_write <- function(filename) {
     .Call(`_lazyarray_test_fstcore_write`, filename)
 }
 
+cpp_fst_meta_orig <- function(fileName) {
+    .Call(`_lazyarray_cpp_fst_meta_orig`, fileName)
+}
+
 cpp_index_to_index <- function(idx, locations, parent_dim) {
     .Call(`_lazyarray_cpp_index_to_index`, idx, locations, parent_dim)
 }

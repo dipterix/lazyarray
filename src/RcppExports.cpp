@@ -46,6 +46,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cpp_fst_meta_orig
+SEXP cpp_fst_meta_orig(Rcpp::String fileName);
+RcppExport SEXP _lazyarray_cpp_fst_meta_orig(SEXP fileNameSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::String >::type fileName(fileNameSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_fst_meta_orig(fileName));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cpp_index_to_index
 IntegerVector cpp_index_to_index(IntegerVector& idx, List& locations, IntegerVector& parent_dim);
 RcppExport SEXP _lazyarray_cpp_index_to_index(SEXP idxSEXP, SEXP locationsSEXP, SEXP parent_dimSEXP) {
@@ -64,6 +75,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lazyarray_cpp_create_lazyarray", (DL_FUNC) &_lazyarray_cpp_create_lazyarray, 5},
     {"_lazyarray_cpp_load_lazyarray", (DL_FUNC) &_lazyarray_cpp_load_lazyarray, 5},
     {"_lazyarray_test_fstcore_write", (DL_FUNC) &_lazyarray_test_fstcore_write, 1},
+    {"_lazyarray_cpp_fst_meta_orig", (DL_FUNC) &_lazyarray_cpp_fst_meta_orig, 1},
     {"_lazyarray_cpp_index_to_index", (DL_FUNC) &_lazyarray_cpp_index_to_index, 3},
     {NULL, NULL, 0}
 };
