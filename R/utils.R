@@ -3,12 +3,12 @@ dir_create <- function(path, showWarnings = FALSE, recursive = TRUE, ...){
 }
 
 load_yaml <- function(path, ...){
-  yaml::read_yaml(path, ...)
+  read_yaml(path, ...)
 }
 
 
 save_yaml <- function(x, path, ...){
-  yaml::write_yaml(x, path, ...)
+  write_yaml(x, path, ...)
 }
 
 

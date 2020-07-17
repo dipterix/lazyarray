@@ -1,4 +1,7 @@
 cloneable
+fstcore
 LazyArray
+LZ
 OpenMP
 readRDS
+ZSTD

@@ -1,7 +1,7 @@
 #' @title Internal Class definition for \code{LazyArray}
 #' @author Zhengjia Wang
 #' @description Internal class definition of lazy array objects
-LazyArray <- R6::R6Class(
+ClassLazyArray <- R6::R6Class(
   classname = "LazyArray",
   portable = TRUE,
   private = list(

@@ -1,11 +1,13 @@
 Package: lazyarray
 Type: Package
 Title: Persistent Large Data Array with Lazy-Loading on Demand
-Version: 1.0.0.1
+Version: 1.1.0
 Language: en-US
 License: AGPL-3
 Encoding: UTF-8
-SystemRequirements: C++11
+SystemRequirements: 
+    C++11
+    little-endian platform
 RoxygenNote: 7.1.1
 URL: https://github.com/dipterix/lazyarray
 BugReports: https://github.com/dipterix/lazyarray/issues
@@ -20,7 +22,9 @@ Description: Multi-threaded serialization of compressed array that
     without occupying too much memories. With data stored on hard drive, 
     a lazy-array data can be loaded, shared across multiple R sessions.
     For arrays with partition mode on, multiple R sessions can write to 
-    a same array simultaneously along the last dimension (partition).
+    a same array simultaneously along the last dimension (partition). 
+    The internal storage format is provided by 'fstcore' package geared by 
+    'LZ4' and 'ZSTD' compressors.
 Imports: 
     Rcpp (>= 1.0.4),
     R6,
@@ -34,5 +38,5 @@ Suggests:
     knitr,
     fst,
     rmarkdown,
-    dipsaus
+    dipsaus (>= 0.0.8)
 VignetteBuilder: knitr

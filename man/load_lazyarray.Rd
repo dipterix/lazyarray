@@ -14,7 +14,7 @@ load_lazyarray(path, read_only = TRUE, meta_name = "lazyarray.meta")
 \item{meta_name}{header file name, default is \code{"lazyarray.meta"}}
 }
 \value{
-A \code{LazyArray} object
+A \code{ClassLazyArray} instance
 }
 \description{
 Load Lazy Array from Given Path

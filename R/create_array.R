@@ -16,7 +16,7 @@
 #' no compression, 100 means maximum compression. For persistent data,
 #' it's recommended to set 100. Default is 50.
 #' @param meta_name header file name, default is \code{"lazyarray.meta"}
-#' @return A \code{LazyArray} object
+#' @return A \code{ClassLazyArray} instance
 #' @details Lazy array stores array into hard drive, and load them on
 #' demand. It differs from other packages such as \code{"bigmemory"}
 #' that the internal reading uses multi-thread, which gains significant 
@@ -134,7 +134,7 @@ create_lazyarray <- function(
   meta_path <- file.path(path, meta_name)
   save_yaml(meta, meta_path)
   
-  LazyArray$new(path = path, read_only = FALSE, meta_name = meta_name)
+  ClassLazyArray$new(path = path, read_only = FALSE, meta_name = meta_name)
   
 }
 
@@ -145,7 +145,7 @@ create_lazyarray <- function(
 #' @param path character, path of the array
 #' @param read_only whether setting data is allowed
 #' @param meta_name header file name, default is \code{"lazyarray.meta"}
-#' @return A \code{LazyArray} object
+#' @return A \code{ClassLazyArray} instance
 #' @examples 
 #' 
 #' path <- tempfile()
@@ -217,5 +217,5 @@ create_lazyarray <- function(
 #' @export
 load_lazyarray <- function(path, read_only = TRUE, meta_name = 'lazyarray.meta'){
   path <- normalizePath(path, mustWork = TRUE)
-  LazyArray$new(path = path, read_only = read_only, meta_name = meta_name)
+  ClassLazyArray$new(path = path, read_only = read_only, meta_name = meta_name)
 }

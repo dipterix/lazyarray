@@ -42,7 +42,7 @@ it's recommended to set 100. Default is 50.}
 \item{meta_name}{header file name, default is \code{"lazyarray.meta"}}
 }
 \value{
-A \code{LazyArray} object
+A \code{ClassLazyArray} instance
 }
 \description{
 Create a directory to store lazy-array. The path must be missing. See \code{\link{load_lazyarray}} for more details

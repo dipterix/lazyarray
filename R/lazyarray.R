@@ -311,7 +311,7 @@ lazyarray <- function(
   meta_path <- file.path(path, meta_name)
   save_yaml(meta, meta_path)
   
-  LazyArray$new(path = path, read_only = read_only, meta_name = meta_name)
+  ClassLazyArray$new(path = path, read_only = read_only, meta_name = meta_name)
   
 }
 
