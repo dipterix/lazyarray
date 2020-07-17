@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">lazyarray</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.1.0</span>
       </span>
     </div>
 
@@ -98,6 +98,9 @@
       <a href="../articles/basic-usage-of-lazyarray.html">A Basic Usage of 'LazyArray'</a>
     </li>
   </ul>
+</li>
+<li>
+  <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
@@ -134,10 +137,11 @@
   <span class='no'>storage_format</span>,
   <span class='no'>dim</span>,
   <span class='kw'>dimnames</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>multipart</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>prefix</span> <span class='kw'>=</span> <span class='st'>""</span>,
-  <span class='kw'>multipart_mode</span> <span class='kw'>=</span> <span class='fl'>1</span>,
   <span class='kw'>compress_level</span> <span class='kw'>=</span> <span class='fl'>50L</span>,
+  <span class='kw'>prefix</span> <span class='kw'>=</span> <span class='st'>""</span>,
+  <span class='kw'>multipart</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>multipart_mode</span> <span class='kw'>=</span> <span class='fl'>1</span>,
+  <span class='kw'>file_names</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>meta_name</span> <span class='kw'>=</span> <span class='st'>"lazyarray.meta"</span>
 )</pre>
 
@@ -162,22 +166,26 @@
       <td><p>list of vectors, names of each dimension, see <code><a href='https://rdrr.io/r/base/dimnames.html'>dimnames</a></code></p></td>
     </tr>
     <tr>
-      <th>multipart</th>
-      <td><p>whether to split array into multiple partitions, default is true</p></td>
+      <th>compress_level</th>
+      <td><p>0 to 100, level of compression. 0 means
+no compression, 100 means maximum compression. For persistent data,
+it's recommended to set 100. Default is 50.</p></td>
     </tr>
     <tr>
       <th>prefix</th>
       <td><p>character prefix of array partition</p></td>
     </tr>
     <tr>
+      <th>multipart</th>
+      <td><p>whether to split array into multiple partitions, default is true</p></td>
+    </tr>
+    <tr>
       <th>multipart_mode</th>
       <td><p>1, or 2, mode of partition, see details.</p></td>
     </tr>
     <tr>
-      <th>compress_level</th>
-      <td><p>0 to 100, level of compression. 0 means
-no compression, 100 means maximum compression. For persistent data,
-it's recommended to set 100. Default is 50.</p></td>
+      <th>file_names</th>
+      <td><p>data file names without prefix/extensions; see details.</p></td>
     </tr>
     <tr>
       <th>meta_name</th>
@@ -187,7 +195,7 @@ it's recommended to set 100. Default is 50.</p></td>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A <code>LazyArray</code> object</p>
+    <p>A <code>ClassLazyArray</code> instance</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
     <p>Lazy array stores array into hard drive, and load them on
@@ -201,11 +209,21 @@ partitioned.</p>
 set at the creation of the array and cannot be mutable once created</p>
 <p>For partitioned data array, there are also two partition modes, 
 defined by <code>`multipart_mode`</code>. For mode 1, each partition 
-has the same dimension size as the array, with the last dimension
-to be one. For example, a data with dimension <code><a href='https://rdrr.io/r/base/c.html'>c(2,3,5)</a></code> 
+has the same dimension size as the array. The last dimension is <code>1</code>.
+For example, a data with dimension <code><a href='https://rdrr.io/r/base/c.html'>c(2,3,5)</a></code> 
 partitioned with mode 1 will have each partition dimension stored
 with <code><a href='https://rdrr.io/r/base/c.html'>c(2,3,1)</a></code>. For mode 2, the last dimension will be dropped
 when storing each partitions.</p>
+<p><code>file_names</code> is used when irregular partition names should be used.
+If <code>multipart=FALSE</code>, the whole array is stored in a single file under
+<code>path</code>. The file name is <code>&lt;prefix&gt;&lt;file_name&gt;.fst</code>. For example,
+by default <code>prefix=""</code>, and <code>file_name=""</code>, then <code>path/.fst</code>
+stores the array data. If <code>multipart=TRUE</code>, then <code>file_names</code>
+should be a character vector of length equal to array's last dimension. A
+<code>3x4x5</code> array has 5 partitions, each partition name follows 
+<code>&lt;prefix&gt;&lt;file_name&gt;.fst</code> convention, and one can always use
+<code>arr$get_partition_fpath()</code> to find location of partition files.
+For examples, see <code><a href='lazyarray.html'>lazyarray</a></code>.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

@@ -71,7 +71,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">lazyarray</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.1.0</span>
       </span>
     </div>
 
@@ -97,6 +97,9 @@
       <a href="articles/basic-usage-of-lazyarray.html">A Basic Usage of 'LazyArray'</a>
     </li>
   </ul>
+</li>
+<li>
+  <a href="news/index.html">Changelog</a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
@@ -219,7 +222,7 @@
 <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">dipsaus</span>)
 
 <span class="co"># key must be the same for the array</span>
-<span class="fu">shared_finalizer</span>(<span class="no">arr</span>, <span class="kw">key</span> <span class="kw">=</span> <span class="no">arr</span>$<span class="no">storage_path</span>, <span class="kw">function</span>(<span class="no">e</span>){
+<span class="fu"><a href="https://rdrr.io/pkg/dipsaus/man/shared_finalizer.html">shared_finalizer</a></span>(<span class="no">arr</span>, <span class="kw">key</span> <span class="kw">=</span> <span class="no">arr</span>$<span class="no">storage_path</span>, <span class="kw">function</span>(<span class="no">e</span>){
   <span class="no">e</span>$<span class="fu">remove_data</span>(<span class="kw">force</span> <span class="kw">=</span> <span class="fl">TRUE</span>)
 })</pre></html></div>
 <p>Here’s a demonstration on how to register multiple arrays</p>
@@ -231,11 +234,11 @@
   <span class="no">e</span>$<span class="fu">remove_data</span>(<span class="kw">force</span> <span class="kw">=</span> <span class="fl">TRUE</span>)
 }
 <span class="no">arr</span> <span class="kw">&lt;-</span> <span class="fu"><a href="reference/load_lazyarray.html">load_lazyarray</a></span>(<span class="no">path</span>)
-<span class="fu">shared_finalizer</span>(<span class="no">arr</span>, <span class="kw">key</span> <span class="kw">=</span> <span class="no">arr</span>$<span class="no">storage_path</span>, <span class="no">fin</span>)
+<span class="fu"><a href="https://rdrr.io/pkg/dipsaus/man/shared_finalizer.html">shared_finalizer</a></span>(<span class="no">arr</span>, <span class="kw">key</span> <span class="kw">=</span> <span class="no">arr</span>$<span class="no">storage_path</span>, <span class="no">fin</span>)
 
 
 <span class="no">arr_another</span> <span class="kw">&lt;-</span> <span class="fu"><a href="reference/load_lazyarray.html">load_lazyarray</a></span>(<span class="no">path</span>)
-<span class="fu">shared_finalizer</span>(<span class="no">arr_another</span>, <span class="kw">key</span> <span class="kw">=</span> <span class="no">arr</span>$<span class="no">storage_path</span>, <span class="no">fin</span>)
+<span class="fu"><a href="https://rdrr.io/pkg/dipsaus/man/shared_finalizer.html">shared_finalizer</a></span>(<span class="no">arr_another</span>, <span class="kw">key</span> <span class="kw">=</span> <span class="no">arr</span>$<span class="no">storage_path</span>, <span class="no">fin</span>)
 
 <span class="co"># now removing arr_another still keeps data</span>
 <span class="fu"><a href="https://rdrr.io/r/base/rm.html">rm</a></span>(<span class="no">arr_another</span>); <span class="fu"><a href="https://rdrr.io/r/base/gc.html">gc</a></span>()

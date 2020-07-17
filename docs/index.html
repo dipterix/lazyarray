@@ -18,7 +18,9 @@
     without occupying too much memories. With data stored on hard drive, 
     a lazy-array data can be loaded, shared across multiple R sessions.
     For arrays with partition mode on, multiple R sessions can write to 
-    a same array simultaneously along the last dimension (partition).">
+    a same array simultaneously along the last dimension (partition). 
+    The internal storage format is provided by fstcore package geared by 
+    LZ4 and ZSTD compressors.">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
@@ -37,7 +39,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">lazyarray</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.1.0</span>
       </span>
     </div>
 
@@ -63,6 +65,9 @@
       <a href="articles/basic-usage-of-lazyarray.html">A Basic Usage of 'LazyArray'</a>
     </li>
   </ul>
+</li>
+<li>
+  <a href="news/index.html">Changelog</a>
 </li>
       </ul>
 <ul class="nav navbar-nav navbar-right">
@@ -182,7 +187,7 @@
 <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">dipsaus</span>)
 
 <span class="co"># key must be the same for the array</span>
-<span class="fu">shared_finalizer</span>(<span class="no">arr</span>, <span class="kw">key</span> <span class="kw">=</span> <span class="no">arr</span>$<span class="no">storage_path</span>, <span class="kw">function</span>(<span class="no">e</span>){
+<span class="fu"><a href="https://rdrr.io/pkg/dipsaus/man/shared_finalizer.html">shared_finalizer</a></span>(<span class="no">arr</span>, <span class="kw">key</span> <span class="kw">=</span> <span class="no">arr</span>$<span class="no">storage_path</span>, <span class="kw">function</span>(<span class="no">e</span>){
   <span class="no">e</span>$<span class="fu">remove_data</span>(<span class="kw">force</span> <span class="kw">=</span> <span class="fl">TRUE</span>)
 })</pre></div>
 <p>Here’s a demonstration on how to register multiple arrays</p>
@@ -194,11 +199,11 @@
   <span class="no">e</span>$<span class="fu">remove_data</span>(<span class="kw">force</span> <span class="kw">=</span> <span class="fl">TRUE</span>)
 }
 <span class="no">arr</span> <span class="kw">&lt;-</span> <span class="fu"><a href="reference/load_lazyarray.html">load_lazyarray</a></span>(<span class="no">path</span>)
-<span class="fu">shared_finalizer</span>(<span class="no">arr</span>, <span class="kw">key</span> <span class="kw">=</span> <span class="no">arr</span>$<span class="no">storage_path</span>, <span class="no">fin</span>)
+<span class="fu"><a href="https://rdrr.io/pkg/dipsaus/man/shared_finalizer.html">shared_finalizer</a></span>(<span class="no">arr</span>, <span class="kw">key</span> <span class="kw">=</span> <span class="no">arr</span>$<span class="no">storage_path</span>, <span class="no">fin</span>)
 
 
 <span class="no">arr_another</span> <span class="kw">&lt;-</span> <span class="fu"><a href="reference/load_lazyarray.html">load_lazyarray</a></span>(<span class="no">path</span>)
-<span class="fu">shared_finalizer</span>(<span class="no">arr_another</span>, <span class="kw">key</span> <span class="kw">=</span> <span class="no">arr</span>$<span class="no">storage_path</span>, <span class="no">fin</span>)
+<span class="fu"><a href="https://rdrr.io/pkg/dipsaus/man/shared_finalizer.html">shared_finalizer</a></span>(<span class="no">arr_another</span>, <span class="kw">key</span> <span class="kw">=</span> <span class="no">arr</span>$<span class="no">storage_path</span>, <span class="no">fin</span>)
 
 <span class="co"># now removing arr_another still keeps data</span>
 <span class="fu"><a href="https://rdrr.io/r/base/rm.html">rm</a></span>(<span class="no">arr_another</span>); <span class="fu"><a href="https://rdrr.io/r/base/gc.html">gc</a></span>()
@@ -219,6 +224,8 @@
     <div class="links">
 <h2>Links</h2>
 <ul class="list-unstyled">
+<li>Download from CRAN at <br><a href="https://cloud.r-project.org/package=lazyarray">https://​cloud.r-project.org/​package=lazyarray</a>
+</li>
 <li>Browse source code at <br><a href="https://github.com/dipterix/lazyarray/">https://​github.com/​dipterix/​lazyarray/​</a>
 </li>
 <li>Report a bug at <br><a href="https://github.com/dipterix/lazyarray/issues">https://​github.com/​dipterix/​lazyarray/​issues</a>

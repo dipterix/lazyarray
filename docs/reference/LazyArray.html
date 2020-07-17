@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Internal Class definition for <code>LazyArray</code> — LazyArray • lazyarray</title>
+<title>Create or load 'lazyarray' instance — lazyarray • lazyarray</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,10 @@
 
 
 
-<meta property="og:title" content="Internal Class definition for <code>LazyArray</code> — LazyArray" />
-<meta property="og:description" content="Internal class definition of lazy array objects" />
+<meta property="og:title" content="Create or load 'lazyarray' instance — lazyarray" />
+<meta property="og:description" content="If path is missing, create a new array. If path exists and 
+meta file is complete, load existing file, otherwise create new meta file
+and import from existing data." />
 
 
 
@@ -72,7 +74,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">lazyarray</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.1.0</span>
       </span>
     </div>
 
@@ -99,6 +101,9 @@
     </li>
   </ul>
 </li>
+<li>
+  <a href="../news/index.html">Changelog</a>
+</li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
@@ -120,230 +125,265 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Internal Class definition for <code>LazyArray</code></h1>
-    <small class="dont-index">Source: <a href='https://github.com/dipterix/lazyarray/blob/master/R/class-lazyarray.R'><code>R/class-lazyarray.R</code></a></small>
-    <div class="hidden name"><code>LazyArray.Rd</code></div>
+    <h1>Create or load 'lazyarray' instance</h1>
+    <small class="dont-index">Source: <a href='https://github.com/dipterix/lazyarray/blob/master/R/lazyarray.R'><code>R/lazyarray.R</code></a></small>
+    <div class="hidden name"><code>lazyarray.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Internal class definition of lazy array objects</p>
+    <p>If path is missing, create a new array. If path exists and 
+meta file is complete, load existing file, otherwise create new meta file
+and import from existing data.</p>
     </div>
 
+    <pre class="usage"><span class='fu'>lazyarray</span>(
+  <span class='no'>path</span>,
+  <span class='no'>storage_format</span>,
+  <span class='no'>dim</span>,
+  <span class='kw'>dimnames</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>multipart</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>prefix</span> <span class='kw'>=</span> <span class='st'>""</span>,
+  <span class='kw'>multipart_mode</span> <span class='kw'>=</span> <span class='fl'>1</span>,
+  <span class='kw'>compress_level</span> <span class='kw'>=</span> <span class='fl'>50L</span>,
+  <span class='kw'>file_names</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='st'>""</span>, <span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq_len</a></span>(<span class='no'>dim</span><span class='kw'>[[</span><span class='fu'><a href='https://rdrr.io/r/base/length.html'>length</a></span>(<span class='no'>dim</span>)]]))<span class='kw'>[[</span><span class='no'>multipart</span> + <span class='fl'>1</span>]],
+  <span class='kw'>meta_name</span> <span class='kw'>=</span> <span class='st'>"lazyarray.meta"</span>,
+  <span class='kw'>read_only</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='no'>...</span>
+)</pre>
 
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
+    <table class="ref-arguments">
+    <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>path</th>
+      <td><p>path to a local drive where array data is stored</p></td>
+    </tr>
+    <tr>
+      <th>storage_format</th>
+      <td><p>data type, choices are <code>"double"</code>, 
+<code>"integer"</code>, <code>"character"</code>, and <code>"complex"</code>; see details</p></td>
+    </tr>
+    <tr>
+      <th>dim</th>
+      <td><p>integer vector, dimension of array, see <code><a href='https://rdrr.io/r/base/dim.html'>dim</a></code></p></td>
+    </tr>
+    <tr>
+      <th>dimnames</th>
+      <td><p>list of vectors, names of each dimension, see <code><a href='https://rdrr.io/r/base/dimnames.html'>dimnames</a></code></p></td>
+    </tr>
+    <tr>
+      <th>multipart</th>
+      <td><p>whether to split array into multiple partitions, default is true</p></td>
+    </tr>
+    <tr>
+      <th>prefix</th>
+      <td><p>character prefix of array partition</p></td>
+    </tr>
+    <tr>
+      <th>multipart_mode</th>
+      <td><p>1, or 2, mode of partition, see <code><a href='create_lazyarray.html'>create_lazyarray</a></code></p></td>
+    </tr>
+    <tr>
+      <th>compress_level</th>
+      <td><p>0 to 100, level of compression. 0 means
+no compression, 100 means maximum compression. For persistent data,
+it's recommended to set 100. Default is 50.</p></td>
+    </tr>
+    <tr>
+      <th>file_names</th>
+      <td><p>partition names without prefix nor extension; see details</p></td>
+    </tr>
+    <tr>
+      <th>meta_name</th>
+      <td><p>header file name, default is <code>"lazyarray.meta"</code></p></td>
+    </tr>
+    <tr>
+      <th>read_only</th>
+      <td><p>whether created array is read-only</p></td>
+    </tr>
+    <tr>
+      <th>quiet</th>
+      <td><p>whether to suppress messages, default is false</p></td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td><p>ignored</p></td>
+    </tr>
+    </table>
 
-    <h2 class="hasAnchor" id="active-bindings"><a class="anchor" href="#active-bindings"></a>Active bindings</h2>
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p><div class="r6-active-bindings"></p><dl'>
-<dt><code>meta_name</code></dt><dd><p>file name to store meta information</p></dd>
+    <p>There are three cases and <code>lazyarray</code> behaves differently 
+under each cases. Case 1: if <code>path</code> is missing, then the function calls 
+<code><a href='create_lazyarray.html'>create_lazyarray</a></code> to create a blank array instance. Case 2: 
+if <code>path</code> exists and it contains <code>meta_name</code>, then load existing
+instance with given read/write access. In this case, parameters other than
+<code>read_only</code>, <code>path</code>, <code>meta_name</code> will be ignored. Case 3: if 
+<code>meta_name</code> is missing and <code>path</code> is missing, then <code>lazyarray</code>
+will try to create arrays from existing data files.</p>
+<p>If <code>lazyarray</code> enters case 3, then <code>file_names</code> will be used to 
+locate partition files. Under multi-part mode (<code>multipart=TRUE</code>), 
+<code>file_names</code> is default to 1, 2, ..., <code>dim[length(dim)]</code>. These
+correspond to <code>'1.fst'</code>, <code>'2.fst'</code>, etc. under <code>path</code> folder.
+You may specify your own <code>file_names</code> if irregular names are used. 
+and file format for each partition will be <code>&lt;prefix&gt;&lt;file_name&gt;.fst</code>.
+For example, a file name <code>file_names=c('A', 'B')</code> and 
+<code>prefix="file-"</code> means the first partition will be stored as 
+<code>"file-A.fst"</code>, and <code>"file-B.fst"</code>. It's fine if some files are
+missing, the corresponding partition will be filled with <code>NA</code> when
+trying to obtain values from those partition. However, length of 
+<code>file_names</code> must equals to the last dimension when 
+<code>multipart=TRUE</code>. If <code>multipart=FALSE</code>, <code>file_names</code> should 
+have length 1 and the corresponding file is the data file.</p>
+<p>It's worth note to import from existing partition files generated by 
+other packages such as <code>'fst'</code>, the partition files must be homogeneous,
+meaning the stored data length, dimension, and storage type must be the same.
+Because <code>'fstcore'</code> package stores data in data frame internally, 
+the column name must be 'V1', 'V2', etc. for non-complex elements or 
+'V1R', 'V1I', ... for complex numbers (real and imaginary data are stored
+in different columns).</p>
+    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-<dt><code>min_version</code></dt><dd><p>minimal version supported, for backward compatibility concerns</p></dd>
+    <div class='dont-index'><p><code><a href='create_lazyarray.html'>create_lazyarray</a></code>, <code><a href='load_lazyarray.html'>load_lazyarray</a></code></p></div>
 
-<dt><code>version</code></dt><dd><p>current version of lazy data instance</p></dd>
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'>
+<span class='no'>path</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempfile</a></span>()
 
-<dt><code>dim</code></dt><dd><p>dimension of the data</p></dd>
+<span class='co'># ---------------- case 1: Create new array ------------------</span>
+<span class='no'>arr</span> <span class='kw'>&lt;-</span> <span class='fu'>lazyarray</span>(<span class='no'>path</span>, <span class='kw'>storage_format</span> <span class='kw'>=</span> <span class='st'>'double'</span>, <span class='kw'>dim</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>2</span>,<span class='fl'>3</span>,<span class='fl'>4</span>),
+                 <span class='kw'>meta_name</span> <span class='kw'>=</span> <span class='st'>'lazyarray.meta'</span>)
+<span class='no'>arr</span>[] <span class='kw'>&lt;-</span> <span class='fl'>1</span>:<span class='fl'>24</span>
 
-<dt><code>dimnames</code></dt><dd><p>dimension names of the data</p></dd>
+<span class='co'># Subset and get the first partition</span>
+<span class='no'>arr</span>[,,<span class='fl'>1</span>]</div><div class='output co'>#&gt;      [,1] [,2] [,3]
+#&gt; [1,]    1    3    5
+#&gt; [2,]    2    4    6</div><div class='input'>
+<span class='co'># Partition file path (total 4 partitions)</span>
+<span class='no'>arr</span>$<span class='fu'>get_partition_fpath</span>()</div><div class='output co'>#&gt; [1] "/private/var/folders/qk/ffmy94156yldmkdnv266wjg40000gn/T/RtmpeIZM91/file86416535cecf/1.fst"
+#&gt; [2] "/private/var/folders/qk/ffmy94156yldmkdnv266wjg40000gn/T/RtmpeIZM91/file86416535cecf/2.fst"
+#&gt; [3] "/private/var/folders/qk/ffmy94156yldmkdnv266wjg40000gn/T/RtmpeIZM91/file86416535cecf/3.fst"
+#&gt; [4] "/private/var/folders/qk/ffmy94156yldmkdnv266wjg40000gn/T/RtmpeIZM91/file86416535cecf/4.fst"</div><div class='input'>
+<span class='co'># Removing array doesn't clear the data</span>
+<span class='fu'><a href='https://rdrr.io/r/base/rm.html'>rm</a></span>(<span class='no'>arr</span>); <span class='fu'><a href='https://rdrr.io/r/base/gc.html'>gc</a></span>()</div><div class='output co'>#&gt;           used (Mb) gc trigger (Mb) limit (Mb) max used (Mb)
+#&gt; Ncells  813681 43.5    1321030 70.6         NA  1321030 70.6
+#&gt; Vcells 1525958 11.7    8388608 64.0      65536  2668573 20.4</div><div class='input'>
+<span class='co'># ---------------- Case 2: Load from existing directory ----------------</span>
+<span class='co'>## Important!!! Run case 1 first</span>
+<span class='co'># Load from existing path, no need to specify other params</span>
+<span class='no'>arr</span> <span class='kw'>&lt;-</span> <span class='fu'>lazyarray</span>(<span class='no'>path</span>, <span class='kw'>meta_name</span> <span class='kw'>=</span> <span class='st'>'lazyarray.meta'</span>, <span class='kw'>read_only</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
 
-<dt><code>ndim</code></dt><dd><p>length of dimensions</p></dd>
+<span class='no'>arr</span>[,,<span class='fl'>1</span>]</div><div class='output co'>#&gt;      [,1] [,2] [,3]
+#&gt; [1,]    1    3    5
+#&gt; [2,]    2    4    6</div><div class='input'>
+<span class='co'># ---------------- Case 3: Import from existing data ----------------</span>
+<span class='co'>## Important!!! Run case 1 first</span>
 
-<dt><code>can_write</code></dt><dd><p>is array read-only or writable</p></dd>
+<span class='co'># path exists, but meta is missing, all other params are required</span>
+<span class='co'># Notice the partition count increased from 4 to 5, and storage type converts</span>
+<span class='co'># from double to character</span>
+<span class='no'>arr</span> <span class='kw'>&lt;-</span> <span class='fu'>lazyarray</span>(<span class='kw'>path</span> <span class='kw'>=</span> <span class='no'>path</span>, <span class='kw'>meta_name</span> <span class='kw'>=</span> <span class='st'>'lazyarray-character.meta'</span>,
+                 <span class='kw'>file_names</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>1</span>,<span class='fl'>2</span>,<span class='fl'>3</span>,<span class='fl'>4</span>,<span class='st'>'additional'</span>),
+                 <span class='kw'>storage_format</span> <span class='kw'>=</span> <span class='st'>'character'</span>, <span class='kw'>dim</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>2</span>,<span class='fl'>3</span>,<span class='fl'>5</span>),
+                 <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>read_only</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
 
-<dt><code>storage_path</code></dt><dd><p>directory where the data is stored at</p></dd>
+<span class='co'># partition names</span>
+<span class='no'>arr</span>$<span class='fu'>get_partition_fpath</span>(<span class='fl'>1</span>:<span class='fl'>4</span>, <span class='kw'>full_path</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</div><div class='output co'>#&gt; [1] "1.fst" "2.fst" "3.fst" "4.fst"</div><div class='input'><span class='no'>arr</span>$<span class='fu'>get_partition_fpath</span>(<span class='fl'>5</span>, <span class='kw'>full_path</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</div><div class='output co'>#&gt; [1] "additional.fst"</div><div class='input'>
+<span class='co'># The first dimension still exist and valid</span>
+<span class='no'>arr</span>[,,<span class='fl'>1</span>]</div><div class='output co'>#&gt;      [,1] [,2] [,3]
+#&gt; [1,] "1"  "3"  "5" 
+#&gt; [2,] "2"  "4"  "6" </div><div class='input'>
+<span class='co'># The additional partition is all NA</span>
+<span class='no'>arr</span>[,,<span class='fl'>5</span>]</div><div class='output co'>#&gt;      [,1] [,2] [,3]
+#&gt; [1,] NA   NA   NA  
+#&gt; [2,] NA   NA   NA  </div><div class='input'>
+<span class='co'># Set data to 5th partition</span>
+<span class='no'>arr</span>[,,<span class='fl'>5</span>] <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/rep.html'>rep</a></span>(<span class='fl'>0</span>, <span class='fl'>6</span>)
 
-</dl><p></div></p>
-    <h2 class="hasAnchor" id="methods"><a class="anchor" href="#methods"></a>Methods</h2>
+<span class='co'># -------- Advanced usage: create fst data and import manually --------</span>
 
-    
-<h3>Public methods</h3>
+<span class='co'># Clear existing files</span>
+<span class='no'>path</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempfile</a></span>()
+<span class='fu'><a href='https://rdrr.io/r/base/unlink.html'>unlink</a></span>(<span class='no'>path</span>, <span class='kw'>recursive</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
+<span class='fu'><a href='https://rdrr.io/r/base/files2.html'>dir.create</a></span>(<span class='no'>path</span>, <span class='kw'>recursive</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
 
-<ul>
-<li><p><a href='#method-print'><code>LazyArray$print()</code></a></p></li>
-<li><p><a href='#method-new'><code>LazyArray$new()</code></a></p></li>
-<li><p><a href='#method-flag_auto_clean'><code>LazyArray$flag_auto_clean()</code></a></p></li>
-<li><p><a href='#method-finalize'><code>LazyArray$finalize()</code></a></p></li>
-<li><p><a href='#method-remove_data'><code>LazyArray$remove_data()</code></a></p></li>
-<li><p><a href='#method-make_writable'><code>LazyArray$make_writable()</code></a></p></li>
-<li><p><a href='#method-make_readonly'><code>LazyArray$make_readonly()</code></a></p></li>
-<li><p><a href='#method-set_dim'><code>LazyArray$set_dim()</code></a></p></li>
-<li><p><a href='#method-get_file_format'><code>LazyArray$get_file_format()</code></a></p></li>
-<li><p><a href='#method-get_storage_format'><code>LazyArray$get_storage_format()</code></a></p></li>
-<li><p><a href='#method-is_multi_part'><code>LazyArray$is_multi_part()</code></a></p></li>
-<li><p><a href='#method-partition_dim'><code>LazyArray$partition_dim()</code></a></p></li>
-<li><p><a href='#method-get_partition_fpath'><code>LazyArray$get_partition_fpath()</code></a></p></li>
-<li><p><a href='#method-@set_data'><code>LazyArray$@set_data()</code></a></p></li>
-<li><p><a href='#method-set_compress_level'><code>LazyArray$set_compress_level()</code></a></p></li>
-<li><p><a href='#method-get_compress_level'><code>LazyArray$get_compress_level()</code></a></p></li>
-<li><p><a href='#method-@get_data'><code>LazyArray$@get_data()</code></a></p></li>
-<li><p><a href='#method-@sample_data'><code>LazyArray$@sample_data()</code></a></p></li>
-<li><p><a href='#method-clone'><code>LazyArray$clone()</code></a></p></li>
-</ul>
-<p><hr>
-<a id="method-print"></a></p><h3>Method <code><a href='https://rdrr.io/r/base/print.html'>print()</a></code></h3>
-<p>Override print method</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>LazyArray</span>$<span class='fu'><a href='https://rdrr.io/r/base/print.html'>print</a></span>(<span class='no'>...</span>)</pre><p></div></p>
+<span class='co'># Create array of dimension 2x3x4, but 3rd partition is missing</span>
+<span class='co'># without using lazyarray package </span>
 
-<h3>Arguments</h3>
-<p><div class="arguments"></p><dl'>
-<dt><code>...</code></dt><dd><p>ignored</p></dd>
+<span class='co'># Column names must be V1 or V1R, V1I (complex)</span>
+<span class='kw pkg'>fst</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.fstpackage.org/reference/write_fst.html'>write_fst</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/data.frame.html'>data.frame</a></span>(<span class='kw'>V1</span> <span class='kw'>=</span> <span class='fl'>1</span>:<span class='fl'>6</span>), <span class='kw'>path</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='no'>path</span>, <span class='st'>'part-1.fst'</span>))
+<span class='kw pkg'>fst</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.fstpackage.org/reference/write_fst.html'>write_fst</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/data.frame.html'>data.frame</a></span>(<span class='kw'>V1</span> <span class='kw'>=</span> <span class='fl'>7</span>:<span class='fl'>12</span>), <span class='kw'>path</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='no'>path</span>, <span class='st'>'part-B.fst'</span>))
+<span class='kw pkg'>fst</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.fstpackage.org/reference/write_fst.html'>write_fst</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/data.frame.html'>data.frame</a></span>(<span class='kw'>V1</span> <span class='kw'>=</span> <span class='fl'>19</span>:<span class='fl'>24</span>), <span class='kw'>path</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='no'>path</span>, <span class='st'>'part-d.fst'</span>))
 
-</dl><p></div></p>
-<h3>Returns</h3>
-<p>self instance</p>
-<p><hr>
-<a id="method-new"></a></p><h3>Method <code>new()</code></h3>
-<p>Constructor</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>LazyArray</span>$<span class='fu'>new</span>(<span class='no'>path</span>, <span class='kw'>read_only</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>meta_name</span> <span class='kw'>=</span> <span class='st'>"lazyarray.meta"</span>)</pre><p></div></p>
+<span class='co'># Import via lazyarray</span>
+<span class='no'>arr</span> <span class='kw'>&lt;-</span> <span class='fu'>lazyarray</span>(<span class='no'>path</span>, <span class='kw'>meta_name</span> <span class='kw'>=</span> <span class='st'>'test-int.meta'</span>,
+                 <span class='kw'>storage_format</span> <span class='kw'>=</span> <span class='st'>'integer'</span>,
+                 <span class='kw'>dim</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>2</span>,<span class='fl'>3</span>,<span class='fl'>4</span>), <span class='kw'>prefix</span> <span class='kw'>=</span> <span class='st'>'part-'</span>,
+                 <span class='kw'>file_names</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>'1'</span>, <span class='st'>'B'</span>, <span class='st'>'C'</span>, <span class='st'>'d'</span>),
+                 <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
 
-<h3>Arguments</h3>
-<p><div class="arguments"></p><dl'>
-<dt><code>path</code></dt><dd><p>directory to store data into</p></dd>
+<span class='no'>arr</span>[]</div><div class='output co'>#&gt; , , 1
+#&gt; 
+#&gt;      [,1] [,2] [,3]
+#&gt; [1,]    1    3    5
+#&gt; [2,]    2    4    6
+#&gt; 
+#&gt; , , 2
+#&gt; 
+#&gt;      [,1] [,2] [,3]
+#&gt; [1,]    7    9   11
+#&gt; [2,]    8   10   12
+#&gt; 
+#&gt; , , 3
+#&gt; 
+#&gt;      [,1] [,2] [,3]
+#&gt; [1,]   NA   NA   NA
+#&gt; [2,]   NA   NA   NA
+#&gt; 
+#&gt; , , 4
+#&gt; 
+#&gt;      [,1] [,2] [,3]
+#&gt; [1,]   19   21   23
+#&gt; [2,]   20   22   24
+#&gt; </div><div class='input'>
+<span class='co'># Complex case</span>
+<span class='kw pkg'>fst</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.fstpackage.org/reference/write_fst.html'>write_fst</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/data.frame.html'>data.frame</a></span>(<span class='kw'>V1R</span> <span class='kw'>=</span> <span class='fl'>1</span>:<span class='fl'>6</span>, <span class='kw'>V1I</span> <span class='kw'>=</span> <span class='fl'>1</span>:<span class='fl'>6</span>),
+               <span class='kw'>path</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='no'>path</span>, <span class='st'>'cplx-1.fst'</span>))
+<span class='kw pkg'>fst</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.fstpackage.org/reference/write_fst.html'>write_fst</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/data.frame.html'>data.frame</a></span>(<span class='kw'>V1R</span> <span class='kw'>=</span> <span class='fl'>7</span>:<span class='fl'>12</span>, <span class='kw'>V1I</span> <span class='kw'>=</span> <span class='fl'>100</span>:<span class='fl'>105</span>),
+               <span class='kw'>path</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='no'>path</span>, <span class='st'>'cplx-2.fst'</span>))
+<span class='kw pkg'>fst</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.fstpackage.org/reference/write_fst.html'>write_fst</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/data.frame.html'>data.frame</a></span>(<span class='kw'>V1R</span> <span class='kw'>=</span> <span class='fl'>19</span>:<span class='fl'>24</span>, <span class='kw'>V1I</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/rep.html'>rep</a></span>(<span class='fl'>0</span>,<span class='fl'>6</span>)),
+               <span class='kw'>path</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='no'>path</span>, <span class='st'>'cplx-4.fst'</span>))
+<span class='no'>arr</span> <span class='kw'>&lt;-</span> <span class='fu'>lazyarray</span>(<span class='no'>path</span>, <span class='kw'>meta_name</span> <span class='kw'>=</span> <span class='st'>'test-cplx.meta'</span>,
+                 <span class='kw'>storage_format</span> <span class='kw'>=</span> <span class='st'>'complex'</span>,
+                 <span class='kw'>dim</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>2</span>,<span class='fl'>3</span>,<span class='fl'>4</span>), <span class='kw'>prefix</span> <span class='kw'>=</span> <span class='st'>'cplx-'</span>,
+                 <span class='kw'>file_names</span> <span class='kw'>=</span> <span class='fl'>1</span>:<span class='fl'>4</span>, <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
 
-<dt><code>read_only</code></dt><dd><p>whether modification is allowed</p></dd>
-
-<dt><code>meta_name</code></dt><dd><p>meta file to store the data into</p></dd>
-
-</dl><p></div></p>
-<p><hr>
-<a id="method-flag_auto_clean"></a></p><h3>Method <code>flag_auto_clean()</code></h3>
-<p>Set auto clean flag</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>LazyArray</span>$<span class='fu'>flag_auto_clean</span>(<span class='no'>auto</span>)</pre><p></div></p>
-
-<h3>Arguments</h3>
-<p><div class="arguments"></p><dl'>
-<dt><code>auto</code></dt><dd><p>logical whether the data on hard disk will be automatically cleaned</p></dd>
-
-</dl><p></div></p>
-<p><hr>
-<a id="method-finalize"></a></p><h3>Method <code>finalize()</code></h3>
-<p>Override finalize method</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>LazyArray</span>$<span class='fu'>finalize</span>()</pre><p></div></p>
-
-<p><hr>
-<a id="method-remove_data"></a></p><h3>Method <code>remove_data()</code></h3>
-<p>Remove data on hard disk</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>LazyArray</span>$<span class='fu'>remove_data</span>(<span class='kw'>force</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>warn</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</pre><p></div></p>
-
-<h3>Arguments</h3>
-<p><div class="arguments"></p><dl'>
-<dt><code>force</code></dt><dd><p>whether to force remove the data</p></dd>
-
-<dt><code>warn</code></dt><dd><p>whether to show warning if not fully cleaned</p></dd>
-
-</dl><p></div></p>
-<p><hr>
-<a id="method-make_writable"></a></p><h3>Method <code>make_writable()</code></h3>
-<p>Make instance writable</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>LazyArray</span>$<span class='fu'>make_writable</span>()</pre><p></div></p>
-
-<p><hr>
-<a id="method-make_readonly"></a></p><h3>Method <code>make_readonly()</code></h3>
-<p>Make instance read-only</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>LazyArray</span>$<span class='fu'>make_readonly</span>()</pre><p></div></p>
-
-<p><hr>
-<a id="method-set_dim"></a></p><h3>Method <code>set_dim()</code></h3>
-<p>Set <code><a href='https://rdrr.io/r/base/dim.html'>dim</a></code> and <code><a href='https://rdrr.io/r/base/dimnames.html'>dimnames</a></code> of the array</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>LazyArray</span>$<span class='fu'>set_dim</span>(<span class='no'>dim</span>, <span class='no'>dimnames</span>)</pre><p></div></p>
-
-<h3>Arguments</h3>
-<p><div class="arguments"></p><dl'>
-<dt><code>dim</code></dt><dd><p>integer vector of the array dimension; see <code><a href='https://rdrr.io/r/base/dim.html'>dim</a></code></p></dd>
-
-<dt><code>dimnames</code></dt><dd><p>named list of dimension names; see <code><a href='https://rdrr.io/r/base/dimnames.html'>dimnames</a></code></p></dd>
-
-</dl><p></div></p>
-<p><hr>
-<a id="method-get_file_format"></a></p><h3>Method <code>get_file_format()</code></h3>
-<p>Partition format, currently only <code>'fst'</code> is supported</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>LazyArray</span>$<span class='fu'>get_file_format</span>()</pre><p></div></p>
-
-<p><hr>
-<a id="method-get_storage_format"></a></p><h3>Method <code>get_storage_format()</code></h3>
-<p>Data storage format, expected to be one of the 
-followings: 'double', 'integer', 'character', or 'complex'</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>LazyArray</span>$<span class='fu'>get_storage_format</span>()</pre><p></div></p>
-
-<p><hr>
-<a id="method-is_multi_part"></a></p><h3>Method <code>is_multi_part()</code></h3>
-<p>Whether partitioned based on the last dimension</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>LazyArray</span>$<span class='fu'>is_multi_part</span>()</pre><p></div></p>
-
-<p><hr>
-<a id="method-partition_dim"></a></p><h3>Method <code>partition_dim()</code></h3>
-<p>Returns dimension of each partition</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>LazyArray</span>$<span class='fu'>partition_dim</span>()</pre><p></div></p>
-
-<p><hr>
-<a id="method-get_partition_fpath"></a></p><h3>Method <code>get_partition_fpath()</code></h3>
-<p>Get partition path</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>LazyArray</span>$<span class='fu'>get_partition_fpath</span>(<span class='no'>part</span>, <span class='kw'>full_path</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</pre><p></div></p>
-
-<h3>Arguments</h3>
-<p><div class="arguments"></p><dl'>
-<dt><code>part</code></dt><dd><p>integer representing the partition</p></dd>
-
-<dt><code>full_path</code></dt><dd><p>whether return the full system path</p></dd>
-
-</dl><p></div></p>
-<h3>Returns</h3>
-<p>Character file name or full path</p>
-<p><hr>
-<a id="method-@set_data"></a></p><h3>Method <code>@set_data()</code></h3>
-<p>Internal method to set data</p><h3>Usage</h3>
-<p><div class="r"></p><pre>LazyArray$@set_data(value, ...)</pre><p></div></p>
-
-<h3>Arguments</h3>
-<p><div class="arguments"></p><dl'>
-<dt><code>value</code></dt><dd><p>vector of data to be set</p></dd>
-
-<dt><code>...</code></dt><dd><p>index set</p></dd>
-
-</dl><p></div></p>
-<p><hr>
-<a id="method-set_compress_level"></a></p><h3>Method <code>set_compress_level()</code></h3>
-<p>Set compression level</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>LazyArray</span>$<span class='fu'>set_compress_level</span>(<span class='no'>level</span>)</pre><p></div></p>
-
-<h3>Arguments</h3>
-<p><div class="arguments"></p><dl'>
-<dt><code>level</code></dt><dd><p>from 0 to 100. 0 means no compression, 100 means max compression</p></dd>
-
-</dl><p></div></p>
-<p><hr>
-<a id="method-get_compress_level"></a></p><h3>Method <code>get_compress_level()</code></h3>
-<p>Get compression level</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>LazyArray</span>$<span class='fu'>get_compress_level</span>()</pre><p></div></p>
-
-<p><hr>
-<a id="method-@get_data"></a></p><h3>Method <code>@get_data()</code></h3>
-<p>Internal method to read data</p><h3>Usage</h3>
-<p><div class="r"></p><pre>LazyArray$@get_data(..., drop = TRUE)</pre><p></div></p>
-
-<h3>Arguments</h3>
-<p><div class="arguments"></p><dl'>
-<dt><code>...</code></dt><dd><p>index set</p></dd>
-
-<dt><code>drop</code></dt><dd><p>whether to drop dimension after subset, default is true</p></dd>
-
-</dl><p></div></p>
-<p><hr>
-<a id="method-@sample_data"></a></p><h3>Method <code>@sample_data()</code></h3>
-<p>Internal method to obtain a sample data to be used to determine storage mode</p><h3>Usage</h3>
-<p><div class="r"></p><pre>LazyArray$@sample_data()</pre><p></div></p>
-
-<p><hr>
-<a id="method-clone"></a></p><h3>Method <code>clone()</code></h3>
-<p>The objects of this class are cloneable with this method.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>LazyArray</span>$<span class='fu'>clone</span>(<span class='kw'>deep</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre><p></div></p>
-
-<h3>Arguments</h3>
-<p><div class="arguments"></p><dl'>
-<dt><code>deep</code></dt><dd><p>Whether to make a deep clone.</p></dd>
-
-</dl><p></div></p>
-
-
-
+<span class='no'>arr</span>[]</div><div class='output co'>#&gt; , , 1
+#&gt; 
+#&gt;      [,1] [,2] [,3]
+#&gt; [1,] 1+1i 3+3i 5+5i
+#&gt; [2,] 2+2i 4+4i 6+6i
+#&gt; 
+#&gt; , , 2
+#&gt; 
+#&gt;        [,1]    [,2]    [,3]
+#&gt; [1,] 7+100i  9+102i 11+104i
+#&gt; [2,] 8+101i 10+103i 12+105i
+#&gt; 
+#&gt; , , 3
+#&gt; 
+#&gt;      [,1] [,2] [,3]
+#&gt; [1,]   NA   NA   NA
+#&gt; [2,]   NA   NA   NA
+#&gt; 
+#&gt; , , 4
+#&gt; 
+#&gt;       [,1]  [,2]  [,3]
+#&gt; [1,] 19+0i 21+0i 23+0i
+#&gt; [2,] 20+0i 22+0i 24+0i
+#&gt; </div><div class='input'>
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

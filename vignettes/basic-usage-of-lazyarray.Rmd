@@ -3,7 +3,7 @@ title: "A Basic Usage of 'LazyArray'"
 output: rmarkdown::html_vignette
 author: Zhengjia Wang
 vignette: >
-  %\VignetteIndexEntry{Basic Usage of LazyArray}
+  %\VignetteIndexEntry{A Basic Usage of 'LazyArray'}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
