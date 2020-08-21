@@ -6,3 +6,6 @@
 #' @useDynLib lazyarray, .registration = TRUE
 NULL
 
+has_dipsaus <- function(){
+  system.file('', package = 'dipsaus') != ''
+}
