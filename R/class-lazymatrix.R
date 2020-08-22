@@ -163,9 +163,9 @@ ClassLazyMatrix <- R6::R6Class(
       if(nloops * chunk_size < nrows){
         nloops <- nloops + 1
       }
-      if(nloops > 1000){
-        # force nloops to be 1000
-        nloops <- 1000
+      if(nloops > 200){
+        # force nloops to be 200
+        nloops <- 200
         chunk_size <- floor(nrows / nloops)
         if(nloops * chunk_size < nrows){
           chunk_size <- chunk_size + 1

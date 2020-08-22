@@ -6,6 +6,7 @@ library(bigmemory)
 library(biganalytics)
 library(dipsaus)
 library(lazyarray)
+library(future)
 
 path <- tempfile()
 f <- 'bigmemory.testfile'
@@ -35,21 +36,26 @@ for(ii in 1:5){
 }
 
 {
+  fstcore::threads_fstlib(1L)  # change this to > 1 to enable OpenMP
+  future::plan('multisession')  # change this to multisession or multicore to enable future parallels
   a = Sys.time()
   amat <- as.lazymatrix(arr)
   amatt <- amat$transpose()
-  re <- amatt$multiply_mat(amat, plan = TRUE)
+  re <- amatt$multiply_mat(amat, plan = FALSE)
   coef <- solve(re[c(1,2,4,5),c(1,2,4,5)]) %*% re[c(1,2,4,5), 3]
   b <- Sys.time(); b - a
 }
 
-# sequential 
-# Time difference of 21.62714 secs
+# sequential, openmp thread = 1
+# Time difference of 16.67987 secs
+
+# sequential, openmp thread = 4
+# Time difference of 16.65988 secs
 
 # multisession
-# Time difference of 12.19716 secs
+# Time difference of 8.292826 secs
 
-# multicore (plan = TRUE)
+# multicore
 # Time difference of 7.512503 secs
 
 
