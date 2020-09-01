@@ -9,8 +9,10 @@ ClassLazyMatrix <- R6::R6Class(
     
   ),
   public = list(
+    #' @field @transposed whether the matrix is transposed
     `@transposed` = FALSE,
     
+    #' @description Transpose matrix
     transpose = function(){
       new <- self$clone(deep = FALSE)
       new$`@transposed` = !new$`@transposed`
@@ -136,7 +138,11 @@ ClassLazyMatrix <- R6::R6Class(
     },
     
     
-    multiply_mat = function(x, chunk_size = 'auto', plan = FALSE, ...){
+    #' @description Matrix multiplication
+    #' @param x another \code{LazyMatrix} or normal matrix
+    #' @param chunk_size chunk size to use
+    #' @param ... ignored
+    multiply_mat = function(x, chunk_size = 'auto', ...){
       d1 <- self$dim
       d2 <- dim(x)
       stopifnot(d1[[2]] == d2[[1]] && length(d2) == 2)
@@ -180,42 +186,29 @@ ClassLazyMatrix <- R6::R6Class(
         path, storage_format = 'double', dim = c(d3, nloops)
       )
       
+      lapply2(seq_len(nloops), function(ii){
+        re$make_writable()
+        idx1 <- (ii-1) * chunk_size + 1
+        idx2 <- min((ii) * chunk_size, nrows)
+        if(idx1 > idx2){
+          re[,,ii] <- 0
+        }
+        idx <- seq.int(idx1, idx2)
+        re[,,ii] <- self[, idx, drop = FALSE] %*% x[idx, , drop = FALSE]
+        NULL
+      })
+      
       if(has_dipsaus()){
-        
-        dipsaus::lapply_async2(seq_len(nloops), function(ii){
-          arrtmp <- lazyarray(path, storage_format = 'double', dim = c(d3, nloops))
-          arrtmp$make_writable()
-          idx1 <- (ii-1) * chunk_size + 1
-          idx2 <- min((ii) * chunk_size, nrows)
-          if(idx1 > idx2){
-            arrtmp[,,ii] <- 0
-          }
-          idx <- seq.int(idx1, idx2)
-          arrtmp[,,ii] <- self[, idx, drop = FALSE] %*% x[idx, , drop = FALSE]
-          NULL
-        }, plan = plan, ...)
-        
         re <- dipsaus::collapse(re[], keep = c(1,2))
-        
       } else {
-        lapply(seq_len(nloops), function(ii){
-          idx1 <- (ii-1) * chunk_size + 1
-          idx2 <- min((ii) * chunk_size, nrows)
-          if(idx1 > idx2){
-            re[,,ii] <- 0
-          }
-          idx <- seq.int(idx1, idx2)
-          re[,,ii] <- self[, idx, drop = FALSE] %*% x[idx, , drop = FALSE]
-          NULL
-        })
         re <- apply(re[], 2, rowSums)
       }
       re
-      
     }
     
   ),
   active = list(
+    #' @field dim dimension of the matrix
     dim = function(){
       v <- super$dim
       if(self$`@transposed`){
@@ -223,12 +216,32 @@ ClassLazyMatrix <- R6::R6Class(
       }
       v
     },
+    
+    #' @field dimnames dimension names of the matrix
     dimnames = function(){
       v <- super$dimnames
       if(self$`@transposed`){
         v <- rev(v)
       }
       v
+    },
+    
+    #' @field rownames row names of the matrix
+    rownames = function(){
+      d <- self$dimnames
+      if(!is.null(d)){
+        d <- d[[1]]
+      }
+      d
+    },
+    
+    #' @field colnames column names of the matrix
+    colnames = function(){
+      d <- self$dimnames
+      if(!is.null(d)){
+        d <- d[[2]]
+      }
+      d
     }
   )
 )

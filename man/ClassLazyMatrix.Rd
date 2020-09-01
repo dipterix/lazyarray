@@ -12,6 +12,26 @@ Zhengjia Wang
 \section{Super class}{
 \code{\link[lazyarray:LazyArray]{lazyarray::LazyArray}} -> \code{LazyMatrix}
 }
+\section{Public fields}{
+\if{html}{\out{<div class="r6-fields">}}
+\describe{
+\item{\code{@transposed}}{whether the matrix is transposed}
+}
+\if{html}{\out{</div>}}
+}
+\section{Active bindings}{
+\if{html}{\out{<div class="r6-active-bindings">}}
+\describe{
+\item{\code{dim}}{dimension of the matrix}
+
+\item{\code{dimnames}}{dimension names of the matrix}
+
+\item{\code{rownames}}{row names of the matrix}
+
+\item{\code{colnames}}{column names of the matrix}
+}
+\if{html}{\out{</div>}}
+}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
@@ -28,6 +48,8 @@ Zhengjia Wang
 \if{html}{
 \out{<details ><summary>Inherited methods</summary>}
 \itemize{
+\item \out{<span class="pkg-link" data-pkg="lazyarray" data-topic="LazyArray" data-id="@generate_parition_summary">}\href{../../lazyarray/html/LazyArray.html#method-@generate_parition_summary}{\code{lazyarray::LazyArray$@generate_parition_summary()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="lazyarray" data-topic="LazyArray" data-id="@partition_map">}\href{../../lazyarray/html/LazyArray.html#method-@partition_map}{\code{lazyarray::LazyArray$@partition_map()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="lazyarray" data-topic="LazyArray" data-id="@sample_data">}\href{../../lazyarray/html/LazyArray.html#method-@sample_data}{\code{lazyarray::LazyArray$@sample_data()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="lazyarray" data-topic="LazyArray" data-id="finalize">}\href{../../lazyarray/html/LazyArray.html#method-finalize}{\code{lazyarray::LazyArray$finalize()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="lazyarray" data-topic="LazyArray" data-id="flag_auto_clean">}\href{../../lazyarray/html/LazyArray.html#method-flag_auto_clean}{\code{lazyarray::LazyArray$flag_auto_clean()}}\out{</span>}
@@ -39,6 +61,7 @@ Zhengjia Wang
 \item \out{<span class="pkg-link" data-pkg="lazyarray" data-topic="LazyArray" data-id="make_readonly">}\href{../../lazyarray/html/LazyArray.html#method-make_readonly}{\code{lazyarray::LazyArray$make_readonly()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="lazyarray" data-topic="LazyArray" data-id="make_writable">}\href{../../lazyarray/html/LazyArray.html#method-make_writable}{\code{lazyarray::LazyArray$make_writable()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="lazyarray" data-topic="LazyArray" data-id="partition_dim">}\href{../../lazyarray/html/LazyArray.html#method-partition_dim}{\code{lazyarray::LazyArray$partition_dim()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="lazyarray" data-topic="LazyArray" data-id="partition_summary">}\href{../../lazyarray/html/LazyArray.html#method-partition_summary}{\code{lazyarray::LazyArray$partition_summary()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="lazyarray" data-topic="LazyArray" data-id="remove_data">}\href{../../lazyarray/html/LazyArray.html#method-remove_data}{\code{lazyarray::LazyArray$remove_data()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="lazyarray" data-topic="LazyArray" data-id="set_compress_level">}\href{../../lazyarray/html/LazyArray.html#method-set_compress_level}{\code{lazyarray::LazyArray$set_compress_level()}}\out{</span>}
 }
@@ -48,6 +71,7 @@ Zhengjia Wang
 \if{html}{\out{<a id="method-transpose"></a>}}
 \if{latex}{\out{\hypertarget{method-transpose}{}}}
 \subsection{Method \code{transpose()}}{
+Transpose matrix
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ClassLazyMatrix$transpose()}\if{html}{\out{</div>}}
 }
@@ -155,10 +179,22 @@ Internal method to read data
 \if{html}{\out{<a id="method-multiply_mat"></a>}}
 \if{latex}{\out{\hypertarget{method-multiply_mat}{}}}
 \subsection{Method \code{multiply_mat()}}{
+Matrix multiplication
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ClassLazyMatrix$multiply_mat(x, chunk_size = "auto", plan = FALSE, ...)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ClassLazyMatrix$multiply_mat(x, chunk_size = "auto", ...)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{x}}{another \code{LazyMatrix} or normal matrix}
+
+\item{\code{chunk_size}}{chunk size to use}
+
+\item{\code{...}}{ignored}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-clone"></a>}}

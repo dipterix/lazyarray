@@ -191,7 +191,10 @@ ClassLazyArray <- R6::R6Class(
         if(force || file.exists(private$.path)){
           
           # list all files within .dir
-          fs <- c(self$get_partition_fpath(full_path = FALSE), private$.meta_name)
+          fs <-
+            c(private$.meta_name,
+              self$get_partition_fpath(full_path = FALSE),
+              self$get_partition_fpath(full_path = FALSE, summary_file = TRUE))
           all_fs <- list.files(private$.dir, all.files = TRUE, 
                                recursive = FALSE, full.names = FALSE, 
                                include.dirs = TRUE)
@@ -296,17 +299,100 @@ ClassLazyArray <- R6::R6Class(
     #' @description Returns dimension of each partition
     partition_dim = function(){
       if(private$partitioned){
-        private$part_dimension
+        as.integer(private$part_dimension)
       }else{
-        private$.dim
+        as.integer(private$.dim)
       }
+    },
+    
+    #' @description Internally used to calculate min, max, range, and sum 
+    #' squares, can only be used when array is numeric
+    #' @param partitions integer, partition numbers
+    #' then \code{map_function} must be specified
+    #' @param map_function mapping function, receive numeric vectors and returns
+    #' a numeric vector
+    #' @param split whether to further partition the data
+    #' @param ... passed as internal options
+    `@partition_map` = function(
+      partitions, map_function = NULL, split = TRUE, ...
+    ){
+      if(!self$is_multi_part()){
+        stop("Cannot call @partition_reduce if array is not multi-part")
+      }
+      
+      sformat <- self$get_storage_format()
+      
+      if(sformat %in% c('complex', 'character')){
+        stop("Cannot @partition_reduce on complex/character data")
+      }
+      
+      stopifnot(is.function(map_function))
+      
+      more_args <- list(...)
+      pd <- self$partition_dim()
+      
+      # self = arr; p = 1
+      paths <- self$get_partition_fpath(partitions)
+      
+      res <- lapply2(seq_along(partitions), function(ii){
+        part <- partitions[[ii]]
+        
+        path <- paths[[ii]]
+        
+        map_f2 <- function(x){
+          map_function(x, part)
+        }
+        
+        if(!file.exists(path)){
+          re <- map_f2(array(NA, dim = pd))
+          if(!is.null(re)){
+            attr(re, 'chunk_length') <- prod(pd)
+          }
+          
+          return(list(re))
+        }
+        
+        meta <- cpp_fst_meta(path)
+        
+        if(inherits(meta, 'fst_error')){
+          stop(meta)
+        }
+          
+        if( split ){
+          more_args[['dim']] <- c(meta$nrOfRows, meta$nrOfCols)
+          more_args[['recursive']] <- !isFALSE(more_args[['recursive']])
+          chunks <- do.call(make_chunks, more_args)
+          
+          res <- lapply(seq_len(chunks$nchunks), function(i){
+            idx <- chunks$get_indices(i, as_numeric = TRUE)
+            idx[[1]] <- as.integer(idx[[1]])
+            lapply(seq.int(idx[[2]][[1]], idx[[2]][[2]]), function(col){
+              cpp_fst_range(path, meta$colNames[[col]], idx[[1]][[1]], idx[[1]][[2]], 
+                            5L, FALSE, map_f2)
+            })
+          })
+          res <- unlist(res, recursive = FALSE)
+        } else {
+          res <- lapply(seq_len(meta$nrOfCols), function(col){
+            cpp_fst_range(path, meta$colNames[[col]], 1L, NULL, 5L, FALSE, map_f2, reshape = pd)
+          })
+        }
+        
+        res
+      })
+      
+      res <- unlist(res, recursive = FALSE)
+      
+      res
+      
     },
     
     #' @description Get partition path
     #' @param part integer representing the partition
     #' @param full_path whether return the full system path
+    #' @param summary_file whether to return summary file
     #' @return Character file name or full path
-    get_partition_fpath = function(part, full_path = TRUE){
+    get_partition_fpath = function(part, full_path = TRUE, summary_file = FALSE){
       if(private$partitioned){
         nm <- private$.file_names[part]
         res <- sprintf('%s%s%s', private$prefix, nm, private$postfix)
@@ -317,6 +403,9 @@ ClassLazyArray <- R6::R6Class(
       }
       if(full_path){
         res <- file.path(private$.dir, res)
+      }
+      if(summary_file){
+        res <- sprintf('%s.summary', res)
       }
       res
     },
@@ -384,6 +473,9 @@ ClassLazyArray <- R6::R6Class(
           x <- eval(call)
           
           cpp_create_lazyarray(x, part_dimension, fname, compression = private$compress_level, uniformEncoding = TRUE)
+          
+          self$`@generate_parition_summary`(part, x = x)
+          
           ii <<- ii+1
           return(TRUE)
         })
@@ -397,6 +489,121 @@ ClassLazyArray <- R6::R6Class(
         cpp_create_lazyarray(x, self$dim, fname, compression = private$compress_level, uniformEncoding = TRUE)
       }
       invisible(self)
+    },
+    
+    #' @description Internal method to generate partition summary statistics
+    #' @param part integer, partition number
+    #' @param x partition data
+    `@generate_parition_summary` = function(part, x){
+      
+      if(!self$is_multi_part()){ return() }
+      if(length(private$.file_names) < part){
+        stop("Wrong partition number: ", part)
+      }
+      
+      storage_format <- private$storage_format
+      
+      # update summary statistics
+      summary_file <- self$get_partition_fpath(part, summary_file = TRUE)
+      
+      smry <- list()
+      suppressWarnings({
+        smry$nas <- sum(is.na(x))
+        smry$length <- length(x)
+        if( storage_format %in% c('double', 'integer') ){
+          smry$max <- max(x, na.rm = TRUE)
+          smry$min <- min(x, na.rm = TRUE)
+          smry$mean <- mean(x, na.rm = TRUE)
+          smry$sd <- sd(x, na.rm = TRUE)
+          smry$range <- c(smry$min, smry$max)
+          smry$var <- smry$sd^2
+          valid_length <- smry$length - smry$nas
+          smry$meansq <- smry$var * (1 - 1 / valid_length) + smry$mean^2
+        } else if( storage_format == 'complex' ){
+          smry$mean <- mean(x, na.rm = TRUE)
+        }
+      })
+      
+      smry$storage_format <- storage_format
+      
+      saveRDS(smry, summary_file, ascii = TRUE)
+      
+
+    },
+    
+    #' @description Get partition summaryr statistics
+    #' @param part integer, partition number
+    #' @param types type of statistics to get, options are \code{'min'}, 
+    #' \code{'max'}, \code{'range'}, \code{'mean'}, \code{'sd'}, \code{'var'}, 
+    #' \code{'nas'}, \code{'length'}; can be more than one options
+    #' @param show_warn whether to show warnings if array type is inconsistent
+    #' with types of statistics
+    partition_summary = function(
+      part, 
+      types = c('min', 'max', 'range', 'mean', 'sd', 'var', 'nas', 'length'),
+      show_warn = TRUE
+    ){
+      if(!self$is_multi_part()){
+        stop("Cannot call partition_summary if array is not multi-part")
+      }
+      
+      if(part > self$npart){
+        stop("partition overflow")
+      }
+      
+      storage_format <- self$get_storage_format()
+      if(!storage_format %in% c('double', 'integer') &&
+         types %in% c('min', 'max', 'range', 'sd', 'var')){
+        if( show_warn ){
+          warning('Summary [min,max, range, sd, var] cannot be obtained from storage_format: ', storage_format)
+        }
+        types <- types[!types %in% c('min', 'max', 'range', 'sd', 'var')]
+      }
+      
+      if(!length(types)){
+        return(NULL)
+      }
+      fname <- self$get_partition_fpath(part, summary_file = TRUE)
+      fst_name <- self$get_partition_fpath(part, summary_file = FALSE)
+      
+      if(file.exists(fname)){
+        tryCatch({
+          readRDS(fname)
+        }, error = function(e){
+          unlink(fname)
+        })
+      }
+      
+      if(!file.exists(fname) && file.exists(fst_name)){
+        # generate summary file
+        self$`@partition_map`(
+          partitions = part, split = FALSE, 
+          map_function = function(x, part){
+            self$`@generate_parition_summary`(part, x)
+        })
+      }
+      
+      if(file.exists(fname)){
+        smry <- readRDS(fname)
+      } else {
+        # Not exist! partition data is missing
+        plen <- prod(self$partition_dim())
+        smry <- list(
+          nas = plen,
+          length = plen,
+          max = -Inf,
+          min = Inf,
+          mean = NA_real_,
+          sd = NA_real_,
+          range = c(-Inf, Inf),
+          var = NA_real_,
+          meansq = NA_real_,
+          storage_format = storage_format
+        )
+      }
+      
+      smry[types]
+      
     },
     
     #' @description Set compression level
@@ -496,6 +703,28 @@ ClassLazyArray <- R6::R6Class(
     #' @field storage_path directory where the data is stored at
     storage_path = function(){
       private$.path
+    },
+    
+    #' @field npart number of partitions
+    npart = function(){
+      length(private$.file_names)
+    },
+    
+    #' @field filesize total disk space used in gigatypes
+    filesize = function(){
+      files <-
+        self$get_partition_fpath(
+          part = seq_len(self$npart),
+          full_path = TRUE,
+          summary_file = FALSE
+        )
+      files <- files[file.exists(files)]
+      if(length(files)){
+        sum(file.info(files, extra_cols = FALSE)$size) / 1024^3
+      } else {
+        0
+      }
+      
     }
   )
 )

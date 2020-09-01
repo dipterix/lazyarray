@@ -27,6 +27,10 @@ Zhengjia Wang
 \item{\code{can_write}}{is array read-only or writable}
 
 \item{\code{storage_path}}{directory where the data is stored at}
+
+\item{\code{npart}}{number of partitions}
+
+\item{\code{filesize}}{total disk space used in gigatypes}
 }
 \if{html}{\out{</div>}}
 }
@@ -45,8 +49,11 @@ Zhengjia Wang
 \item \href{#method-get_storage_format}{\code{ClassLazyArray$get_storage_format()}}
 \item \href{#method-is_multi_part}{\code{ClassLazyArray$is_multi_part()}}
 \item \href{#method-partition_dim}{\code{ClassLazyArray$partition_dim()}}
+\item \href{#method-@partition_map}{\code{ClassLazyArray$@partition_map()}}
 \item \href{#method-get_partition_fpath}{\code{ClassLazyArray$get_partition_fpath()}}
 \item \href{#method-@set_data}{\code{ClassLazyArray$@set_data()}}
+\item \href{#method-@generate_parition_summary}{\code{ClassLazyArray$@generate_parition_summary()}}
+\item \href{#method-partition_summary}{\code{ClassLazyArray$partition_summary()}}
 \item \href{#method-set_compress_level}{\code{ClassLazyArray$set_compress_level()}}
 \item \href{#method-get_compress_level}{\code{ClassLazyArray$get_compress_level()}}
 \item \href{#method-@get_data}{\code{ClassLazyArray$@get_data()}}
@@ -222,12 +229,47 @@ Returns dimension of each partition
 
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-@partition_map"></a>}}
+\if{latex}{\out{\hypertarget{method-@partition_map}{}}}
+\subsection{Method \code{@partition_map()}}{
+Internally used to calculate min, max, range, and sum 
+squares, can only be used when array is numeric
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ClassLazyArray$@partition_map(
+  partitions,
+  map_function = NULL,
+  split = TRUE,
+  ...
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{partitions}}{integer, partition numbers
+then \code{map_function} must be specified}
+
+\item{\code{map_function}}{mapping function, receive numeric vectors and returns
+a numeric vector}
+
+\item{\code{split}}{whether to further partition the data}
+
+\item{\code{...}}{passed as internal options}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-get_partition_fpath"></a>}}
 \if{latex}{\out{\hypertarget{method-get_partition_fpath}{}}}
 \subsection{Method \code{get_partition_fpath()}}{
 Get partition path
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ClassLazyArray$get_partition_fpath(part, full_path = TRUE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ClassLazyArray$get_partition_fpath(
+  part,
+  full_path = TRUE,
+  summary_file = FALSE
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -236,6 +278,8 @@ Get partition path
 \item{\code{part}}{integer representing the partition}
 
 \item{\code{full_path}}{whether return the full system path}
+
+\item{\code{summary_file}}{whether to return summary file}
 }
 \if{html}{\out{</div>}}
 }
@@ -258,6 +302,53 @@ Internal method to set data
 \item{\code{value}}{vector of data to be set}
 
 \item{\code{...}}{index set}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-@generate_parition_summary"></a>}}
+\if{latex}{\out{\hypertarget{method-@generate_parition_summary}{}}}
+\subsection{Method \code{@generate_parition_summary()}}{
+Internal method to generate partition summary statistics
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ClassLazyArray$@generate_parition_summary(part, x)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{part}}{integer, partition number}
+
+\item{\code{x}}{partition data}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-partition_summary"></a>}}
+\if{latex}{\out{\hypertarget{method-partition_summary}{}}}
+\subsection{Method \code{partition_summary()}}{
+Get partition summaryr statistics
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ClassLazyArray$partition_summary(
+  part,
+  types = c("min", "max", "range", "mean", "sd", "var", "nas", "length"),
+  show_warn = TRUE
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{part}}{integer, partition number}
+
+\item{\code{types}}{type of statistics to get, options are \code{'min'}, 
+\code{'max'}, \code{'range'}, \code{'mean'}, \code{'sd'}, \code{'var'}, 
+\code{'nas'}, \code{'length'}; can be more than one options}
+
+\item{\code{show_warn}}{whether to show warnings if array type is inconsistent
+with types of statistics}
 }
 \if{html}{\out{</div>}}
 }

@@ -3,7 +3,9 @@ context("Getter/Setter mode = 2")
 
 test_that("Getter/Setter mode = 2", {
   path <- tempfile()
-  self <- create_lazyarray(path, 'double', c(1,3,4), multipart = TRUE, multipart_mode = 2)
+  suppressWarnings({
+    self <- create_lazyarray(path, 'double', c(1,3,4), multipart = TRUE, multipart_mode = 2)
+  })
   private <- self$.__enclos_env__$private
   value <- array(1:4, c(1,2,2))
   
@@ -85,8 +87,9 @@ test_that("Getter/Setter mode = 1", {
 context("Getter/Setter no partition")
 
 test_that("Getter/Setter no partition", {
-  
-  self <- create_lazyarray(tempfile(), 'double', c(1,3,4), multipart = FALSE)
+  suppressWarnings({
+    self <- create_lazyarray(tempfile(), 'double', c(1,3,4), multipart = FALSE)
+  })
   private <- self$.__enclos_env__$private
   value <- array(1:4, c(1,2,2))
   

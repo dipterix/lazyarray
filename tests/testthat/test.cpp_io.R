@@ -209,7 +209,7 @@ test_that("IO - Wrong Column Names", {
   x[sample(10000, 2000)] <- NA
   unlink(f)
   x <- as.data.frame(x)
-  names(x) <- sprintf('Col')
+  names(x) <- sprintf('Col%d', 1:50)
   fst::write_fst(x, f)
   
   
@@ -218,7 +218,9 @@ test_that("IO - Wrong Column Names", {
     as.integer(sample(22)-1),
     as.integer(sample(52)-1)
   )
-  expect_error(lazyarray:::cpp_load_lazyarray(f, idx_loc, dim, length(dim), 0.0))
+  
+  nas = lazyarray:::cpp_load_lazyarray(f, idx_loc, dim, length(dim), 0.0)
+  expect_equal(sum(!is.na(nas)), 0)
   
 })
 

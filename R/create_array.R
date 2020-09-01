@@ -58,6 +58,13 @@ create_lazyarray <- function(
     stop("Path already exists.")
   }
   
+  if(!multipart){
+    warning("multipart=FALSE is deprecated. It will magically disappear in the next version.")
+  }
+  if(multipart_mode != 1){
+    warning("multipart_mode != 1 is deprecated. It will magically disappear in the next version.")
+  }
+  
   stopifnot(compress_level <= 100 & compress_level >= 0)
   
   if(length(dim) < 1){

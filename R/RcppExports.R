@@ -9,15 +9,23 @@ cpp_load_lazyarray <- function(files, partition_locations, partition_dim, ndim, 
     .Call(`_lazyarray_cpp_load_lazyarray`, files, partition_locations, partition_dim, ndim, value_type)
 }
 
+cpp_fst_retrieve <- function(fileName, colSel, start, end) {
+    .Call(`_lazyarray_cpp_fst_retrieve`, fileName, colSel, start, end)
+}
+
+cpp_fst_meta <- function(fileName) {
+    .Call(`_lazyarray_cpp_fst_meta`, fileName)
+}
+
 test_fstcore_write <- function(filename) {
     .Call(`_lazyarray_test_fstcore_write`, filename)
 }
 
-cpp_fst_meta_orig <- function(fileName) {
-    .Call(`_lazyarray_cpp_fst_meta_orig`, fileName)
+cpp_fst_range <- function(fileName, colSel, start, end, method, allow_na, custom_func = NULL, reshape = NULL) {
+    .Call(`_lazyarray_cpp_fst_range`, fileName, colSel, start, end, method, allow_na, custom_func, reshape)
 }
 
-cpp_index_to_index <- function(idx, locations, parent_dim) {
-    .Call(`_lazyarray_cpp_index_to_index`, idx, locations, parent_dim)
+loc2idx <- function(locations, parent_dim) {
+    .Call(`_lazyarray_loc2idx`, locations, parent_dim)
 }
 

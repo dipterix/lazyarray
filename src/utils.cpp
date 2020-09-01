@@ -13,89 +13,61 @@ bool contains(T vec, SEXP el){
 }
 
 template <class T, typename I>
-Rcpp::List cpp_array_to_list_template(T x, Rcpp::IntegerVector cutoff){
+List cpp_array_to_list_template(T x, int64_t nrows, int64_t ncols){
+  // length of x has been checked so assume length(x) = nrows * ncols
+  List re = List::create();
+  String colname;
+  I ptr1_x = x.begin();
+  I ptr2_x = x.begin();
   
-  // Rcpp::Timer _rcpp_timer;
-  // _rcpp_timer.step("enter cpp_array_to_list_integer");
   
-  if(Rcpp::max(cutoff) > x.size()){
-    Rcpp::stop("Index set exceed max length of input.");
-  } else if (Rcpp::min(cutoff) < 0){
-    Rcpp::stop("Index set less than 1 is dis-allowed.");
-  }
-  
-  Rcpp::List re = Rcpp::List::create();
-  I ptr = x.begin() + cutoff[0];
-  I ptr2 = ptr;
-  Rcpp::String colname;
-  for( R_xlen_t ii = 0; ii < cutoff.size() - 1; ii++ ){
-    ptr2 += cutoff[ii + 1] - cutoff[ii];
+  for(int64_t ii = 0; ii < ncols; ii++ ){
+    ptr2_x += nrows;
     colname = "V" + std::to_string(ii + 1);
-    
-    const I p1 = ptr;
-    const I p2 = ptr2;
-    
-    re.push_back(Armor<T>(T(p1, p2)), colname);
-    ptr = ptr2;
-    // _rcpp_timer.step("split-" + std::to_string(ii));
+    T slice = T(ptr1_x, ptr2_x);
+    re.push_back(slice, colname);
+    ptr1_x = ptr2_x;
   }
   
-  // _rcpp_timer.step("split-finished");
-  
-  // if( LAZYARRAY_DEBUG ){
-  //   
-  //   NumericVector _res(_rcpp_timer);
-  //   _res = _res / 1000000.0;
-  //   Rcpp::print(_res);
-  // }
   
   return re;
 }
 
 
-Rcpp::List cpp_array_to_list_complex(ComplexVector x, Rcpp::IntegerVector cutoff){
+List cpp_array_to_list_complex(ComplexVector x, int64_t nrows, int64_t ncols){
   
-  // Rcpp::Timer _rcpp_timer;
-  // _rcpp_timer.step("enter cpp_array_to_list_integer");
   
-  if(Rcpp::max(cutoff) > x.size()){
-    Rcpp::stop("Index set exceed max length of input.");
-  } else if (Rcpp::min(cutoff) < 0){
-    Rcpp::stop("Index set less than 1 is dis-allowed.");
-  }
+  List re = List::create();
+  String colname;
+  ComplexVector::iterator ptr1_x = x.begin();
+  ComplexVector::iterator ptr2_x = x.begin();
   
-  Rcpp::List re = Rcpp::List::create();
-  ComplexVector::iterator ptr = x.begin() + cutoff[0];
-  ComplexVector::iterator ptr2 = ptr;
-  Rcpp::String colname;
-  for( R_xlen_t ii = 0; ii < cutoff.size() - 1; ii++ ){
-    ptr2 += cutoff[ii + 1] - cutoff[ii];
-    const ComplexVector tmp(ptr, ptr2);
+  for(int64_t ii = 0; ii < ncols; ii++ ){
+    ptr2_x += nrows;
+    const ComplexVector slice = ComplexVector(ptr1_x, ptr2_x);
     
     colname = "V" + std::to_string(ii + 1) + "R";
-    re.push_back(Armor<NumericVector>(Rcpp::Re(tmp)), colname);
+    re.push_back(Armor<NumericVector>(Rcpp::Re(slice)), colname);
     
     colname = "V" + std::to_string(ii + 1) + "I";
-    re.push_back(Armor<NumericVector>(Rcpp::Im(tmp)), colname);
+    re.push_back(Armor<NumericVector>(Rcpp::Im(slice)), colname);
     
-    ptr = ptr2;
-    // _rcpp_timer.step("split-" + std::to_string(ii));
+    ptr1_x = ptr2_x;
   }
-  
-  // _rcpp_timer.step("split-finished");
-  
-  // if( LAZYARRAY_DEBUG ){
-  //   
-  //   NumericVector _res(_rcpp_timer);
-  //   _res = _res / 1000000.0;
-  //   Rcpp::print(_res);
-  // }
   
   return re;
 }
 
 
-Rcpp::List cpp_array_to_list(SEXP &x, IntegerVector &cutoff){
+/**
+ * Conver vector x to data.frame with dimension c(first_dim, last_dim)
+ * 
+ * 2020-09-02: 
+ * 1. renamed from cpp_array_to_list to arr2df
+ * 2. changed argument, explicitly add nrows and ncols to be memory efficient
+ * 3. Added length check
+ */
+Rcpp::List arr2df(SEXP &x, int64_t nrows, int64_t ncols){
   // User explicitly tells which storage type of x should be
   // 9	CHARSXP	internal character strings
   // 10	LGLSXP	logical vectors
@@ -105,172 +77,125 @@ Rcpp::List cpp_array_to_list(SEXP &x, IntegerVector &cutoff){
   // 16	STRSXP	character vectors
   // 24	RAWSXP	raw vector
   // 
+  
+  
+  // check length of x
+  if( nrows * ncols - Rf_length(x) != 0 ){
+    stop("Cannot reshape array to data.frame, dimension not match");
+  }
+  
   Rcpp::List re; 
   switch (TYPEOF(x)) {
   case STRSXP:
   case CHARSXP:
-    re = cpp_array_to_list_template<CharacterVector, CharacterVector::iterator>(x, cutoff);
+    re = cpp_array_to_list_template<CharacterVector, CharacterVector::iterator>(x, nrows, ncols);
     break;
   case LGLSXP:
-    re = cpp_array_to_list_template<LogicalVector, LogicalVector::iterator>(x, cutoff);
+    re = cpp_array_to_list_template<LogicalVector, LogicalVector::iterator>(x, nrows, ncols);
     break;
   case INTSXP:
-    re = cpp_array_to_list_template<IntegerVector, IntegerVector::iterator>(x, cutoff);
+    re = cpp_array_to_list_template<IntegerVector, IntegerVector::iterator>(x, nrows, ncols);
     break;
   case REALSXP:
-    re = cpp_array_to_list_template<NumericVector, NumericVector::iterator>(x, cutoff);
+    re = cpp_array_to_list_template<NumericVector, NumericVector::iterator>(x, nrows, ncols);
     break;
   case CPLXSXP:
-    re = cpp_array_to_list_complex(x, cutoff);
+    re = cpp_array_to_list_complex(x, nrows, ncols);
     break;
   default:
-    Rcpp::stop("Unsupported data type. Only logical, numeric, complex, character types are supported.");
+    Rcpp::stop("Unsupported data type, only logical, numeric, complex, character types are supported.");
   }
   return re;
 }
 
-// TO be depricated
-IntegerVector cpp_array_loc_to_index_homogeneous(IntegerVector dim, List locations){
-  // make sure indices are list of integervectors
+/**
+ * Map location index to integer index at parent_dim
+ * For example, suppose dim(a) is c(4,4), location [1,2] is at index 5 [(2-1)*4+1]
+ * This means a[1,2] = a[5]
+ * loc2idx converts list(1,2) to 5
+ * 
+ * If location is invalid, then return NA
+ * 
+ * 2020-09-01: This function had very poor performance indexing c(300L, 200L, 600L, 1L)
+ * array requires 1.5+ seconds while R implementation only requires 500~700ms
+ * 
+ * 2020-09-02: I rewrite this function, 
+ * 1. got rid of code and improved readability
+ * 2. changed return type from IntegerVector to NumericVector (support int64_t indexing)
+ * 3. Removed redundant argument that can be calculated via `locations`
+ * The new function only allocate (almost) minimal size and runs faster to index 
+ * 36 million indexes (~400ms)
+ * 
+ * Changed name from cpp_index_to_index to loc2idx
+ */
+NumericVector loc2idx(List& locations, IntegerVector& parent_dim){
   
-  R_xlen_t ndims = dim.size();
-  R_xlen_t ii = 0;
-  if(ndims != locations.size()){
-    stop("Dimention(" + std::to_string(ndims) +
-      ") doesn't agree with locations(" + std::to_string(locations.size()) +
-      ") in lengths");
-  }
-  // calculate multiply-factors
-  std::vector<R_xlen_t> mfct(ndims, 1);
-  std::vector<R_xlen_t> sfct(ndims, 1);
-  IntegerVector target_dim(ndims);
-  R_xlen_t res_len = 1;
-  std::vector<IntegerVector> loc_copy(ndims);
-  for( ; ii < ndims; ii++ ){
-    loc_copy[ii] = locations[ii];
-    target_dim[ii] = loc_copy[ii].size();
-    res_len *= target_dim[ii];
-    if( ii < ndims - 1 ){
-      mfct[ii + 1] = dim[ii] * mfct[ii];
-      sfct[ii + 1] = target_dim[ii] * sfct[ii];
-    }
-  }
-  
-  IntegerVector re = IntegerVector(res_len, 0);
-  IntegerVector loc;
-  R_xlen_t step, multi;
-  IntegerVector::iterator ptr1, ptr2, ptr_loc;
-  R_xlen_t count = 0;
-  
-  for( ii = 0; ii < ndims; ii++ ){
-    loc = loc_copy[ii];
-    step = sfct[ii];
-    multi = mfct[ii];
-    ptr2 = ptr1 = re.begin();
-    count = 0;
-    Rcout<<step<<"\n";
-    while(ptr2 != re.end()){
-      for(ptr_loc = loc.begin(); ptr_loc != loc.end(); ptr_loc++ ){
-        ptr2 = ptr1 + step;
-        count += step;
-        
-        // security, make sure ptr2 is valid
-        if( count > re.size() ){
-          break;
-        }
-        std::fill(ptr1, ptr2, *ptr_loc * multi);
-        ptr1 = ptr2;
-        
-      }
-    }
-  }
-  
-  re.attr("dim") = target_dim;
-  
-  return re;
-  
-}
-
-
-void c_index_to_loc(R_xlen_t *loc, const R_xlen_t& idx, R_xlen_t *dim, const R_xlen_t& ndim, const bool& allow_overflow){
-  R_xlen_t res = idx - 1;
-  for( R_xlen_t ii = 0; ii < ndim; ii++, loc++, dim++ ){
-    if( ii == ndim - 1 && allow_overflow ){
-      *loc = (res + 1);
-    } else {
-      *loc = (res % (*dim)) + 1;
-      res = (res - *loc + 1) / *dim;
-    }
-  }
-}
-
-
-IntegerVector cpp_index_to_index(IntegerVector& idx, List& locations, IntegerVector& parent_dim){
-  // 
+  // Check whether parent_dim matches with location index size - validation
   R_xlen_t ndim = parent_dim.size();
-  R_xlen_t ii = 0;
+  
   if( ndim != locations.size() ){
-    stop("Dimension input wrong for `cpp_index_to_index`");
+    stop("Dimension input wrong for `loc2idx`");
   }
-  IntegerVector re(idx.size(), 1);
   
-  // int loc[ndim];
-  R_xlen_t *loc = (R_xlen_t *) malloc (ndim * sizeof(R_xlen_t));
+  // Get sub-dimension for location indexes (the dimension of returned value)
+  IntegerVector sub_dim = sapply(locations, Rf_length);
   
-  // 1. Copy dimension to dim_cpy[]
-  // 2. Calculate multiply-factor
-  // 3. copy locations
-  R_xlen_t *dim_cpy = (R_xlen_t *) malloc (ndim * sizeof(R_xlen_t));
-  R_xlen_t *dim_fct = (R_xlen_t *) malloc (ndim * sizeof(R_xlen_t));
-  R_xlen_t *tmp_p = dim_cpy;
-  R_xlen_t *tmp_p_alt = dim_fct;
+  // Total length to return
+  int64_t sub_size = std::accumulate(sub_dim.begin(), sub_dim.end(), 1, std::multiplies<int64_t>());
   
-  std::vector<std::vector<int>> loc_pos(ndim);
-  std::vector<std::vector<int>>::iterator p_loc_pos = loc_pos.begin();
-  IntegerVector::iterator ptr, ptr_alt, ptr_alt2;
+  // Generate integer vector to be returned and assign dimension
+  NumericVector re(sub_size, 1);
+  re.attr("dim") = sub_dim;
+  re.attr("class") = "integer64";
   
-  for( ii = 0 ; ii < ndim; p_loc_pos++, tmp_p++, tmp_p_alt++, ii++ ){
-    *p_loc_pos = as<std::vector<int>>(locations[ii]);
-    *tmp_p = (*p_loc_pos).size();
-    if( ii == 0 ){
-      *tmp_p_alt = 1;
-    } else {
-      *tmp_p_alt = *(tmp_p_alt - 1) * parent_dim[ii-1];
-    }
+  if( sub_size == 0 ){
+    return re;
   }
-  int tmp_value = 0;
   
-  for( ptr = idx.begin(), ptr_alt = re.begin(); ptr != idx.end(); ptr++, ptr_alt++ ){
-    c_index_to_loc(loc, *ptr, dim_cpy, ndim, true);
-    // Rcout << loc[0] <<' ' << loc[1]<<' '<< loc[2] << "\n";
+  // Inflate indexes and add them
+  R_xlen_t ii = 0, jj = 0;
+  R_xlen_t inflate = 1;
+  R_xlen_t tmp = 0;
+  R_xlen_t neach = 1;
+  
+  for(ii = 0; ii < ndim; ii++ ){
     
-    for(
-      tmp_p = loc, p_loc_pos = loc_pos.begin(), tmp_p_alt = dim_fct, ptr_alt2 = parent_dim.begin();
-      p_loc_pos != loc_pos.end();
-      p_loc_pos++, tmp_p++, tmp_p_alt++, ptr_alt2++
-    ) {
-      if( *ptr_alt != NA_INTEGER ){
-        tmp_value = (*p_loc_pos)[*(tmp_p) - 1];
-        if( tmp_value <= 0 || tmp_value > *ptr_alt2 ){
-          *ptr_alt = NA_INTEGER;
-        } else {
-          *ptr_alt += (tmp_value - 1) * (*tmp_p_alt);
-        }
+    tmp = parent_dim[ii];
+    
+    // Ger slice index
+    NumericVector location_ii = NumericVector( locations[ii] );
+    NumericVector current_location = NumericVector(location_ii.begin(), location_ii.end());
+    
+    // Assign invalid indexes to NA
+    // The first needs to be is_na otherwise error will be raised: "can't subset using a logical vector with NAs"
+    current_location[ is_na(current_location) | current_location < 1 | current_location > tmp ] = NA_REAL;
+    
+    // locations[[ii]] = (locations[[ii]] - 1) * inflate
+    current_location = (current_location - 1) * inflate;
+    
+    // write to re,
+    // re += rep(current_location, nrepeat, neach)
+    // if( neach > 1 ){
+    //   current_location = Rcpp::rep_each(current_location, neach);
+    // }
+    // re += Rcpp::rep_len(current_location, sub_size);
+    NumericVector::iterator ptr_current_location = current_location.begin();
+    for( NumericVector::iterator ptr_re = re.begin(); ptr_re != re.end(); ){
+      for(jj = 0; jj < neach; jj++){
+        *ptr_re += *ptr_current_location;
+        ptr_re++;
       }
-      
+      ptr_current_location++;
+      if(ptr_current_location == current_location.end()){
+        ptr_current_location = current_location.begin();
+      }
     }
+    
+    // Prepare for next loop
+    inflate = inflate * tmp;
+    neach = neach * location_ii.size();
+    
   }
-  
-  free(loc);
-  loc = NULL;
-  
-  free(dim_fct);
-  dim_fct = NULL;
-  
-  free(dim_cpy);
-  dim_cpy = NULL;
-  tmp_p = NULL;
-  tmp_p_alt = NULL;
   
   return(re);
 }
@@ -279,12 +204,66 @@ IntegerVector cpp_index_to_index(IntegerVector& idx, List& locations, IntegerVec
 
 
 /*** R
+
+cat("Test loc2idx with small data set - validate\n")
+x = array(1:8,c(2,2,2))
+dim = dim(x)
+locs = list(0:1L,1L, 0:3L)
+target_dim = sapply(locs, length)
+tmp = loc2idx(locs, dim);# tmp
+# validate in R
+mfactor <- c(1, cumprod(dim))[seq_along(dim)]
+scaled_loc <- lapply(seq_along(locs), function(ii){
+  x <- as.integer(locs[[ii]])
+  d <- dim[[ii]]
+  x[x < 1 | x > d] <- NA 
+  (x - 1) * mfactor[[ii]]
+})
+t1 <- Reduce(function(a, b){ outer(a, b, '+') }, scaled_loc) + 1
+sum(is.na(t1)) - sum(is.na(tmp))
+sum(xor(is.na(t1), is.na(tmp))) / length(t1)
+range(t1 - tmp, na.rm = TRUE)
+
+# Performance check
+cat("Test loc2idx with large data set - performance\n")
+dim = c(300L, 200L, 600L, 100L)
+locs = list(
+  1:300L,
+  1:200L,
+  1:600L,
+  1L
+)
+target_dim = sapply(locs, length)
+
+m <- bench::mark({
+  tmp = loc2idx(locs, dim);# tmp
+  dim(tmp) = target_dim
+})
+
+m1 <- bench::mark({
+  # validate in R
+  mfactor <- c(1, cumprod(dim))[seq_along(dim)]
+  scaled_loc <- lapply(seq_along(locs), function(ii){
+    x <- as.integer(locs[[ii]])
+    d <- dim[[ii]]
+    x[x < 1 | x > d] <- NA 
+    (x - 1) * mfactor[[ii]]
+  })
+  t1 <- Reduce(function(a, b){ outer(a, b, '+') }, scaled_loc) + 1
+})
+sum(is.na(t1)) - sum(is.na(tmp))
+sum(xor(is.na(t1), is.na(tmp))) / length(t1)
+range(t1 - tmp)
+
+
+
+
 # dim = as.integer(c(200,100,20)); x = array(seq_len(prod(dim)), dim); idx = sample(x, 1)
 # # cpp_index_to_loc(idx+prod(dim), dim)
 # 
 # locs = lapply(dim, sample)
 # system.time({
-#   y1 = cpp_index_to_index(seq_len(prod(dim)), locs, dim, TRUE)
+#   y1 = loc2idx(seq_len(prod(dim)), locs, dim, TRUE)
 # })
 # # which(x == idx, arr.ind = TRUE)
 # system.time({
@@ -292,9 +271,9 @@ IntegerVector cpp_index_to_index(IntegerVector& idx, List& locations, IntegerVec
 # })
 # 
 # range(y1-y2)
-
+cat("Test loc2idx with missing values - robust\n")
 x = (1:5000000); pryr::object_size(x)
-# cpp_array_to_list(x, c(0L, 25L, 50L), 9L)
+# arr2df(x, c(0L, 25L, 50L), 9L)
 dim = c(50000L, 10L, 10L)
 locs = list(
   as.integer(sample(100000L, 300) - 2000),
@@ -302,32 +281,34 @@ locs = list(
   as.integer(sample(12)-1)
 )
 target_dim = sapply(locs, length)
-tmp = cpp_index_to_index(seq_len(prod(target_dim)), locs, dim);# tmp
+tmp = loc2idx(locs, dim);# tmp
 dim(tmp) = target_dim
 
-# a = lazyarray:::cpp_array_to_list(x, c(2L, 4L, 10L, length(x)), 9L)
-# a
-f= normalizePath("~/Desktop/junk/junk.fst", mustWork = FALSE)
-y1 <- cpp_load_lazyarray(f, locs, dim, 9L)
+# validate in R
+mfactor <- c(1, cumprod(dim))[seq_along(dim)]
+scaled_loc <- lapply(seq_along(locs), function(ii){
+  x <- as.integer(locs[[ii]])
+  d <- dim[[ii]]
+  x[x < 1 | x > d] <- NA 
+  (x - 1) * mfactor[[ii]]
+})
+t1 <- Reduce(function(a, b){ outer(a, b, '+') }, scaled_loc) + 1
+sum(is.na(t1)) - sum(is.na(tmp))
+sum(xor(is.na(t1), is.na(tmp))) / length(t1)
+range(t1 - tmp, na.rm = TRUE)
 
 dim(x) = c(50000L, 10L, 10L)
 a = locs[[1]]; a[(a<1) | (a >50000)] = NA
 b = locs[[2]]; b[b<1 | b > 10] = NA
 c = locs[[3]]; c[c<1 | c > 10] = NA
 y2 <- x[a,b,c]
+range(y2 - tmp, na.rm = TRUE)
 
 y3 = tmp
 sum(abs(is.na(y2) - is.na(y3)))
 which(abs(is.na(y2) - is.na(y3)) > 0, arr.ind = TRUE)
 range(y2 - y3, na.rm = T)
 
-sum(abs(is.na(y2) - is.na(y1)))
-which(abs(is.na(y2) - is.na(y1)) > 0, arr.ind = TRUE)
-
-range(y2 - y1, na.rm = T)
-dif = y2 - y1
-dif[is.na(dif)] = 0
-which(dif != 0, arr.ind = TRUE)
 # s = sample(500000, size = 5, replace = TRUE)
 # 
 # v1 = cpp_load_lazyarray_base(f, c(2,3,1), c(-1L, as.integer(s)), 1); v1

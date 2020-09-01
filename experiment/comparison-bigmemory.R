@@ -8,36 +8,50 @@ library(dipsaus)
 library(lazyarray)
 library(future)
 
-path <- tempfile()
+path <- '~/Desktop/junk/'
 f <- 'bigmemory.testfile'
+# unlink(file.path(path, f))
 dir.create(path)
-x <- big.matrix(99072112, ncol = 5, type = 'double', backingfile = f, backingpath = path)
-options(bigmemory.allow.dimnames=TRUE)
-colnames(x) <- c("movie", "customer", "rating", "year", "month")
-for(ii in 1:5){
+ncol = 5
+x <- big.matrix(99072112, ncol = ncol, type = 'double', backingfile = f, backingpath = path)
+for(ii in 1:ncol){
   x[,ii] <- rnorm(99072112)
 }
 
-pryr::object_size(x)
+system.time({
+  x[100:20000000,]
+})
+system.time({
+  dipsaus::lapply_async2(1:ncol, function(i){
+    max(x[,i])
+  }, plan = FALSE)
+})
+
+profvis::profvis(max(x))
 
 # The challenge is calculation of X^T*X and X^T*y
 {
-  a = Sys.time()
+  options(bigmemory.allow.dimnames=TRUE)
+  colnames(x) <- c('movie', 'customer', 'rating', 'year', 'month')
+  a <- proc.time()
   res <- biglm.big.matrix(rating ~ movie + customer + year + month - 1, data = x)
-  b <- Sys.time(); b - a
+  b <- proc.time(); b - a
 }
 # Time difference of 26.069 secs
 
 
-path <- tempfile()
+path <- '~/Desktop/junk/lazyarray_test2'
 arr <- lazyarray::lazyarray(path, dim = c(99072112, 5), storage_format = 'double')
-for(ii in 1:5){
-  arr[,ii] <- x[,ii]
-}
+# for(ii in 1:5){
+#   arr[,ii] <- x[,ii]
+# }
+system.time({
+  arr[1:20000000,1]
+})
 
 {
   fstcore::threads_fstlib(1L)  # change this to > 1 to enable OpenMP
-  future::plan('multisession')  # change this to multisession or multicore to enable future parallels
+  future::plan('sequential')  # change this to multisession or multicore to enable future parallels
   a = Sys.time()
   amat <- as.lazymatrix(arr)
   amatt <- amat$transpose()
@@ -62,3 +76,61 @@ for(ii in 1:5){
 # Make sure the coef are correct
 # 1e-17 range
 coefficients(res) - coef
+
+
+
+
+
+
+
+
+
+test_file <- '~/Desktop/junk/lazyarray_test'
+
+arr <- lazyarray::lazyarray(test_file, dim = c(100,100,100,1000), storage_format = 'double')
+dim(arr)
+
+# dipsaus::lapply_async2(1:1000, function(i){
+#   arr[,,,i] <- rnorm(1e6)
+#   NULL
+# }, plan = 'multisession')
+
+# options('lazyarray.chunk_memory' = 80)
+
+
+future::plan('sequential')
+future::plan('multisession')
+
+system.time({
+  lazyarray::set_lazy_threads(4)
+  max(arr)
+})
+
+system.time({
+  lazyarray::set_lazy_threads(1)
+  future::plan('multisession', workers = 2)
+  tmp <- arr$`@partition_map`(partitions = 1:1000, method = 'others', map_function = function(x){
+    dim(x) <- c(100,100,100)
+    dipsaus::collapse(x, c(3,2), average = TRUE)
+  }, split = FALSE, na_rm = FALSE, missing = NA)
+})
+
+system.time({
+  lazyarray:::lapply2(1:1000, function(i){
+    max(arr[,,,i])
+  })
+})
+
+future::plan('sequential')
+profvis::profvis(max(arr, max_nchunks = 10))
+
+system.time({
+  max(arr, max_nchunks = 10)
+})
+system.time({
+  range(fst::read_fst(arr$get_partition_fpath(1), as.data.table = T))
+})
+
+
+lazyarray:::make_chunks(max_nchunks = )
+

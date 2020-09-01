@@ -209,7 +209,7 @@ lazyarray <- function(
       ds <- sapply(fs, function(f){
         # f=ts[[1]]$swap_file
         tryCatch({
-          meta <- cpp_fst_meta_orig(normalizePath(f))
+          meta <- cpp_fst_meta(normalizePath(f))
           if(inherits(meta, 'fst_error')){ stop(meta) }
           meta
         }, error = function(e){
@@ -269,7 +269,7 @@ lazyarray <- function(
     f <- file.path(path, sprintf('%s%s.fst', prefix, file_names))
     
     meta <- tryCatch({
-      meta <- cpp_fst_meta_orig(f)
+      meta <- cpp_fst_meta(f)
       if(inherits(meta, 'fst_error')){
         stop(meta)
       }

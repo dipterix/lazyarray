@@ -26,12 +26,15 @@ Description: Multi-threaded serialization of compressed array that
     The internal storage format is provided by 'fstcore' package geared by 
     'LZ4' and 'ZSTD' compressors.
 Imports: 
-    Rcpp (>= 1.0.4),
+    utils,
+    Rcpp (>= 1.0.5),
+    RcppParallel,
     R6,
     fstcore,
     yaml
 LinkingTo: 
     Rcpp,
+    RcppParallel,
     fstcore
 Suggests: 
     testthat,
