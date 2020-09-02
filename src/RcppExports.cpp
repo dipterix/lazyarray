@@ -90,7 +90,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // loc2idx
-NumericVector loc2idx(List& locations, IntegerVector& parent_dim);
+IntegerVector loc2idx(List& locations, IntegerVector& parent_dim);
 RcppExport SEXP _lazyarray_loc2idx(SEXP locationsSEXP, SEXP parent_dimSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;

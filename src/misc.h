@@ -10,7 +10,7 @@
 
 SEXP cpp_load_lazyarray_base(
     CharacterVector& files, IntegerVector& partition_dim, IntegerVector& target_dim,
-    SEXP first_indices, IntegerVector& second_indices, int type);
+    IntegerVector& first_indices, IntegerVector& second_indices, int type);
 
 
 #endif // LAZYARRAY_MISC_H

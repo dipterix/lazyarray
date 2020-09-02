@@ -122,13 +122,17 @@ Rcpp::List arr2df(SEXP &x, int64_t nrows, int64_t ncols){
  * 2020-09-02: I rewrite this function, 
  * 1. got rid of code and improved readability
  * 2. changed return type from IntegerVector to NumericVector (support int64_t indexing)
+ * 2.1 changed back to IntegerVector for two reasons: 
+ *     1. memory overhead 
+ *     2. loc2idx is running on each partition, it's hard for a partition to 
+ *        have very large size. 
  * 3. Removed redundant argument that can be calculated via `locations`
  * The new function only allocate (almost) minimal size and runs faster to index 
  * 36 million indexes (~400ms)
  * 
  * Changed name from cpp_index_to_index to loc2idx
  */
-NumericVector loc2idx(List& locations, IntegerVector& parent_dim){
+IntegerVector loc2idx(List& locations, IntegerVector& parent_dim){
   
   // Check whether parent_dim matches with location index size - validation
   R_xlen_t ndim = parent_dim.size();
@@ -144,9 +148,9 @@ NumericVector loc2idx(List& locations, IntegerVector& parent_dim){
   int64_t sub_size = std::accumulate(sub_dim.begin(), sub_dim.end(), 1, std::multiplies<int64_t>());
   
   // Generate integer vector to be returned and assign dimension
-  NumericVector re(sub_size, 1);
+  IntegerVector re(sub_size, 1);
   re.attr("dim") = sub_dim;
-  re.attr("class") = "integer64";
+  // re.attr("class") = "integer64";
   
   if( sub_size == 0 ){
     return re;
@@ -163,15 +167,12 @@ NumericVector loc2idx(List& locations, IntegerVector& parent_dim){
     tmp = parent_dim[ii];
     
     // Ger slice index
-    NumericVector location_ii = NumericVector( locations[ii] );
-    NumericVector current_location = NumericVector(location_ii.begin(), location_ii.end());
+    IntegerVector location_ii = IntegerVector( locations[ii] );
+    IntegerVector current_location = IntegerVector(location_ii.begin(), location_ii.end());
     
     // Assign invalid indexes to NA
     // The first needs to be is_na otherwise error will be raised: "can't subset using a logical vector with NAs"
-    current_location[ is_na(current_location) | current_location < 1 | current_location > tmp ] = NA_REAL;
-    
-    // locations[[ii]] = (locations[[ii]] - 1) * inflate
-    current_location = (current_location - 1) * inflate;
+    // current_location[ is_na(current_location) | current_location < 1 | current_location > tmp ] = NA_INTEGER;
     
     // write to re,
     // re += rep(current_location, nrepeat, neach)
@@ -179,10 +180,27 @@ NumericVector loc2idx(List& locations, IntegerVector& parent_dim){
     //   current_location = Rcpp::rep_each(current_location, neach);
     // }
     // re += Rcpp::rep_len(current_location, sub_size);
-    NumericVector::iterator ptr_current_location = current_location.begin();
-    for( NumericVector::iterator ptr_re = re.begin(); ptr_re != re.end(); ){
+    IntegerVector::iterator ptr_current_location = current_location.begin();
+    for( IntegerVector::iterator ptr_re = re.begin(); ptr_re != re.end(); ){
       for(jj = 0; jj < neach; jj++){
-        *ptr_re += *ptr_current_location;
+        // if re[...] is not NA
+        if(*ptr_re != NA_INTEGER && 
+           
+           // current_location is not NA
+           *ptr_current_location != NA_INTEGER &&
+           
+           // current_location is valid, i.e. current_location >= 1 & current_location <= tmp
+           *ptr_current_location >= 1 &&
+           
+           *ptr_current_location <= tmp
+           
+        ){
+          
+          // index[[...]] += (locations[[ii]] - 1) * inflate
+          *ptr_re += ((*ptr_current_location) - 1) * inflate;
+        } else {
+          *ptr_re = NA_INTEGER;
+        }
         ptr_re++;
       }
       ptr_current_location++;
@@ -210,7 +228,7 @@ x = array(1:8,c(2,2,2))
 dim = dim(x)
 locs = list(0:1L,1L, 0:3L)
 target_dim = sapply(locs, length)
-tmp = loc2idx(locs, dim);# tmp
+tmp = loc2idx(locs, dim); tmp
 # validate in R
 mfactor <- c(1, cumprod(dim))[seq_along(dim)]
 scaled_loc <- lapply(seq_along(locs), function(ii){

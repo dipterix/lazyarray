@@ -34,7 +34,7 @@ SEXP cpp_load_lazyarray_base_internal(
   
   // No need to check whether end overflows as the _fstcore_fstretrieve automatically trims the end
   // if( end > n_rows ){ end = n_rows; }
-  
+  // return R_NilValue;
   
   String colname, fileName;
   List tmp;
@@ -235,7 +235,7 @@ ComplexVector cpp_load_lazyarray_base_complex(
  */
 SEXP cpp_load_lazyarray_base(
     StringVector& files, IntegerVector& partition_dim, IntegerVector& target_dim,
-    SEXP first_indices, IntegerVector& second_indices,
+    IntegerVector& first_indices, IntegerVector& second_indices,
     int type){
   // SEXP columnSelection, SEXP startRow, SEXP endRow
   // return fstcore::fstretrieve(fileName, columnSelection, startRow, endRow);
@@ -252,37 +252,37 @@ SEXP cpp_load_lazyarray_base(
   // List meta = fstcore::fstmetadata(files[0]);
   
   // R_xlen_t n_cols = meta["nrOfCols"];
-  R_xlen_t n_cols = *(partition_dim.end() - 1);
+  // R_xlen_t n_cols = *(partition_dim.end() - 1);
   // R_xlen_t n_rows = meta["nrOfRows"];
-  R_xlen_t n_rows = std::accumulate(partition_dim.begin(), partition_dim.end() - 1, 1, std::multiplies<R_xlen_t>());
+  // R_xlen_t n_rows = std::accumulate(partition_dim.begin(), partition_dim.end() - 1, 1, std::multiplies<R_xlen_t>());
   
-  IntegerVector first_indices_copy = IntegerVector( first_indices );
-  R_xlen_t subset_nrows = first_indices_copy.size();
-  R_xlen_t n_cols_sub = second_indices.size();
+  // IntegerVector first_indices_copy = IntegerVector( first_indices );
+  // R_xlen_t subset_nrows = first_indices_copy.size();
+  // R_xlen_t n_cols_sub = second_indices.size();
   
   SEXP re;
   
   switch( type ){
   case STRSXP:
     re = cpp_load_lazyarray_base_internal<StringVector, StringVector::iterator>(
-      files, first_indices_copy, second_indices);
+      files, first_indices, second_indices);
     break;
   case CHARSXP:
     re = cpp_load_lazyarray_base_internal<CharacterVector, CharacterVector::iterator>(
-      files, first_indices_copy, second_indices);
+      files, first_indices, second_indices);
     break;
   case LGLSXP:
   case RAWSXP:
   case INTSXP:
     re = cpp_load_lazyarray_base_internal<IntegerVector, IntegerVector::iterator>(
-      files, first_indices_copy, second_indices);
+      files, first_indices, second_indices);
     break;
   case REALSXP:
     re = cpp_load_lazyarray_base_internal<NumericVector, NumericVector::iterator>(
-      files, first_indices_copy, second_indices);
+      files, first_indices, second_indices);
     break;
   case CPLXSXP: {
-    re = cpp_load_lazyarray_base_complex(files, first_indices_copy, second_indices);
+    re = cpp_load_lazyarray_base_complex(files, first_indices, second_indices);
     break;
   }
   default:

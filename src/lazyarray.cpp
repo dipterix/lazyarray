@@ -114,7 +114,6 @@ SEXP cpp_load_lazyarray(StringVector& files, List& partition_locations,
   
   _rcpp_timer.step("calculated target_dim");
   
-  
   // TODO: check whether first_len is needed
   int64_t first_len = std::accumulate(target_dim.begin(), target_dim.begin() + part_dim - 1, 1, std::multiplies<int64_t>());
   // What if re_len is 0?
@@ -123,9 +122,11 @@ SEXP cpp_load_lazyarray(StringVector& files, List& partition_locations,
     return R_NilValue;
   }
 
-  NumericVector row_indices = loc2idx(first_loc, first_dim);
+  IntegerVector row_indices = loc2idx(first_loc, first_dim);
+  
   
   _rcpp_timer.step("calculated loc2idx");
+  
 
   // print(partition_dim);
   SEXP re = cpp_load_lazyarray_base(files, partition_dim, target_dim, 
@@ -231,6 +232,15 @@ SEXP cpp_fst_range(Rcpp::String fileName, String colSel, SEXP start, SEXP end, i
 
 
 /*** R
+path = '~/Desktop/lazyarray_data'
+dimension <- c(287, 200, 601, 84)
+x <- lazyarray(path, storage_format = "double", dim = dimension)
+part_loc <- list(1:287L, 1:200L, 1:601L, 1L)
+a <- bench::mark({
+  cpp_load_lazyarray(x$get_partition_fpath(1), part_loc, c(287L, 200L, 601L, 1L), 4, 0.1)
+}, iterations = 1)
+a$memory
+
 path <- tempfile()
 a = data.frame(V1=c(1:10 + rnorm(10), rep(NA,2)))
 fst::write_fst(a, path)
