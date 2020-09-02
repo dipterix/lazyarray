@@ -87,6 +87,8 @@ it's recommended to set 100. Default is 50.}
 \item{quiet}{whether to suppress messages, default is false}
 
 \item{...}{ignored or passed to other methods}
+
+\item{x}{R vector, matrix, array or \code{LazyArray}, \code{LazyMatrix}}
 }
 \description{
 If path is missing, create a new array. If path exists and 

@@ -1,3 +1,4 @@
+#' @noRd
 #' @title Internal Class definition for \code{LazyMatrix}
 #' @author Zhengjia Wang
 #' @description Internal class definition of lazy matrix objects

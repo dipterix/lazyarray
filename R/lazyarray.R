@@ -5,6 +5,7 @@
 #' and import from existing data.
 #' @author Zhengjia Wang
 #' @seealso \code{\link{create_lazyarray}}, \code{\link{load_lazyarray}}
+#' @param x R vector, matrix, array or \code{LazyArray}, \code{LazyMatrix}
 #' @param path path to a local drive where array data is stored
 #' @param file_names partition names without prefix nor extension; see details
 #' @param storage_format data type, choices are \code{"double"}, 
