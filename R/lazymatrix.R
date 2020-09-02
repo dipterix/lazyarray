@@ -174,16 +174,56 @@ lazymatrix <- function(
 }
 
 
+
+#' @rdname lazyarray
 #' @export
-as.lazymatrix <- function(x, read_only = NA, ...){
+as.lazymatrix <- function(x, read_only = FALSE, ...){
   UseMethod('as.lazymatrix')
 }
 
+#' @rdname lazyarray
 #' @export
-as.lazymatrix.LazyArray <- function(x, read_only = NA, ...){
+as.lazymatrix.default <- function(x, read_only = FALSE, storage_format, path = tempfile(), ...){
+  x <- unlist(x)
+  call <- match.call()
+  call[[1]] <- quote(as.lazymatrix.array)
+  eval(call)
+}
+
+#' @rdname lazyarray
+#' @export
+as.lazymatrix.array <- function(x, read_only = FALSE, storage_format, path = tempfile(), ...){
+  if(dir.exists(path)){
+    stop("path exists, please specify a different path")
+  }
+  if(missing(storage_format)){
+    storage_format <- storage.mode(x)
+  }
+  
+  dm <- dim(x)
+  if(length(dm) < 2){
+    dm <- c(length(x), 1)
+  } else {
+    dm <- c( prod(dm) / dm[[length(dm)]], dm[[length(dm)]] )
+  }
+  dim(x) <- dm
+  
+  re <- lazyarray(path = path, storage_format = storage_format, dim = dm)
+  
+  ii <- 1
+  for(ii in seq_len(dm[[2]])){
+    re[,ii] <- x[,ii]
+  }
+  
+  as.lazymatrix.LazyArray(re, read_only = read_only, ...)
+}
+
+#' @rdname lazyarray
+#' @export
+as.lazymatrix.LazyArray <- function(x, read_only = FALSE, ...){
   path <- dirname(x$storage_path)
   meta_name <- x$meta_name
-  if(is.na(read_only)){
+  if(is.na(read_only) || !is.logical(read_only)){
     read_only <- !x$can_write
   }
   ClassLazyMatrix$new(path = path, read_only = read_only, meta_name = meta_name)

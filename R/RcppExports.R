@@ -21,8 +21,8 @@ test_fstcore_write <- function(filename) {
     .Call(`_lazyarray_test_fstcore_write`, filename)
 }
 
-cpp_fst_range <- function(fileName, colSel, start, end, method, allow_na, custom_func = NULL, reshape = NULL) {
-    .Call(`_lazyarray_cpp_fst_range`, fileName, colSel, start, end, method, allow_na, custom_func, reshape)
+cpp_fst_range <- function(fileName, colSel, start, end = NULL, custom_func = NULL, reshape = NULL) {
+    .Call(`_lazyarray_cpp_fst_range`, fileName, colSel, start, end, custom_func, reshape)
 }
 
 loc2idx <- function(locations, parent_dim) {

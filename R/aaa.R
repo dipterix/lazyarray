@@ -7,6 +7,7 @@
 #' @importFrom utils tail
 #' @importFrom utils str
 #' @importFrom utils capture.output
+#' @importFrom stats sd
 #' @useDynLib lazyarray, .registration = TRUE
 NULL
 

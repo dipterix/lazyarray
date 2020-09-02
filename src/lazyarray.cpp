@@ -160,63 +160,61 @@ SEXP test_fstcore_write(String filename){
 }
 
 // [[Rcpp::export]]
-SEXP cpp_fst_range(Rcpp::String fileName, String colSel, SEXP start, SEXP end, int method, 
-                   bool allow_na, Rcpp::Nullable<Rcpp::Function> custom_func = R_NilValue,
+SEXP cpp_fst_range(Rcpp::String fileName, CharacterVector colSel, SEXP start, SEXP end = R_NilValue, 
+                   Rcpp::Nullable<Rcpp::Function> custom_func = R_NilValue,
                    Rcpp::Nullable<IntegerVector> reshape = R_NilValue){
-  // method:
+  // method 1-4 are not exposed
   // 1: min
   // 2: max
   // 3: range
+  // 4:
+  // 5 customized function
   
-  List tmp = fstcore::fstretrieve(fileName, wrap(colSel), start, end);
+  SEXP tmp;
+  tmp = fstcore::fstretrieve(fileName, wrap(colSel), start, end);
   
-  tmp = tmp["resTable"];
-  NumericVector data = wrap(tmp[colSel]);
-  const R_xlen_t s = data.size();
+  tmp = getListElement(tmp, "resTable");
+  
+  SEXP data;
+  R_xlen_t s;
+  
+  // if colSel.size() == 1, non-complex data
+  bool is_complex = false;
+  if( colSel.size() == 1 ){
+    data = getListElement(tmp, colSel[0]);
+    s = Rf_length(data);
+  } else {
+    is_complex = true;
+    NumericVector re = as<NumericVector>(getListElement(tmp, colSel[0]));
+    NumericVector im = as<NumericVector>(getListElement(tmp, colSel[1]));
+    s = Rf_length(re);
+    
+    data = PROTECT(Rf_allocVector(CPLXSXP, s));
+    
+    Rcomplex *ptr_data = COMPLEX(data);
+    NumericVector::iterator ptr_re = re.begin();
+    NumericVector::iterator ptr_im = im.begin();
+    
+    for(R_xlen_t ii = 0; ii < s; ii++ ){
+      (*ptr_data).r = *ptr_re;
+      (*ptr_data).i = *ptr_im;
+      ptr_data++;
+      ptr_re++;
+      ptr_im++;
+    }
+    
+  }
   
   SEXP re;
   
-  if( method > 0 && method <= 4 ){
-    if( !allow_na ){
-      for( double* ptr = data.begin(); ptr!= data.end(); ptr++){
-        if( R_IsNA( *ptr ) ){
-          re = wrap(NA_REAL);
-          Rf_setAttrib(re, wrap("chunk_length"), wrap(s));
-          return re;
-        }
-      }
-    }
-  } else if (reshape != R_NilValue) {
-    data.attr("dim") = as<IntegerVector>(reshape);
+  if(reshape != R_NilValue){
+    Rf_setAttrib(data, wrap("dim"), wrap(reshape));
   }
   
-  
-  double m = NA_REAL;
-  
-  switch(method){
-  case 1:
-    m = *std::min_element(data.begin(), data.end());
-    re = wrap(m);
-    break;
-  case 2:
-    m = *std::max_element(data.begin(), data.end());
-    re = wrap(m);
-    break;
-  case 3:
-    m = std::accumulate( data.begin(), data.end(), 0.0 );
-    re = wrap(m);
-    break;
-  case 4:
-    m = std::inner_product( data.begin(), data.end(), data.begin(), 0.0 );
-    re = wrap(m);
-    break;
-  default:
-    if( custom_func.isNotNull() ){
-      re = Rcpp::as<Rcpp::Function>(custom_func)( data );
-    } else {
-      re = wrap(m);
-    }
-    
+  if( custom_func.isNotNull() ){
+    re = Rcpp::as<Rcpp::Function>(custom_func)( data );
+  } else {
+    re = R_NilValue;
   }
   
   if( re != R_NilValue ){
@@ -224,7 +222,9 @@ SEXP cpp_fst_range(Rcpp::String fileName, String colSel, SEXP start, SEXP end, i
     Rf_setAttrib(re, wrap("chunk_length"), wrap(s));
   }
   
-  
+  if( is_complex ){
+    UNPROTECT(1);
+  }
   
   return re;
 }
@@ -232,26 +232,41 @@ SEXP cpp_fst_range(Rcpp::String fileName, String colSel, SEXP start, SEXP end, i
 
 
 /*** R
-path = '~/Desktop/lazyarray_data'
-dimension <- c(287, 200, 601, 84)
-x <- lazyarray(path, storage_format = "double", dim = dimension)
-part_loc <- list(1:287L, 1:200L, 1:601L, 1L)
-a <- bench::mark({
-  cpp_load_lazyarray(x$get_partition_fpath(1), part_loc, c(287L, 200L, 601L, 1L), 4, 0.1)
-}, iterations = 1)
-a$memory
+f <- tempfile()
+fst::write_fst(data.frame(V1R = 1:10, V1I = 10:1), path = f)
+tmp <- fst:::fstretrieve(normalizePath(f), c('V1R', 'V1I'), 1L, NULL)
+tmp
 
-path <- tempfile()
-a = data.frame(V1=c(1:10 + rnorm(10), rep(NA,2)))
-fst::write_fst(a, path)
-path <- normalizePath(path)
-cpp_fst_range(path, 'V1', 1L, NULL, 1L, TRUE)
-cpp_fst_range(path, 'V1', 1L, NULL, 2L, TRUE)
-cpp_fst_range(path, 'V1', 1L, NULL, 3L, TRUE)
-cpp_fst_range(path, 'V1', 1L, NULL, 4L, TRUE)
-cpp_fst_range(path, 'V1', 1L, NULL, 5L, TRUE, length)
-cpp_fst_range(path, 'V1', 1L, NULL, 5L, TRUE, function(x){NULL})
-cpp_fst_range(path, 'V1', 1L, NULL, 5L, TRUE, function(x){dim(x)}, c(3L,4L))
+path <- normalizePath(f)
+cpp_fst_range(path, c('V1R', 'V1I'), 1L, NULL, sum)
+cpp_fst_range(path, c('V1R'), 1L, NULL, sum)
+
+x <- lazyarray(tempfile(), 'complex', c(2,3,4))
+x[] <- 1:24 + (24:1)*1i
+
+partition_map(x, function(slice, part){
+  slice
+})
+
+
+# path = '~/Desktop/lazyarray_data'
+# dimension <- c(287, 200, 601, 84)
+# x <- lazyarray(path, storage_format = "double", dim = dimension)
+# part_loc <- list(1:287L, 1:200L, 1:601L, 1L)
+# a <- bench::mark({
+#   cpp_load_lazyarray(x$get_partition_fpath(1), part_loc, c(287L, 200L, 601L, 1L), 4, 0.1)
+# }, iterations = 1)
+# a$memory
+# 
+# path <- tempfile()
+# a = data.frame(V1=c(1:10 + rnorm(10), rep(NA,2)))
+# fst::write_fst(a, path)
+# path <- normalizePath(path)
+# cpp_fst_range(path, 'V1', 1L, NULL, sum)
+# cpp_fst_range(path, 'V1', 1L, NULL, function(x){mean(x, na.rm = TRUE)})
+# cpp_fst_range(path, 'V1', 1L, NULL, length)
+# cpp_fst_range(path, 'V1', 1L, NULL, function(x){NULL})
+# cpp_fst_range(path, 'V1', 1L, NULL, function(x){dim(x)}, c(3L,4L))
 
 # a = 1:3; b = 4:6+0.5
 # pryr::address(a)

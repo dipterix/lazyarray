@@ -20,7 +20,7 @@
 #' @param meta_name header file name, default is \code{"lazyarray.meta"}
 #' @param read_only whether created array is read-only
 #' @param quiet whether to suppress messages, default is false
-#' @param ... ignored
+#' @param ... ignored or passed to other methods
 #' 
 #' @details There are three cases and \code{lazyarray} behaves differently 
 #' under each cases. Case 1: if \code{path} is missing, then the function calls 
@@ -102,6 +102,18 @@
 #' 
 #' # Set data to 5th partition
 #' arr[,,5] <- rep(0, 6)
+#' 
+#' # ---------------- Case 3: Converting from R arrays ----------------
+#' 
+#' x <- matrix(1:16, 4)
+#' x <- as.lazymatrix(x)
+#' x[,]
+#' 
+#' 
+#' x <- array(1:27, c(3,3,3))
+#' as.lazymatrix(x)[,1]
+#' 
+#' as.lazyarray(x)[]
 #' 
 #' # -------- Advanced usage: create fst data and import manually --------
 #' 
@@ -375,4 +387,72 @@ auto_clear_lazyarray <- function(x, onexit = FALSE){
 }
 
 
+#' @rdname lazyarray
+#' @export
+as.lazyarray <- function(x, path, storage_format, ...){
+  UseMethod('as.lazyarray')
+}
 
+#' @rdname lazyarray
+#' @export
+as.lazyarray.default <- function(x, path, storage_format, ...){
+  dm <- dim(x)
+  
+  if(length(dm) < 2){
+    dm <- c(length(x), 1)
+  }
+  
+  if(missing(path)){
+    path <- tempfile()
+  }
+  if(missing(storage_format)){
+    storage_format <- storage.mode(x)
+  }
+  
+  re <- create_lazyarray(path, storage_format, dim = dm, ...)
+  re[] <- x
+  re
+}
+
+
+#' @rdname lazyarray
+#' @export
+as.lazyarray.LazyArray <- function(x, path, storage_format, meta_name, ...){
+  
+  path1 <- normalizePath(dirname(x$storage_path))
+  # temporarily create?
+  if(!missing(path)){
+    path <- normalizePath(path, mustWork = FALSE)
+    if(path != path1){
+      warning("as.lazyarray.LazyArray: path will be ignored")
+    }
+  }
+  
+  if(missing(storage_format)){
+    return(x)
+  } else if(missing(meta_name)){
+    meta_name = sprintf('%s_version.meta', storage_format)
+  }
+  
+  header <- load_yaml(x$storage_path)
+  if( header$storage_format == storage_format ){
+    return(x)
+  }
+  
+  header$storage_format = storage_format
+  
+  stopifnot(storage_format %in% x$storage_formats_avail)
+  
+  save_yaml(header, file.path(path1, meta_name))
+  
+  lazyarray(
+    meta_name = meta_name,
+    path = path1,
+    dim = x$dim,
+    dimnames = x$dimnames,
+    storage_format = storage_format,
+    read_only = !x$can_write,
+    ...
+  )
+  
+}

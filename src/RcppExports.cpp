@@ -72,20 +72,18 @@ BEGIN_RCPP
 END_RCPP
 }
 // cpp_fst_range
-SEXP cpp_fst_range(Rcpp::String fileName, String colSel, SEXP start, SEXP end, int method, bool allow_na, Rcpp::Nullable<Rcpp::Function> custom_func, Rcpp::Nullable<IntegerVector> reshape);
-RcppExport SEXP _lazyarray_cpp_fst_range(SEXP fileNameSEXP, SEXP colSelSEXP, SEXP startSEXP, SEXP endSEXP, SEXP methodSEXP, SEXP allow_naSEXP, SEXP custom_funcSEXP, SEXP reshapeSEXP) {
+SEXP cpp_fst_range(Rcpp::String fileName, CharacterVector colSel, SEXP start, SEXP end, Rcpp::Nullable<Rcpp::Function> custom_func, Rcpp::Nullable<IntegerVector> reshape);
+RcppExport SEXP _lazyarray_cpp_fst_range(SEXP fileNameSEXP, SEXP colSelSEXP, SEXP startSEXP, SEXP endSEXP, SEXP custom_funcSEXP, SEXP reshapeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::String >::type fileName(fileNameSEXP);
-    Rcpp::traits::input_parameter< String >::type colSel(colSelSEXP);
+    Rcpp::traits::input_parameter< CharacterVector >::type colSel(colSelSEXP);
     Rcpp::traits::input_parameter< SEXP >::type start(startSEXP);
     Rcpp::traits::input_parameter< SEXP >::type end(endSEXP);
-    Rcpp::traits::input_parameter< int >::type method(methodSEXP);
-    Rcpp::traits::input_parameter< bool >::type allow_na(allow_naSEXP);
     Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::Function> >::type custom_func(custom_funcSEXP);
     Rcpp::traits::input_parameter< Rcpp::Nullable<IntegerVector> >::type reshape(reshapeSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_fst_range(fileName, colSel, start, end, method, allow_na, custom_func, reshape));
+    rcpp_result_gen = Rcpp::wrap(cpp_fst_range(fileName, colSel, start, end, custom_func, reshape));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -108,7 +106,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lazyarray_cpp_fst_retrieve", (DL_FUNC) &_lazyarray_cpp_fst_retrieve, 4},
     {"_lazyarray_cpp_fst_meta", (DL_FUNC) &_lazyarray_cpp_fst_meta, 1},
     {"_lazyarray_test_fstcore_write", (DL_FUNC) &_lazyarray_test_fstcore_write, 1},
-    {"_lazyarray_cpp_fst_range", (DL_FUNC) &_lazyarray_cpp_fst_range, 8},
+    {"_lazyarray_cpp_fst_range", (DL_FUNC) &_lazyarray_cpp_fst_range, 6},
     {"_lazyarray_loc2idx", (DL_FUNC) &_lazyarray_loc2idx, 2},
     {NULL, NULL, 0}
 };

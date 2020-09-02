@@ -6,6 +6,7 @@
 #include <iterator>
 #include <complex>
 #include <cmath>
+// #include <string>
 
 #include <Rcpp.h>
 #include <Rcpp/Benchmark/Timer.h>

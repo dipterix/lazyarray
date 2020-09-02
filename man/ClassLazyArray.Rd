@@ -31,6 +31,8 @@ Zhengjia Wang
 \item{\code{npart}}{number of partitions}
 
 \item{\code{filesize}}{total disk space used in gigatypes}
+
+\item{\code{storage_formats_avail}}{storage format supported}
 }
 \if{html}{\out{</div>}}
 }

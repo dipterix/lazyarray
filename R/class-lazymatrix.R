@@ -40,7 +40,12 @@ ClassLazyMatrix <- R6::R6Class(
       
       # get dimension information
       if(length(private$.dim) != 2){
-        stop("Invalid dimension, lazymatrix must have length(dim) = 2.")
+        d <- private$.dim
+        if(length(d) == 1){
+          private$.dim <- c(d, 1)
+        } else {
+          private$.dim <- c(prod(d[-length(x)]), d[[length(d)]])
+        }
       }
       
     },
@@ -129,12 +134,23 @@ ClassLazyMatrix <- R6::R6Class(
     #' @description Internal method to read data
     #' @param i,j index set
     #' @param drop whether to drop dimension after subset, default is true
-    `@get_data` = function(i = NULL, j = NULL, drop = TRUE){
-      if(self$`@transposed`){
-        t(super$`@get_data`(j, i, drop = drop))
-      } else {
-        super$`@get_data`(i, j, drop = drop)
+    `@get_data` = function(i, j, drop = TRUE){
+      if(missing(j)){
+        j <- seq_len(self$dim[[2]])
       }
+      if(missing(i)){
+        i <- seq_len(self$dim[[1]])
+      }
+      
+      if(self$`@transposed`){
+        re <- t(super$`@get_data`(j, i, drop = FALSE))
+        if(drop){
+          re <- drop(re)
+        }
+      } else {
+        re <- super$`@get_data`(i, j, drop = drop)
+      }
+      return(re)
     },
     
     

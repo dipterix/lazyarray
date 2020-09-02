@@ -5,6 +5,20 @@
 #include "misc.h"
 
 
+SEXP getListElement(SEXP list, const char *str){
+  SEXP elmt = R_NilValue, names = Rf_getAttrib(list, R_NamesSymbol);
+  
+  const String str_copy(str);
+  
+  for (R_len_t i = 0; i < Rf_length(list); i++)
+    if(str_copy == String(CHAR(STRING_ELT(names, i)))) {
+      elmt = VECTOR_ELT(list, i);
+      break;
+    }
+  return elmt;
+}
+
+
 template <typename T, typename I>
 SEXP cpp_load_lazyarray_base_internal(
     StringVector& files, IntegerVector& first_indices, IntegerVector& second_indices){

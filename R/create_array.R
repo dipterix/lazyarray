@@ -111,7 +111,7 @@ create_lazyarray <- function(
     warning("multipart_mode must be 1 for matrix")
   }
   
-  stopifnot(storage_format %in% c('character', 'double', 'int', 'complex'))
+  stopifnot(storage_format %in% c('character', 'double', 'integer', 'complex'))
   
   if( multipart_mode == 1 ){
     part_dimension <- dim

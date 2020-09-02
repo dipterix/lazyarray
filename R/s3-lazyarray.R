@@ -43,15 +43,50 @@
     idx$drop <- drop
     return(do.call(x$`@get_data`, idx))
   }
+  
+  has_idx <- FALSE
   if(...length() == 1){
-    idx <- tryCatch({
-      ...elt(1)
-    }, error = function(e){
-      NULL
-    })
-    if(length(idx)){
-      stop('lazyarray x[a:b] is not supported right now')
+    tryCatch({
+      idx <- ...elt(1)
+      has_idx <- TRUE
+    }, error = function(e){})
+  }
+  
+  if(has_idx){
+    if(!length(idx)){
+      return(logical(0))
+    } else {
+      # stop('lazyarray x[a:b] is not supported right now')
+      
+      # idx to each partition?
+      dm <- dim(x)
+      part_size<- length(x) / dm[[length(dm)]]
+      
+      partition_idx <- ((idx - 1) %% part_size) + 1
+      partition <- (idx - partition_idx) / part_size + 1
+      
+      if(isTRUE(x$`@transposed`)){
+        tmp <- partition
+        partition <- partition_idx
+        partition_idx <- tmp
+      }
+      
+      re <- partition_map(x, function(slice, part){
+        sel <- partition == part
+        list(
+          data = slice[partition_idx[sel]],
+          sel = sel
+        )
+      }, reduce = function(l){
+        re <- rep(NA, length(partition))
+        for(ii in seq_along(l)){
+          re[l[[ii]]$sel] <- l[[ii]]$data
+        }
+        re
+      })
+      return(re)
     }
+    
   }
   
   
@@ -414,5 +449,6 @@ summary.LazyArray <- function(object, ...){
   
   invisible(x)
 }
+
 
 

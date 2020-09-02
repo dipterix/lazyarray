@@ -162,7 +162,7 @@ Internal method to set data
 \subsection{Method \code{@get_data()}}{
 Internal method to read data
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ClassLazyMatrix$@get_data(i = NULL, j = NULL, drop = TRUE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ClassLazyMatrix$@get_data(i, j, drop = TRUE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{

@@ -27,6 +27,7 @@ Description: Multi-threaded serialization of compressed array that
     'LZ4' and 'ZSTD' compressors.
 Imports: 
     utils,
+    stats,
     Rcpp (>= 1.0.5),
     RcppParallel,
     R6,

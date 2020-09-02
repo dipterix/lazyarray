@@ -2,7 +2,14 @@
 % Please edit documentation in R/lazyarray.R, R/lazymatrix.R
 \name{lazyarray}
 \alias{lazyarray}
+\alias{as.lazyarray}
+\alias{as.lazyarray.default}
+\alias{as.lazyarray.LazyArray}
 \alias{lazymatrix}
+\alias{as.lazymatrix}
+\alias{as.lazymatrix.default}
+\alias{as.lazymatrix.array}
+\alias{as.lazymatrix.LazyArray}
 \title{Create or load 'lazyarray' instance}
 \usage{
 lazyarray(
@@ -21,6 +28,12 @@ lazyarray(
   ...
 )
 
+as.lazyarray(x, path, storage_format, ...)
+
+\method{as.lazyarray}{default}(x, path, storage_format, ...)
+
+\method{as.lazyarray}{LazyArray}(x, path, storage_format, meta_name, ...)
+
 lazymatrix(
   path,
   storage_format,
@@ -36,6 +49,14 @@ lazymatrix(
   quiet = FALSE,
   ...
 )
+
+as.lazymatrix(x, read_only = FALSE, ...)
+
+\method{as.lazymatrix}{default}(x, read_only = FALSE, storage_format, path = tempfile(), ...)
+
+\method{as.lazymatrix}{array}(x, read_only = FALSE, storage_format, path = tempfile(), ...)
+
+\method{as.lazymatrix}{LazyArray}(x, read_only = FALSE, ...)
 }
 \arguments{
 \item{path}{path to a local drive where array data is stored}
@@ -65,7 +86,7 @@ it's recommended to set 100. Default is 50.}
 
 \item{quiet}{whether to suppress messages, default is false}
 
-\item{...}{ignored}
+\item{...}{ignored or passed to other methods}
 }
 \description{
 If path is missing, create a new array. If path exists and 
@@ -153,6 +174,18 @@ arr[,,5]
 
 # Set data to 5th partition
 arr[,,5] <- rep(0, 6)
+
+# ---------------- Case 3: Converting from R arrays ----------------
+
+x <- matrix(1:16, 4)
+x <- as.lazymatrix(x)
+x[,]
+
+
+x <- array(1:27, c(3,3,3))
+as.lazymatrix(x)[,1]
+
+as.lazyarray(x)[]
 
 # -------- Advanced usage: create fst data and import manually --------
 

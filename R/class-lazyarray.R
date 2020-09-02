@@ -322,9 +322,7 @@ ClassLazyArray <- R6::R6Class(
       
       sformat <- self$get_storage_format()
       
-      if(sformat %in% c('complex', 'character')){
-        stop("Cannot @partition_reduce on complex/character data")
-      }
+      is_complex = sformat == 'complex'
       
       stopifnot(is.function(map_function))
       
@@ -357,9 +355,21 @@ ClassLazyArray <- R6::R6Class(
         if(inherits(meta, 'fst_error')){
           stop(meta)
         }
+        
+        # decide column names
+        if(is_complex){
+          ncols = floor(meta$nrOfCols / 2)
+          colnms <- sapply(c('R', 'I'), function(s){
+            sprintf('V%d%s', seq_len(ncols), s)
+          })
+          colnms <- matrix(colnms, ncol = 2)
+        } else {
+          ncols = meta$nrOfCols
+          colnms <- as.matrix(sprintf('V%d', seq_len(ncols)))
+        }
           
         if( split ){
-          more_args[['dim']] <- c(meta$nrOfRows, meta$nrOfCols)
+          more_args[['dim']] <- c(meta$nrOfRows, ncols)
           more_args[['recursive']] <- !isFALSE(more_args[['recursive']])
           chunks <- do.call(make_chunks, more_args)
           
@@ -367,14 +377,13 @@ ClassLazyArray <- R6::R6Class(
             idx <- chunks$get_indices(i, as_numeric = TRUE)
             idx[[1]] <- as.integer(idx[[1]])
             lapply(seq.int(idx[[2]][[1]], idx[[2]][[2]]), function(col){
-              cpp_fst_range(path, meta$colNames[[col]], idx[[1]][[1]], idx[[1]][[2]], 
-                            5L, FALSE, map_f2)
+              cpp_fst_range(path, colnms[col, ], idx[[1]][[1]], idx[[1]][[2]], map_f2)
             })
           })
           res <- unlist(res, recursive = FALSE)
         } else {
-          res <- lapply(seq_len(meta$nrOfCols), function(col){
-            cpp_fst_range(path, meta$colNames[[col]], 1L, NULL, 5L, FALSE, map_f2, reshape = pd)
+          res <- lapply(seq_len(ncols), function(ii){
+            cpp_fst_range(path, colnms[ii,], 1L, NULL, map_f2, reshape = pd)
           })
         }
         
@@ -725,6 +734,11 @@ ClassLazyArray <- R6::R6Class(
         0
       }
       
+    },
+    
+    #' @field storage_formats_avail storage format supported
+    storage_formats_avail = function(){
+      c('double', 'integer', 'character', 'complex')
     }
   )
 )
