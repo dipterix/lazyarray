@@ -89,13 +89,15 @@ ClassLazyMatrix <- R6::R6Class(
           dimnames <- rev(dimnames)
         }
         dnl <- sapply(dimnames, length)
-        if(length(dimnames) != length(dim) || !all(dnl - dim == 0)){
+        if(length(dimnames) != length(dim) || !all(dnl - dim == 0 | dnl == 0)){
           stop("dim does not matches with dimnames")
         }
       }
       private$.dim <- dim
       for(ii in seq_along(dimnames)){
-        dimnames[[ii]] <- dimnames[[ii]][seq_len(dim[[ii]])]
+        if(length(dimnames[[ii]])){
+          dimnames[[ii]] <- dimnames[[ii]][seq_len(dim[[ii]])]
+        }
       }
       private$.dimnames <- dimnames
       private$save_meta()
