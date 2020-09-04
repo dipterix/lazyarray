@@ -20,7 +20,7 @@ rand_string <- function(length = 10){
   paste(sample(c(letters, LETTERS, 0:9), length, replace = TRUE), collapse = '')
 }
 
-make_chunks <- function(dim, chunk_size = 1024, max_nchunks = 200, recursive = FALSE){
+make_chunks <- function(dim, chunk_size, max_nchunks = 200, recursive = FALSE){
   max_nchunks <- floor(max_nchunks)
   len <- prod(dim)
   drange <- lapply(dim, function(d){ c(1, d) })
@@ -32,7 +32,13 @@ make_chunks <- function(dim, chunk_size = 1024, max_nchunks = 200, recursive = F
       paste(rep('', length(dim)), collapse = ',')
     }))
   }
-  if(len < chunk_size || len <= getOption('lazyarray.chunk_memory', 80) * 125000){
+  
+  if(missing(chunk_size)){
+    chunk_size <- getOption('lazyarray.chunk_memory', 80) * 125000
+  }
+  
+  
+  if(len <= chunk_size ){
     return(list(nchunks = 1, get_indices = function(i, as_numeric = FALSE){
       if(as_numeric){ return( drange ) }
       paste(rep('', length(dim)), collapse = ',')
@@ -134,7 +140,7 @@ make_chunks <- function(dim, chunk_size = 1024, max_nchunks = 200, recursive = F
 
 lapply2 <- function(x, FUN, ...){
   if( length(x) > 1 && has_dipsaus() ){
-    dipsaus::lapply_async2(x, FUN, FUN.args = list(...), plan = FALSE)
+    dipsaus::lapply_async2(x, FUN, FUN.args = list(...), plan = getOption('lazyarray.parallel.strategy', FALSE))
   } else {
     lapply(x, FUN)
   }

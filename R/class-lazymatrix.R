@@ -25,7 +25,7 @@ ClassLazyMatrix <- R6::R6Class(
     #' @return self instance
     print = function(...){
       cat("<LazyMatrix> (", private$storage_format, ')\n', sep = '')
-      cat('Dimension:\t', paste(sprintf('%d ', self$dim), collapse = 'x '), 
+      cat('Dimension:\t', paste(sprintf('%s ', self$dim), collapse = 'x '), 
           ifelse(self$`@transposed`, ' (transposed)', ''), '\n')
       cat('Partitioned:\t', private$partitioned , '\n')
       cat('File format:\t', sprintf('%s[part]%s', private$prefix, private$postfix), '\n')
@@ -46,6 +46,13 @@ ClassLazyMatrix <- R6::R6Class(
           private$.dim <- c(d, 1)
         } else {
           private$.dim <- c(prod(d[-length(x)]), d[[length(d)]])
+        }
+        
+        if(length(private$.dimnames)){
+          private$.dimnames <- structure(list(
+            NULL,
+            private$.dimnames[[length(private$.dimnames)]]
+          ), names = c('', names(private$.dimnames)[[length(private$.dimnames)]]))
         }
       }
       
@@ -264,5 +271,6 @@ ClassLazyMatrix <- R6::R6Class(
     }
   )
 )
+
 
 

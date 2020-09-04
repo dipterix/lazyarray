@@ -8,6 +8,13 @@
 #' @importFrom utils str
 #' @importFrom utils capture.output
 #' @importFrom stats sd
+#' @importFrom stats model.response
+#' @importFrom stats is.empty.model
+#' @importFrom stats model.matrix
+#' @importFrom stats contrasts
+#' @importFrom methods setGeneric
+#' @importFrom methods setMethod
+#' @importFrom methods signature
 #' @useDynLib lazyarray, .registration = TRUE
 NULL
 

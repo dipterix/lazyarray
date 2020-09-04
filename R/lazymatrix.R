@@ -208,23 +208,76 @@ as.lazymatrix.array <- function(x, read_only = FALSE, storage_format, path = tem
   }
   dim(x) <- dm
   
-  re <- lazyarray(path = path, storage_format = storage_format, dim = dm)
-  
-  ii <- 1
-  for(ii in seq_len(dm[[2]])){
-    re[,ii] <- x[,ii]
+  if(dm[[1]] < dm[[2]]){
+    dm = rev(dm)
+    re <- lazyarray(path = path, storage_format = storage_format, dim = dm)
+    
+    ii <- 1
+    for(ii in seq_len(dm[[2]])){
+      re[,ii] <- x[ii,]
+    }
+    re <- as.lazymatrix.LazyArray(re, read_only = read_only, ...)
+    re <- t(re)
+  } else {
+    re <- lazyarray(path = path, storage_format = storage_format, dim = dm)
+    
+    ii <- 1
+    for(ii in seq_len(dm[[2]])){
+      re[,ii] <- x[,ii]
+    }
+    
+    re <- as.lazymatrix.LazyArray(re, read_only = read_only, ...)
   }
+  re
   
-  as.lazymatrix.LazyArray(re, read_only = read_only, ...)
 }
 
 #' @rdname lazyarray
 #' @export
-as.lazymatrix.LazyArray <- function(x, read_only = FALSE, ...){
+as.lazymatrix.LazyArray <- function(x, read_only = FALSE, storage_format, ...){
   path <- dirname(x$storage_path)
   meta_name <- x$meta_name
   if(is.na(read_only) || !is.logical(read_only)){
     read_only <- !x$can_write
   }
+  
+  if(missing(storage_format)){
+    storage_format <- x$get_storage_format()
+  }
+  
+  stopifnot(storage_format %in% x$storage_formats_avail)
+  
+  meta_name <- sprintf("%s_version-%s", storage_format, x$meta_name)
+  
+  # create header
+  meta <- load_yaml(x$storage_path)
+  meta$storage_format <- storage_format
+  meta$dim <- c(length(x) / x$npart, x$npart)
+  meta$part_dimension <- c(meta$dim[[1]], 1L)
+  
+  if(length(meta$dimnames) == length(x$dim)){
+    dn <- meta$dimnames
+    ndim <- length(dn)
+    dk <- names(dn)
+    if(length(dk == ndim)){
+      meta$dimnames <- structure(list(NULL, dn[[ndim]]), names = c('', names(dn)[[ndim]]))
+    } else {
+      meta$dimnames <- list(NULL, dn[[ndim]])
+    }
+    
+  } else {
+    meta$dimnames <- NULL
+  }
+  
+  save_yaml(meta, file.path(path, meta_name))
+  
   ClassLazyMatrix$new(path = path, read_only = read_only, meta_name = meta_name)
+}
+
+#' @rdname lazyarray
+#' @export
+as.lazymatrix.LazyMatrix <- function(x, read_only = FALSE, storage_format, ...){
+  re <- as.lazymatrix.LazyArray(x, read_only, storage_format, ...)
+  re$`@transposed` <- x$`@transposed`
+  re
 }

@@ -300,9 +300,9 @@ ClassLazyArray <- R6::R6Class(
     #' @description Returns dimension of each partition
     partition_dim = function(){
       if(private$partitioned){
-        as.integer(private$part_dimension)
+        private$part_dimension
       }else{
-        as.integer(private$.dim)
+        private$.dim
       }
     },
     
@@ -376,7 +376,7 @@ ClassLazyArray <- R6::R6Class(
           
           res <- lapply(seq_len(chunks$nchunks), function(i){
             idx <- chunks$get_indices(i, as_numeric = TRUE)
-            idx[[1]] <- as.integer(idx[[1]])
+            idx[[1]] <- idx[[1]]
             lapply(seq.int(idx[[2]][[1]], idx[[2]][[2]]), function(col){
               cpp_fst_range(path, colnms[col, ], idx[[1]][[1]], idx[[1]][[2]], map_f2)
             })
@@ -395,6 +395,50 @@ ClassLazyArray <- R6::R6Class(
       
       res
       
+    },
+    
+    
+    `@chunk_map` = function(
+      map_function, max_nchunks = 50, ...
+    ){
+      if(!self$is_multi_part()){
+        stop("Cannot call @chunk_map if array is not multi-part")
+      }
+      
+      if(!is.function(map_function)){
+        stop("map_function must be a function")
+      }
+      if(length(formals(map_function)) < 2){
+        map_f <- function(data, chunk, idx){
+          map_function(data)
+        }
+      } else if(length(formals(map_function)) < 2){
+        map_f <- function(data, chunk, idx){
+          map_function(data, chunk)
+        }
+      } else {
+        map_f <- map_function
+      }
+      
+      nrows <- prod(self$partition_dim())
+      ncols <- self$npart
+      # get chunk size
+      chunkf <- make_chunks(nrows, max_nchunks = max_nchunks, ...)
+      files <- self$get_partition_fpath()
+      partition_locations <- list(
+        numeric(0),
+        seq_len(ncols)
+      )
+      
+      sdata <- self$`@sample_data`()
+      
+      lapply2(seq_len(chunkf$nchunks), function(ii){
+        idx_range <- chunkf$get_indices(ii, as_numeric = TRUE)[[1]]
+        chunk_data <- cpp_load_lazyarray(files = files, partition_dim = c(nrows, 1), 
+                           partition_locations = list(seq.int(idx_range[[1]], idx_range[[2]]), 1L), 
+                           ndim = 2L, value_type = sdata)
+        map_f(chunk_data, ii, idx_range)
+      })
     },
     
     #' @description Get partition path
@@ -476,11 +520,16 @@ ClassLazyArray <- R6::R6Class(
             return(FALSE)
           }
           fname <- self$get_partition_fpath(part, full_path = TRUE)
-          x <- cpp_load_lazyarray(fname, partition_locations, part_dimension, self$ndim, private$sample_data())
-          # x <- do.call('[<-', args)
-          # make a call instead of do.call
-          call <- as.call(c(list(quote(`[<-`)), args))
-          x <- eval(call)
+          
+          if(prod(vapply(part_idx, length, 1L)) == prod(self$partition_dim())){
+            x <- array(value, dim = self$partition_dim())
+          } else {
+            x <- cpp_load_lazyarray(fname, partition_locations, part_dimension, self$ndim, private$sample_data())
+            # x <- do.call('[<-', args)
+            # make a call instead of do.call
+            call <- as.call(c(list(quote(`[<-`)), args))
+            x <- eval(call)
+          }
           
           cpp_create_lazyarray(x, part_dimension, fname, compression = private$compress_level, uniformEncoding = TRUE)
           
@@ -737,10 +786,38 @@ ClassLazyArray <- R6::R6Class(
       
     },
     
+    #' @field expected_filesize expected file size in gigatypes if all partition
+    #' files exist 
+    expected_filesize = function(){
+      
+      fsize <- self$filesize
+      if(fsize > 0){
+        files <-
+          self$get_partition_fpath(
+            part = seq_len(self$npart),
+            full_path = TRUE,
+            summary_file = FALSE
+          )
+        return(fsize / mean(file.exists(files)))
+      }
+      
+      unit_size <- 32
+      if(private$storage_format == 'integer'){
+        unit_size <- 4
+      } else if(private$storage_format == 'double'){
+        unit_size <- 8
+      } else if(private$storage_format == 'complex'){
+        unit_size <- 16
+      }
+      
+      prod(self$dim) * unit_size / 1024^3
+    },
+    
     #' @field storage_formats_avail storage format supported
     storage_formats_avail = function(){
       c('double', 'integer', 'character', 'complex')
     }
+    
   )
 )
 

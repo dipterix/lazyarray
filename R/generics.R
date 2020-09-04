@@ -184,3 +184,72 @@ partition_map.LazyArray <- function(x, map_fun, reduce, partitions, further_spli
 }
 
 
+#' Apply functions to all partitions, but small chunks each time
+#' @seealso \code{\link{partition_map}}
+#' @param x a \code{LazyArray} or R array
+#' @param map_function function to apply to each chunk
+#' @param reduce similar to \code{reduce} in \code{\link{partition_map}}
+#' @param max_nchunks max number of chunks. If missing, then automatically 
+#' assigned based on array size
+#' @param chunk_size Integer chunk size. If \code{chunk_size} is too small, it 
+#' will be ignored
+#' @param ... ignored or passed to other methods
+#' @return If \code{reduce} is missing, returns a list of results. Each result
+#' is returned by \code{map_fun}, and the total length equals to number of 
+#' chunks mapped. If \code{reduce} is a function, that list of results will
+#' be passed to \code{reduce} and \code{chunk_map} returns the results 
+#' generated from \code{reduce}.
+#' @details The difference between \code{chunk_map} and 
+#' \code{partition_map} is the margin or direction to apply mapping
+#' functions. In \code{partition_map}, mapping function is applied to 
+#' each partition. If \code{x} is a matrix, this means applying to each column.
+#' \code{chunk_map} generate small chunks along all dimensions except the last,
+#' and apply mapping functions to each chunks. If \code{x} is a matrix, it 
+#' make chunks along rows and apply mapping functions along rows. 
+#' @examples 
+#' 
+#' x <- as.lazymatrix(matrix(1:100, ncol = 2))
+#' x
+#' 
+#' # Set max_nchunks=Inf and chunk_size=10 to force total number of chunks
+#' # is around nrow(x)/10 and each chunk contains at most 10 rows
+#' chunk_map(x, function(chunk){chunk[1:2,]}, chunk_size = 10, max_nchunks = Inf)
+#' 
+#' # For each chunks, calculate mean, then calculate the mean of chunk mean
+#' chunk_map(x, function(chunk) {
+#'   colMeans(chunk)
+#' }, function(chunk_means) {
+#'   Reduce('+', chunk_means) / length(chunk_means)
+#' })
+#' 
+#' colMeans(x[])
+#' 
+#' 
+#' @export
+chunk_map <- function(x, map_function, reduce, max_nchunks, chunk_size, ...){
+  UseMethod('chunk_map')
+}
+
+
+#' @export
+chunk_map.LazyArray <- function(x, map_function, reduce, max_nchunks, chunk_size, ...){
+  
+  if(missing(max_nchunks)){
+    # calculate such that each chunk size is at most 0.5GB
+    max_nchunks <- auto_chunks(x)
+  }
+  
+  if(missing(chunk_size)){
+    mapped <- x$`@chunk_map`(map_function = map_function, max_nchunks = max_nchunks, chunk_size = 1024L)
+  } else {
+    mapped <- x$`@chunk_map`(map_function = map_function, max_nchunks = max_nchunks, chunk_size = chunk_size)
+  }
+  
+  if(!missing(reduce)){
+    mapped <- reduce(mapped)
+  }
+  
+  return(mapped)
+}
+
+
