@@ -33,7 +33,7 @@ test_that("IO - double, NumericVector", {
     as.integer(sample(52)-1)
   )
   target_dim = sapply(idx_loc, length)
-  y1 <- lazyarray:::cpp_load_lazyarray(f, idx_loc, dim, 0.1)
+  y1 <- lazyarray:::lazyLoadOld(f, idx_loc, dim, 0.1)
   
   a = idx_loc[[1]]; a[(a<1) | (a >10)] = NA
   b = idx_loc[[2]]; b[b<1 | b > 20] = NA
@@ -44,10 +44,10 @@ test_that("IO - double, NumericVector", {
   expect_equal(range(y2 - y1, na.rm = TRUE), c(0,0), label = 'lazyarray subset (double) vs base -> value')
   
   # trying other loader
-  y3 <- lazyarray:::cpp_load_lazyarray(f, idx_loc, dim, 0L)
+  y3 <- lazyarray:::lazyLoadOld(f, idx_loc, dim, 0L)
   expect_equal(range(as.integer(y2) - y3, na.rm = TRUE), c(0,0), label = 'lazyarray stored: double -> loader: int')
   
-  y3 <- lazyarray:::cpp_load_lazyarray(f, idx_loc, dim, '')
+  y3 <- lazyarray:::lazyLoadOld(f, idx_loc, dim, '')
   expect_equal(local({y2 <- as.character(y2); dim(y2) = dim(y3); y2}), y3, label = 'lazyarray stored: double -> loader: char')
   
 })
@@ -65,7 +65,7 @@ test_that("IO - double, IntegerVector", {
     as.integer(sample(22)-1),
     as.integer(sample(52)-1)
   )
-  y1 <- lazyarray:::cpp_load_lazyarray(f, idx_loc, dim, 9L)
+  y1 <- lazyarray:::lazyLoadOld(f, idx_loc, dim, 9L)
   
   a = idx_loc[[1]]; a[(a<1) | (a >10)] = NA
   b = idx_loc[[2]]; b[b<1 | b > 20] = NA
@@ -77,10 +77,10 @@ test_that("IO - double, IntegerVector", {
   expect_true(is.integer(y1), label = "check if it's integer")
   
   # trying other loaders
-  y3 <- lazyarray:::cpp_load_lazyarray(f, idx_loc, dim, 0.0)
+  y3 <- lazyarray:::lazyLoadOld(f, idx_loc, dim, 0.0)
   expect_equal(range(y2 - y3, na.rm = TRUE), c(0,0), label = 'lazyarray stored: int -> loader: double')
   
-  y3 <- lazyarray:::cpp_load_lazyarray(f, idx_loc, dim, '')
+  y3 <- lazyarray:::lazyLoadOld(f, idx_loc, dim, '')
   expect_equal(local({y2 <- as.character(y2); dim(y2) = dim(y3); y2}), y3, label = 'lazyarray stored: int -> loader: char')
   
 })
@@ -100,7 +100,7 @@ test_that("IO - double, CharacterVector", {
     as.integer(sample(22)-1),
     as.integer(sample(52)-1)
   )
-  y1 <- lazyarray:::cpp_load_lazyarray(f, idx_loc, dim, '')
+  y1 <- lazyarray:::lazyLoadOld(f, idx_loc, dim, '')
   
   a = idx_loc[[1]]; a[(a<1) | (a >10)] = NA
   b = idx_loc[[2]]; b[b<1 | b > 20] = NA
@@ -112,16 +112,16 @@ test_that("IO - double, CharacterVector", {
   expect_true(is.character(y1), label = "check if it's integer")
   
   # trying other loaders
-  expect_error(lazyarray:::cpp_load_lazyarray(f, idx_loc, dim, 0.0))
+  expect_error(lazyarray:::lazyLoadOld(f, idx_loc, dim, 0.0))
   
-  expect_error(lazyarray:::cpp_load_lazyarray(f, idx_loc, dim, 0L))
+  expect_error(lazyarray:::lazyLoadOld(f, idx_loc, dim, 0L))
   
   x <- paste0(sample(0:9, 10000, replace = TRUE), ""); dim(x) <- dim
   unlink(f)
   lazyarray:::cpp_create_lazyarray(x, dim, f, 100L, TRUE);
   
-  expect_error(lazyarray:::cpp_load_lazyarray(f, idx_loc, dim, 0.0))
+  expect_error(lazyarray:::lazyLoadOld(f, idx_loc, dim, 0.0))
   
-  expect_error(lazyarray:::cpp_load_lazyarray(f, idx_loc, dim, 0L))
+  expect_error(lazyarray:::lazyLoadOld(f, idx_loc, dim, 0L))
   
 })

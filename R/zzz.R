@@ -1,4 +1,5 @@
 .onUnload <- function (libpath) {
+  setLazyThread(1L, FALSE)
   library.dynam.unload("lazyarray", libpath)
 }
 
@@ -6,6 +7,7 @@
 .onLoad <- function(libname, pkgname){
   options('lazyarray.parallel.strategy' = FALSE)
   options('lazyarray.chunk_memory' = 80)
+  setLazyThread(4L, FALSE)
 }
 
 

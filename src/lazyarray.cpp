@@ -2,7 +2,12 @@
 
 #include "common.h"
 #include "utils.h"
-#include "misc.h"
+#include "indexConvert.h"
+#include "reshape.h"
+#include "loader1.h"
+#include "loader2.h"
+#include "fstWrapper.h"
+using namespace Rcpp; 
 
 /**
  * Write array to fst files
@@ -50,125 +55,15 @@ SEXP cpp_create_lazyarray(SEXP& x, IntegerVector& dim, SEXP fileName,
 
 
 /**
- * For example array of dimension c(10,100,20)
- * @param files files to load from
- * @param partition_locations
- * @param partition_dim partition dimension, e.g. c(10,100,1), or c(10,100), depending on how partition is stored
- * @param ndim total number of dimensions of array, in this example it's 3
- * @param value_type value type of numbers stored
+ * @param fileName,colSel,start,end Parameter required to locate each partition for each file
+ * @param custom_func Function to apply to each partition
+ * @param reshape Dimension to reshape partition data to
  */
 // [[Rcpp::export]]
-SEXP cpp_load_lazyarray(StringVector& files, List& partition_locations, 
-                        IntegerVector& partition_dim, R_xlen_t ndim,  SEXP value_type){
-  // files are the total files
-  // locations is to each partition
-  // dim is total dim
-  
-  Rcpp::Timer _rcpp_timer;
-  _rcpp_timer.step("start cpp_load_lazyarray");
-  
-  // Get partition dimension size
-  R_xlen_t part_dim = partition_dim.size();
-  if( part_dim != partition_locations.size() || part_dim < 2 ){
-    stop("Dimension not match for cpp_load_lazyarray");
-  }
-  
-  // Obtain the dimension to be returned
-  IntegerVector target_dim = sapply(partition_locations, Rf_length);
-  
-  // If dim for each partition shares the same length as array dim,
-  if(part_dim == ndim){
-    target_dim[part_dim - 1] *= files.size();
-  } else {
-    // multipart, mode: 2: tensor mode = part mode + 1
-    // this mode is experimental
-    
-    if( ndim - part_dim != 1 ){
-      stop("Total dimension must be partition size+1 in multipart mode~2");
-    }
-    
-    target_dim.push_back( files.size() );
-  }
-  
-  // int64_t target_length = std::accumulate(target_dim.begin(), target_dim.end(), 1, std::multiplies<int64_t>());
-  
-  // if( target_length == 0 )
-  
-  /*
-   * split partition_locations into two parts
-   * the last of partition dim is column of fst -- column_indices
-   * the other dimensions need to be converted to rows of fst -- first_dim & first_loc
-   */
-  
-  // first_dim: partition_dim[-length(partition_dim)], e.g. c(10,100)
-  IntegerVector first_dim = IntegerVector(partition_dim.begin(), partition_dim.end() - 1);
-  
-  // column_indices = partition_dim[length(partition_dim)]
-  IntegerVector column_indices = IntegerVector(partition_locations[part_dim - 1]);
-  
-  // Partition location indexes to be mapped to fst rows
-  List first_loc(part_dim - 1);
-  for(R_xlen_t ii = 0; ii < part_dim - 1; ii++){
-    first_loc[ii] = partition_locations[ii];
-  }
-  
-  _rcpp_timer.step("calculated target_dim");
-  
-  // TODO: check whether first_len is needed
-  int64_t first_len = std::accumulate(target_dim.begin(), target_dim.begin() + part_dim - 1, 1, std::multiplies<int64_t>());
-  // What if re_len is 0?
-  if( first_len == 0 || column_indices.size() == 0 || files.size() == 0 ){
-    // return numeric(0)?
-    return R_NilValue;
-  }
-
-  IntegerVector row_indices = loc2idx(first_loc, first_dim);
-  
-  
-  _rcpp_timer.step("calculated loc2idx");
-  
-
-  // print(partition_dim);
-  SEXP re = cpp_load_lazyarray_base(files, partition_dim, target_dim, 
-                                    row_indices, column_indices, TYPEOF(value_type));
-  
-  _rcpp_timer.step("calculated cpp_load_lazyarray_base");
-  
-  // if( LAZYARRAY_DEBUG ){
-  //   
-  //   NumericVector _res(_rcpp_timer);
-  //   _res = _res / 1000.0;
-  //   Rcpp::print(_res);
-  // }
-  return re;
-}
-
-// [[Rcpp::export]]
-SEXP cpp_fst_retrieve(Rcpp::String fileName, SEXP colSel, SEXP start, SEXP end){
-  return fstcore::fstretrieve(fileName, colSel, start, end);
-}
-
-// [[Rcpp::export]]
-SEXP cpp_fst_meta(Rcpp::String fileName){
-  return fstcore::fstmetadata(fileName);
-}
-
-// [[Rcpp::export]]
-SEXP test_fstcore_write(String filename){
-  DataFrame data = DataFrame::create(_["V1"] = 1);
-  return fstcore::fststore(filename, data, wrap(100), wrap(true));
-}
-
-// [[Rcpp::export]]
-SEXP cpp_fst_range(Rcpp::String fileName, CharacterVector colSel, SEXP start, SEXP end = R_NilValue, 
-                   Rcpp::Nullable<Rcpp::Function> custom_func = R_NilValue,
-                   Rcpp::Nullable<IntegerVector> reshape = R_NilValue){
-  // method 1-4 are not exposed
-  // 1: min
-  // 2: max
-  // 3: range
-  // 4:
-  // 5 customized function
+SEXP lazyMapReduceByPartition(
+    Rcpp::String fileName, CharacterVector colSel, SEXP start, SEXP end = R_NilValue, 
+    Rcpp::Nullable<Rcpp::Function> custom_func = R_NilValue,
+    Rcpp::Nullable<IntegerVector> reshape = R_NilValue){
   
   SEXP tmp;
   tmp = fstcore::fstretrieve(fileName, wrap(colSel), start, end);
@@ -182,12 +77,12 @@ SEXP cpp_fst_range(Rcpp::String fileName, CharacterVector colSel, SEXP start, SE
   bool is_complex = false;
   if( colSel.size() == 1 ){
     data = getListElement(tmp, colSel[0]);
-    s = Rf_length(data);
+    s = Rf_xlength(data);
   } else {
     is_complex = true;
     NumericVector re = as<NumericVector>(getListElement(tmp, colSel[0]));
     NumericVector im = as<NumericVector>(getListElement(tmp, colSel[1]));
-    s = Rf_length(re);
+    s = Rf_xlength(re);
     
     data = PROTECT(Rf_allocVector(CPLXSXP, s));
     
@@ -229,24 +124,65 @@ SEXP cpp_fst_range(Rcpp::String fileName, CharacterVector colSel, SEXP start, SE
   return re;
 }
 
+// [[Rcpp::export]]
+int64_t setBlockSize(int64_t size = 0){
+  if(size < 0){
+    stop("Cannot set block size to be less than 0");
+  }
+  if( size <= 0 ){
+    BLOCKSIZE = 16384;
+  } else {
+    BLOCKSIZE = size;
+  }
+  
+  return BLOCKSIZE;
+}
+
+
 
 
 /*** R
-f <- tempfile()
-fst::write_fst(data.frame(V1R = 1:10, V1I = 10:1), path = f)
-tmp <- fst:::fstretrieve(normalizePath(f), c('V1R', 'V1I'), 1L, NULL)
-tmp
+# devtools::load_all()
+require(lazyarray)
+x <- array(seq_len(prod(c(3000,7,20,8))), c(3000,7,20,8))
+x <- as.lazyarray(x)
 
-path <- normalizePath(f)
-cpp_fst_range(path, c('V1R', 'V1I'), 1L, NULL, sum)
-cpp_fst_range(path, c('V1R'), 1L, NULL, sum)
+# unlink(x$get_partition_fpath(3))
+# fst::write_fst(data.frame(V2 = 1:8), x$get_partition_fpath(3))
 
-x <- lazyarray(tempfile(), 'complex', c(2,3,4))
-x[] <- 1:24 + (24:1)*1i
+b <- function(i,...){
+  subsetIdx(environment(), dim(x), TRUE)
+}
+invisible(b(1:5,-c(1:2,NA),c(1,NA),))
 
-partition_map(x, function(slice, part){
-  slice
-})
+files <- x$get_partition_fpath()
+a <- function(i,...){
+  lazySubset(files, environment(), dim(x), 0.1)
+}
+# e = a(c(3,1,7,NA,2,1, 27, 16, 15,14,NA, 27))
+e = a(1:5,c(1:2,NA),,)
+range(e - x[][1:5,c(1:2,NA),,], na.rm = TRUE)
+
+a(c(1:20, NA))
+
+# array(1:27, c(3,3,3))[c(3,1,7,NA,2,1)]
+
+
+# f <- tempfile()
+# fst::write_fst(data.frame(V1R = 1:10, V1I = 10:1), path = f)
+# tmp <- fst:::fstretrieve(normalizePath(f), c('V1R', 'V1I'), 1L, NULL)
+# tmp
+# 
+# path <- normalizePath(f)
+# lazyMapReduceByPartition(path, c('V1R', 'V1I'), 1L, NULL, sum)
+# lazyMapReduceByPartition(path, c('V1R'), 1L, NULL, sum)
+# 
+# x <- lazyarray(tempfile(), 'complex', c(2,3,4))
+# x[] <- 1:24 + (24:1)*1i
+# 
+# partition_map(x, function(slice, part){
+#   slice
+# })
 
 
 # path = '~/Desktop/lazyarray_data'
@@ -262,11 +198,11 @@ partition_map(x, function(slice, part){
 # a = data.frame(V1=c(1:10 + rnorm(10), rep(NA,2)))
 # fst::write_fst(a, path)
 # path <- normalizePath(path)
-# cpp_fst_range(path, 'V1', 1L, NULL, sum)
-# cpp_fst_range(path, 'V1', 1L, NULL, function(x){mean(x, na.rm = TRUE)})
-# cpp_fst_range(path, 'V1', 1L, NULL, length)
-# cpp_fst_range(path, 'V1', 1L, NULL, function(x){NULL})
-# cpp_fst_range(path, 'V1', 1L, NULL, function(x){dim(x)}, c(3L,4L))
+# lazyMapReduceByPartition(path, 'V1', 1L, NULL, sum)
+# lazyMapReduceByPartition(path, 'V1', 1L, NULL, function(x){mean(x, na.rm = TRUE)})
+# lazyMapReduceByPartition(path, 'V1', 1L, NULL, length)
+# lazyMapReduceByPartition(path, 'V1', 1L, NULL, function(x){NULL})
+# lazyMapReduceByPartition(path, 'V1', 1L, NULL, function(x){dim(x)}, c(3L,4L))
 
 # a = 1:3; b = 4:6+0.5
 # pryr::address(a)

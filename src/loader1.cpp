@@ -1,26 +1,12 @@
 // [[Rcpp::plugins("cpp11")]]
 
-#include "common.h"
-#include "utils.h"
-#include "misc.h"
-
-
-SEXP getListElement(SEXP list, const char *str){
-  SEXP elmt = R_NilValue, names = Rf_getAttrib(list, R_NamesSymbol);
-  
-  const String str_copy(str);
-  
-  for (R_len_t i = 0; i < Rf_length(list); i++)
-    if(str_copy == String(CHAR(STRING_ELT(names, i)))) {
-      elmt = VECTOR_ELT(list, i);
-      break;
-    }
-  return elmt;
-}
+#include "loader1.h"
+#include "indexConvert.h"
+using namespace Rcpp; 
 
 
 template <typename T, typename I>
-SEXP cpp_load_lazyarray_base_internal(
+SEXP lazyLoadOld_base_internal(
     StringVector& files, IntegerVector& first_indices, IntegerVector& second_indices){
   
   // Rcpp::print(files);
@@ -67,8 +53,8 @@ SEXP cpp_load_lazyarray_base_internal(
     if( Rf_inherits(meta, "fst_error") || 
         !meta.containsElementNamed("nrOfRows") ||
         !meta.containsElementNamed("nrOfCols")){
-      // this file is invalid, fill with na
-      std::fill_n(ptr_first, block_size, T::get_na());
+        // this file is invalid, fill with na
+        std::fill_n(ptr_first, block_size, T::get_na());
       ptr_first += block_size;
       // Rcout << "continued" << "\n";
       continue;
@@ -95,8 +81,8 @@ SEXP cpp_load_lazyarray_base_internal(
         // Read error, just fill with NAs
         if( Rf_inherits(tmp, "fst_error") || 
             !tmp.containsElementNamed("resTable") ){
-          // this file is invalid, fill with na
-          std::fill_n(ptr_first, subset_nrows, T::get_na());
+            // this file is invalid, fill with na
+            std::fill_n(ptr_first, subset_nrows, T::get_na());
           ptr_first += subset_nrows;
           continue;
         }
@@ -129,7 +115,7 @@ SEXP cpp_load_lazyarray_base_internal(
 }
 
 
-ComplexVector cpp_load_lazyarray_base_complex(
+ComplexVector lazyLoadOld_base_complex(
     StringVector& files, IntegerVector& first_indices, IntegerVector& second_indices){
   
   // calculate subset dimension for each file
@@ -162,8 +148,8 @@ ComplexVector cpp_load_lazyarray_base_complex(
     if( Rf_inherits(meta, "fst_error") || 
         !meta.containsElementNamed("nrOfRows") ||
         !meta.containsElementNamed("nrOfCols") ){
-      // this file is invalid, fill with na
-      std::fill_n(ptr_first, block_size, ComplexVector::get_na());
+        // this file is invalid, fill with na
+        std::fill_n(ptr_first, block_size, ComplexVector::get_na());
       ptr_first += block_size;
       continue;
     }
@@ -187,8 +173,8 @@ ComplexVector cpp_load_lazyarray_base_complex(
         
         if( Rf_inherits(tmp, "fst_error") || 
             !tmp.containsElementNamed("resTable") ){
-          // this file is invalid, fill with na
-          std::fill_n(ptr_first, subset_nrows, ComplexVector::get_na());
+            // this file is invalid, fill with na
+            std::fill_n(ptr_first, subset_nrows, ComplexVector::get_na());
           ptr_first += subset_nrows;
           continue;
         }
@@ -203,8 +189,8 @@ ComplexVector cpp_load_lazyarray_base_complex(
         
         if( Rf_inherits(tmp, "fst_error") || 
             !tmp.containsElementNamed("resTable") ){
-          // this file is invalid, fill with na
-          std::fill_n(ptr_first, subset_nrows, ComplexVector::get_na());
+            // this file is invalid, fill with na
+            std::fill_n(ptr_first, subset_nrows, ComplexVector::get_na());
           ptr_first += subset_nrows;
           continue;
         }
@@ -247,7 +233,7 @@ ComplexVector cpp_load_lazyarray_base_complex(
  * @param second_indices collumn indices of fst table
  * @param type R type to convert to
  */
-SEXP cpp_load_lazyarray_base(
+SEXP lazyLoadBaseOld(
     StringVector& files, IntegerVector& partition_dim, IntegerVector& target_dim,
     IntegerVector& first_indices, IntegerVector& second_indices,
     int type){
@@ -278,25 +264,25 @@ SEXP cpp_load_lazyarray_base(
   
   switch( type ){
   case STRSXP:
-    re = cpp_load_lazyarray_base_internal<StringVector, StringVector::iterator>(
+    re = lazyLoadOld_base_internal<StringVector, StringVector::iterator>(
       files, first_indices, second_indices);
     break;
   case CHARSXP:
-    re = cpp_load_lazyarray_base_internal<CharacterVector, CharacterVector::iterator>(
+    re = lazyLoadOld_base_internal<CharacterVector, CharacterVector::iterator>(
       files, first_indices, second_indices);
     break;
   case LGLSXP:
   case RAWSXP:
   case INTSXP:
-    re = cpp_load_lazyarray_base_internal<IntegerVector, IntegerVector::iterator>(
+    re = lazyLoadOld_base_internal<IntegerVector, IntegerVector::iterator>(
       files, first_indices, second_indices);
     break;
   case REALSXP:
-    re = cpp_load_lazyarray_base_internal<NumericVector, NumericVector::iterator>(
+    re = lazyLoadOld_base_internal<NumericVector, NumericVector::iterator>(
       files, first_indices, second_indices);
     break;
   case CPLXSXP: {
-    re = cpp_load_lazyarray_base_complex(files, first_indices, second_indices);
+    re = lazyLoadOld_base_complex(files, first_indices, second_indices);
     break;
   }
   default:
@@ -308,6 +294,99 @@ SEXP cpp_load_lazyarray_base(
   return re;
 }
 
+
+/**
+ * For example array of dimension c(10,100,20)
+ * @param files files to load from
+ * @param partition_locations
+ * @param partition_dim partition dimension, e.g. c(10,100,1), or c(10,100), depending on how partition is stored
+ * @param ndim total number of dimensions of array, in this example it's 3
+ * @param value_type value type of numbers stored
+ */
+SEXP lazyLoadOld(StringVector& files, List& partition_locations, 
+                        IntegerVector& partition_dim, R_xlen_t ndim,  SEXP value_type){
+  // files are the total files
+  // locations is to each partition
+  // dim is total dim
+  
+  Rcpp::Timer _rcpp_timer;
+  _rcpp_timer.step("start lazyLoadOld");
+  
+  // Get partition dimension size
+  R_xlen_t part_dim = partition_dim.size();
+  if( part_dim != partition_locations.size() || part_dim < 2 ){
+    stop("Dimension not match for lazyLoadOld");
+  }
+  
+  // Obtain the dimension to be returned
+  IntegerVector target_dim = sapply(partition_locations, Rf_length);
+  
+  // If dim for each partition shares the same length as array dim,
+  if(part_dim == ndim){
+    target_dim[part_dim - 1] *= files.size();
+  } else {
+    // multipart, mode: 2: tensor mode = part mode + 1
+    // this mode is experimental
+    
+    if( ndim - part_dim != 1 ){
+      stop("Total dimension must be partition size+1 in multipart mode~2");
+    }
+    
+    target_dim.push_back( files.size() );
+  }
+  
+  // int64_t target_length = std::accumulate(target_dim.begin(), target_dim.end(), 1, std::multiplies<int64_t>());
+  
+  // if( target_length == 0 )
+  
+  /*
+   * split partition_locations into two parts
+   * the last of partition dim is column of fst -- column_indices
+   * the other dimensions need to be converted to rows of fst -- first_dim & first_loc
+   */
+  
+  // first_dim: partition_dim[-length(partition_dim)], e.g. c(10,100)
+  IntegerVector first_dim = IntegerVector(partition_dim.begin(), partition_dim.end() - 1);
+  
+  // column_indices = partition_dim[length(partition_dim)]
+  IntegerVector column_indices = IntegerVector(partition_locations[part_dim - 1]);
+  
+  // Partition location indexes to be mapped to fst rows
+  List first_loc(part_dim - 1);
+  for(R_xlen_t ii = 0; ii < part_dim - 1; ii++){
+    first_loc[ii] = partition_locations[ii];
+  }
+  
+  _rcpp_timer.step("calculated target_dim");
+  
+  // TODO: check whether first_len is needed
+  int64_t first_len = std::accumulate(target_dim.begin(), target_dim.begin() + part_dim - 1, 1, std::multiplies<int64_t>());
+  // What if re_len is 0?
+  if( first_len == 0 || column_indices.size() == 0 || files.size() == 0 ){
+    // return numeric(0)?
+    return R_NilValue;
+  }
+  
+  IntegerVector row_indices = loc2idx(first_loc, first_dim);
+  
+  
+  _rcpp_timer.step("calculated loc2idx");
+  
+  
+  // print(partition_dim);
+  SEXP re = lazyLoadBaseOld(files, partition_dim, target_dim, 
+                        row_indices, column_indices, TYPEOF(value_type));
+  
+  _rcpp_timer.step("calculated cpp_load_lazyarray_base");
+  
+  // if( LAZYARRAY_DEBUG ){
+  //   
+  //   NumericVector _res(_rcpp_timer);
+  //   _res = _res / 1000.0;
+  //   Rcpp::print(_res);
+  // }
+  return re;
+}
 
 /*** R
 f = normalizePath(tempfile(), mustWork = F)

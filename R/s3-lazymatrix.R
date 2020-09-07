@@ -204,10 +204,10 @@ lazy_matmul <- function(x, y, max_chunks, weights = NULL, hybrid_limit = 2){
       idx_seq <- seq.int(idx_range[[1]], idx_range[[2]])
       partition_locations = list(idx_seq, 1L)
       # get chunks from x and y
-      chunk_x <- t(cpp_load_lazyarray(files = xfiles, partition_dim = c(total_l, 1), 
+      chunk_x <- t(lazyLoadOld(files = xfiles, partition_dim = c(total_l, 1), 
                                     partition_locations = partition_locations, 
                                     ndim = 2L, value_type = x_sdata))
-      chunk_y <- cpp_load_lazyarray(files = yfiles, partition_dim = c(total_l, 1), 
+      chunk_y <- lazyLoadOld(files = yfiles, partition_dim = c(total_l, 1), 
                                     partition_locations = partition_locations, 
                                     ndim = 2L, value_type = y_sdata)
       if(!is.null(weights)){
@@ -257,7 +257,7 @@ lazy_matmul <- function(x, y, max_chunks, weights = NULL, hybrid_limit = 2){
       partition_locations = list(idx_seq, 1L)
       # get chunks from x and y
       
-      part <- cpp_load_lazyarray(
+      part <- lazyLoadOld(
         xfiles, partition_locations = partition_locations, 
         partition_dim = c(dx[[1]], 1L), ndim = 2L, value_type = x_sdata
       )

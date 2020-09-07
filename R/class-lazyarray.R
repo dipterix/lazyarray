@@ -351,7 +351,7 @@ ClassLazyArray <- R6::R6Class(
           return(list(re))
         }
         
-        meta <- cpp_fst_meta(path)
+        meta <- fstMeta(path)
         
         if(inherits(meta, 'fst_error')){
           stop(meta)
@@ -378,13 +378,13 @@ ClassLazyArray <- R6::R6Class(
             idx <- chunks$get_indices(i, as_numeric = TRUE)
             idx[[1]] <- idx[[1]]
             lapply(seq.int(idx[[2]][[1]], idx[[2]][[2]]), function(col){
-              cpp_fst_range(path, colnms[col, ], idx[[1]][[1]], idx[[1]][[2]], map_f2)
+              lazyMapReduceByPartition(path, colnms[col, ], idx[[1]][[1]], idx[[1]][[2]], map_f2)
             })
           })
           res <- unlist(res, recursive = FALSE)
         } else {
           res <- lapply(seq_len(ncols), function(ii){
-            cpp_fst_range(path, colnms[ii,], 1L, NULL, map_f2, reshape = pd)
+            lazyMapReduceByPartition(path, colnms[ii,], 1L, NULL, map_f2, reshape = pd)
           })
         }
         
@@ -434,7 +434,7 @@ ClassLazyArray <- R6::R6Class(
       
       lapply2(seq_len(chunkf$nchunks), function(ii){
         idx_range <- chunkf$get_indices(ii, as_numeric = TRUE)[[1]]
-        chunk_data <- cpp_load_lazyarray(files = files, partition_dim = c(nrows, 1), 
+        chunk_data <- lazyLoadOld(files = files, partition_dim = c(nrows, 1), 
                            partition_locations = list(seq.int(idx_range[[1]], idx_range[[2]]), 1L), 
                            ndim = 2L, value_type = sdata)
         map_f(chunk_data, ii, idx_range)
@@ -524,7 +524,7 @@ ClassLazyArray <- R6::R6Class(
           if(prod(vapply(part_idx, length, 1L)) == prod(self$partition_dim())){
             x <- array(value, dim = self$partition_dim())
           } else {
-            x <- cpp_load_lazyarray(fname, partition_locations, part_dimension, self$ndim, private$sample_data())
+            x <- lazyLoadOld(fname, partition_locations, part_dimension, self$ndim, private$sample_data())
             # x <- do.call('[<-', args)
             # make a call instead of do.call
             call <- as.call(c(list(quote(`[<-`)), args))
@@ -543,7 +543,7 @@ ClassLazyArray <- R6::R6Class(
         fname <- self$get_partition_fpath(full_path = TRUE)
         partition_locations <- lapply(self$dim, seq_len)
         args <- c(list(x = quote(x)), idx, list(value = quote(value)))
-        x <- cpp_load_lazyarray(fname, partition_locations, self$dim, self$ndim, private$sample_data())
+        x <- lazyLoadOld(fname, partition_locations, self$dim, self$ndim, private$sample_data())
         x <- do.call('[<-', args)
         cpp_create_lazyarray(x, self$dim, fname, compression = private$compress_level, uniformEncoding = TRUE)
       }
@@ -709,7 +709,7 @@ ClassLazyArray <- R6::R6Class(
           idx[[self$ndim]] <- NULL
         }
       }
-      re <- cpp_load_lazyarray(files, partition_locations = idx, 
+      re <- lazyLoadOld(files, partition_locations = idx, 
                          partition_dim = self$partition_dim(), 
                          ndim = self$ndim, value_type = private$sample_data())
       if(drop){

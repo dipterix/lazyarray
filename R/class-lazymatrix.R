@@ -145,6 +145,10 @@ ClassLazyMatrix <- R6::R6Class(
     #' @param i,j index set
     #' @param drop whether to drop dimension after subset, default is true
     `@get_data` = function(i, j, drop = TRUE){
+      
+      has_i <- !missing(i)
+      has_j <- !missing(j)
+      
       if(missing(j)){
         j <- seq_len(self$dim[[2]])
       }
