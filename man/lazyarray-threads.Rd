@@ -8,13 +8,15 @@
 \usage{
 set_lazy_threads(nr_of_threads = NULL, reset_after_fork = NULL)
 
-get_lazy_threads()
+get_lazy_threads(max = FALSE)
 }
 \arguments{
 \item{nr_of_threads}{number of CPU cores to use, or \code{NULL} to 
 stay unchanged}
 
 \item{reset_after_fork}{whether to reset after forked process}
+
+\item{max}{whether return maximum available threads}
 }
 \value{
 Number of cores currently used.

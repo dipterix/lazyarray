@@ -36,7 +36,6 @@
       seq_len(dim[ii])[dots_value[[ii]]]
     })
   }
-  
   do.call('subf', dots_value)
   
 }
@@ -53,6 +52,7 @@ get_missing_value <- function(){
 `[.LazyMatrix` <- function(x, i, j, drop = TRUE){
   
   miss_j <- missing(j)
+  miss_i <- missing(i)
   
   if(x$`@transposed`){
     y <- t(x)
@@ -60,8 +60,35 @@ get_missing_value <- function(){
     y <- x
   }
   
-  # x[]
-  if(missing(i) && miss_j){
+  Narg <- nargs() - !missing(drop)
+  
+  # x[] or x[i]
+  if(Narg < 3){
+    if(miss_i){
+      re <- `[.LazyArray`(y, drop = FALSE)
+      if(x$`@transposed`){
+        re <- t(re)
+      }
+      if(drop){
+        re <- drop(re)
+      }
+      return(re)
+    } else {
+      dim <- dim(x)
+      if(x$`@transposed`){
+        rows <- (i - 1) %% dim[1]
+        rows <- rows + 1
+        cols <- (i - rows) / dim[1] + 1
+        re <- `[.LazyArray`(y, cols + (rows-1) * dim[2])
+      } else {
+        re <- `[.LazyArray`(y, i)
+      }
+      return(re)
+    }
+  }
+  
+  # x[,]
+  if(miss_i && miss_j){
     re <- `[.LazyArray`(y, drop = FALSE)
     if(x$`@transposed`){
       re <- t(re)
@@ -72,30 +99,8 @@ get_missing_value <- function(){
     return(re)
   }
   
-  # x[i,j]
-  if(!miss_j){
-    if(missing(i)){
-      if(x$`@transposed`){
-        re <- t(`[.LazyArray`(y, j, , drop = FALSE))
-      } else {
-        re <- `[.LazyArray`(y, , j, drop = FALSE)
-      }
-    } else {
-      if(x$`@transposed`){
-        re <- t(`[.LazyArray`(y, j, i, drop = FALSE))
-      } else {
-        re <- `[.LazyArray`(y, i, j, drop = FALSE)
-      }
-    }
-    
-    if(drop){
-      re <- drop(re)
-    }
-    return(re)
-  }
-  
   # x[i,]
-  if(!missing(i)){
+  if(miss_j){
     if(x$`@transposed`){
       re <- t(`[.LazyArray`(y, , i, drop = FALSE))
     } else {
@@ -107,18 +112,29 @@ get_missing_value <- function(){
     return(re)
   }
   
-  # x[i]
-  dim <- dim(x)
-  
-  if(x$`@transposed`){
-    rows <- (i - 1) %% dim[1]
-    rows <- rows + 1
-    cols <- (i - rows) / dim[1] + 1
-    re <- `[.LazyArray`(y, cols + (rows-1) * dim[2])
-  } else {
-    re <- `[.LazyArray`(y, i)
+  # x[,j]
+  if(miss_i){
+    if(x$`@transposed`){
+      re <- t(`[.LazyArray`(y, j, , drop = FALSE))
+    } else {
+      re <- `[.LazyArray`(y, , j, drop = FALSE)
+    }
+    if(drop){
+      re <- drop(re)
+    }
+    return(re)
   }
   
+  # x[i,j]
+  if(x$`@transposed`){
+    re <- t(`[.LazyArray`(y, j, i, drop = FALSE))
+  } else {
+    re <- `[.LazyArray`(y, i, j, drop = FALSE)
+  }
+    
+  if(drop){
+    re <- drop(re)
+  }
   return(re)
   
 }

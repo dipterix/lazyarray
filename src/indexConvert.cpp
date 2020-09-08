@@ -29,7 +29,7 @@ SEXP subsetIdx(Environment expr_env, NumericVector dim, bool pos_subscript = fal
   R_xlen_t idx_size = 1;
   
   // used to estimate expected dimension
-  int64_t total_length = std::accumulate(dim.begin(), dim.end(), 1, std::multiplies<int64_t>());
+  int64_t total_length = std::accumulate(dim.begin(), dim.end(), INTEGER64_ONE, std::multiplies<int64_t>());
   NumericVector target_dim = NumericVector(dim.begin(), dim.end());
   LogicalVector neg_subscr = LogicalVector(ndims, false);
   
@@ -234,7 +234,7 @@ SEXP subsetIdx(Environment expr_env, NumericVector dim, bool pos_subscript = fal
   }
   
   if(expected_len < 0){
-    expected_len = std::accumulate(target_dim.begin(), target_dim.end(), 1, std::multiplies<int64_t>());
+    expected_len = std::accumulate(target_dim.begin(), target_dim.end(), INTEGER64_ONE, std::multiplies<int64_t>());
   }
   
   
@@ -294,7 +294,7 @@ IntegerVector loc2idx(List& locations, IntegerVector& parent_dim){
     }
   }
   // Total length to return
-  int64_t sub_size = std::accumulate(sub_dim.begin(), sub_dim.end(), 1, std::multiplies<int64_t>());
+  int64_t sub_size = std::accumulate(sub_dim.begin(), sub_dim.end(), INTEGER64_ONE, std::multiplies<int64_t>());
   
   // Generate integer vector to be returned and assign dimension
   IntegerVector re(sub_size, 1);
@@ -402,7 +402,7 @@ NumericVector loc2idx2(List& locations, NumericVector& parent_dim){
   }
   
   // Total length to return
-  int64_t sub_size = std::accumulate(sub_dim.begin(), sub_dim.end(), 1, std::multiplies<int64_t>());
+  int64_t sub_size = std::accumulate(sub_dim.begin(), sub_dim.end(), INTEGER64_ONE, std::multiplies<int64_t>());
   
   // Generate integer vector to be returned and assign dimension
   NumericVector re(sub_size, 1);
@@ -506,7 +506,7 @@ std::vector<int64_t> loc2idx3(SEXP locations, std::vector<int64_t>& parent_dim){
   }
   
   // Total length to return
-  int64_t sub_size = std::accumulate(sub_dim.begin(), sub_dim.end(), 1, std::multiplies<int64_t>());
+  int64_t sub_size = std::accumulate(sub_dim.begin(), sub_dim.end(), INTEGER64_ONE, std::multiplies<int64_t>());
   
   // Generate integer vector to be returned and assign dimension
   std::vector<int64_t> re(sub_size, 1);
@@ -547,6 +547,7 @@ std::vector<int64_t> loc2idx3(SEXP locations, std::vector<int64_t>& parent_dim){
       for(jj = 0; jj < neach; jj++){
         // if re[...] is not NA
         if(*ptr_re != NA_REAL && 
+           *ptr_re != NA_INTEGER64 && 
            
            // current_location is not NA
            *ptr_current_location != NA_REAL &&

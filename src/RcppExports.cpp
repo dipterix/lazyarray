@@ -8,6 +8,17 @@
 
 using namespace Rcpp;
 
+// setBlockSize
+R_xlen_t setBlockSize(R_xlen_t size);
+RcppExport SEXP _lazyarray_setBlockSize(SEXP sizeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< R_xlen_t >::type size(sizeSEXP);
+    rcpp_result_gen = Rcpp::wrap(setBlockSize(size));
+    return rcpp_result_gen;
+END_RCPP
+}
 // fstMeta
 SEXP fstMeta(SEXP fileName);
 RcppExport SEXP _lazyarray_fstMeta(SEXP fileNameSEXP) {
@@ -114,17 +125,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// setBlockSize
-int64_t setBlockSize(int64_t size);
-RcppExport SEXP _lazyarray_setBlockSize(SEXP sizeSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int64_t >::type size(sizeSEXP);
-    rcpp_result_gen = Rcpp::wrap(setBlockSize(size));
-    return rcpp_result_gen;
-END_RCPP
-}
 // lazyLoadOld
 SEXP lazyLoadOld(Rcpp::StringVector& files, Rcpp::List& partition_locations, Rcpp::IntegerVector& partition_dim, R_xlen_t ndim, SEXP value_type);
 RcppExport SEXP _lazyarray_lazyLoadOld(SEXP filesSEXP, SEXP partition_locationsSEXP, SEXP partition_dimSEXP, SEXP ndimSEXP, SEXP value_typeSEXP) {
@@ -157,19 +157,20 @@ BEGIN_RCPP
 END_RCPP
 }
 // getLazyThread
-int getLazyThread();
-static SEXP _lazyarray_getLazyThread_try() {
+int getLazyThread(bool max);
+static SEXP _lazyarray_getLazyThread_try(SEXP maxSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
-    rcpp_result_gen = Rcpp::wrap(getLazyThread());
+    Rcpp::traits::input_parameter< bool >::type max(maxSEXP);
+    rcpp_result_gen = Rcpp::wrap(getLazyThread(max));
     return rcpp_result_gen;
 END_RCPP_RETURN_ERROR
 }
-RcppExport SEXP _lazyarray_getLazyThread() {
+RcppExport SEXP _lazyarray_getLazyThread(SEXP maxSEXP) {
     SEXP rcpp_result_gen;
     {
         Rcpp::RNGScope rcpp_rngScope_gen;
-        rcpp_result_gen = PROTECT(_lazyarray_getLazyThread_try());
+        rcpp_result_gen = PROTECT(_lazyarray_getLazyThread_try(maxSEXP));
     }
     Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
     if (rcpp_isInterrupt_gen) {
@@ -309,7 +310,7 @@ END_RCPP
 static int _lazyarray_RcppExport_validate(const char* sig) { 
     static std::set<std::string> signatures;
     if (signatures.empty()) {
-        signatures.insert("int(*getLazyThread)()");
+        signatures.insert("int(*getLazyThread)(bool)");
         signatures.insert("int(*setLazyThread)(int,SEXP)");
         signatures.insert("bool(*hasOpenMP)()");
     }
@@ -326,6 +327,7 @@ RcppExport SEXP _lazyarray_RcppExport_registerCCallable() {
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_lazyarray_setBlockSize", (DL_FUNC) &_lazyarray_setBlockSize, 1},
     {"_lazyarray_fstMeta", (DL_FUNC) &_lazyarray_fstMeta, 1},
     {"_lazyarray_fstRetrieve", (DL_FUNC) &_lazyarray_fstRetrieve, 4},
     {"_lazyarray_checkFstMeta", (DL_FUNC) &_lazyarray_checkFstMeta, 3},
@@ -334,10 +336,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lazyarray_subsetIdx", (DL_FUNC) &_lazyarray_subsetIdx, 3},
     {"_lazyarray_cpp_create_lazyarray", (DL_FUNC) &_lazyarray_cpp_create_lazyarray, 5},
     {"_lazyarray_lazyMapReduceByPartition", (DL_FUNC) &_lazyarray_lazyMapReduceByPartition, 6},
-    {"_lazyarray_setBlockSize", (DL_FUNC) &_lazyarray_setBlockSize, 1},
     {"_lazyarray_lazyLoadOld", (DL_FUNC) &_lazyarray_lazyLoadOld, 5},
     {"_lazyarray_lazySubset", (DL_FUNC) &_lazyarray_lazySubset, 6},
-    {"_lazyarray_getLazyThread", (DL_FUNC) &_lazyarray_getLazyThread, 0},
+    {"_lazyarray_getLazyThread", (DL_FUNC) &_lazyarray_getLazyThread, 1},
     {"_lazyarray_setLazyThread", (DL_FUNC) &_lazyarray_setLazyThread, 2},
     {"_lazyarray_hasOpenMP", (DL_FUNC) &_lazyarray_hasOpenMP, 0},
     {"_lazyarray_asi", (DL_FUNC) &_lazyarray_asi, 2},

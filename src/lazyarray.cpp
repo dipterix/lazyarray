@@ -33,7 +33,7 @@ SEXP cpp_create_lazyarray(SEXP& x, IntegerVector& dim, SEXP fileName,
    * Case 2: dim = c(10,10,2), last_dim is always the last dim, i.e. 2, first_dim is prod of the rest, i.e. 100
    */
   int64_t last_dim = 1;
-  int64_t total_length = std::accumulate(dim.begin(), dim.end(), 1, std::multiplies<int64_t>());
+  int64_t total_length = std::accumulate(dim.begin(), dim.end(), INTEGER64_ONE, std::multiplies<int64_t>());
   if( ndim >= 2 ){
     // case 2
     last_dim = *(dim.end() - 1);
@@ -122,20 +122,6 @@ SEXP lazyMapReduceByPartition(
   }
   
   return re;
-}
-
-// [[Rcpp::export]]
-int64_t setBlockSize(int64_t size = 0){
-  if(size < 0){
-    stop("Cannot set block size to be less than 0");
-  }
-  if( size <= 0 ){
-    BLOCKSIZE = 16384;
-  } else {
-    BLOCKSIZE = size;
-  }
-  
-  return BLOCKSIZE;
 }
 
 

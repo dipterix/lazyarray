@@ -1,3 +1,4 @@
+#include "common.h"
 #include "utils.h"
 #include "loader2.h"
 
@@ -9,7 +10,6 @@ using namespace Rcpp;
 
 
 SEXP lazySubset(StringVector& files, Environment& env, NumericVector& dim, SEXP samp, SEXP reshape, bool drop){
-  
   if(dim.size() < 2){
     stop("Dimension size must >= 2");
   }
@@ -62,8 +62,10 @@ SEXP lazySubset(StringVector& files, Environment& env, NumericVector& dim, SEXP 
   // subset_mode=2 => x[]
   const int64_t expected_length = subparsed["expected_length"];
   SEXP reshape_alt = reshape;
+  int n_protected = 0;
   if(TYPEOF(reshape) != REALSXP){
-    reshape_alt = Rf_coerceVector(reshape_alt, REALSXP);
+    reshape_alt = PROTECT(Rf_coerceVector(reshape_alt, REALSXP));
+    n_protected++;
   }
   const int64_t reshape_length = prod2(reshape_alt, false);
   
@@ -75,6 +77,10 @@ SEXP lazySubset(StringVector& files, Environment& env, NumericVector& dim, SEXP 
     } else {
       Rf_setAttrib(res, wrap("dim"), R_NilValue);
     }
+  }
+  
+  if(n_protected > 0){
+    UNPROTECT(n_protected);
   }
   
   return res;

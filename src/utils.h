@@ -18,4 +18,6 @@ int64_t prod2(SEXP x, bool na_rm = false);
 // [[Rcpp::export]]
 SEXP parseDots(Rcpp::Environment& env, bool eval);
 
+
+
 #endif // DIP_LAZYARRAY_UTILS_H

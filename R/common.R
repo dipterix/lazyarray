@@ -4,6 +4,7 @@
 #' @param nr_of_threads number of CPU cores to use, or \code{NULL} to 
 #' stay unchanged
 #' @param reset_after_fork whether to reset after forked process
+#' @param max whether return maximum available threads
 #' @return Number of cores currently used.
 #' @seealso \code{\link[fstcore]{threads_fstlib}}
 #' @name lazyarray-threads
@@ -23,6 +24,6 @@ set_lazy_threads <- function(nr_of_threads = NULL, reset_after_fork = NULL){
 
 #' @rdname lazyarray-threads
 #' @export
-get_lazy_threads <- function(){
-  getLazyThread()
+get_lazy_threads <- function(max = FALSE){
+  getLazyThread(max = isTRUE(max))
 }

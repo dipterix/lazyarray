@@ -8,6 +8,7 @@ lazy_parallel(
   strategy = c("multisession", "multicore", "multiprocess", "cluster", "remote",
     "callr"),
   enabled = TRUE,
+  workers = "auto",
   ...
 )
 }

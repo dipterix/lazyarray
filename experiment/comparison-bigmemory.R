@@ -31,6 +31,7 @@ x <- bigmemory::attach.resource(file.path(path, 'bigmemory.testfile.desc'))
 # for(ii in 1:ncol){
 #   x[,ii] <- arr[,ii]
 # }
+system.time({x[,2]})
 
 # The challenge is calculation of X^T*X and X^T*y
 {

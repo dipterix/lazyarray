@@ -25,7 +25,7 @@ lazy_parallel <- function(
   strategy = c(
     'multisession', 'multicore', 
     'multiprocess', 'cluster', 'remote', 'callr'),
-  enabled = TRUE,
+  enabled = TRUE, workers = 'auto',
   ...
   ){
   
@@ -35,13 +35,24 @@ lazy_parallel <- function(
     stop('Package dipsaus not detected. Please install.packages("dipsaus")')
   }
   
+  if(isTRUE(workers == 'auto')){
+    # get maximum available workers
+    workers <- future::availableCores()
+  }
+  
   if(enabled){
+    
     if(strategy == 'multicore'){
-      dipsaus::make_forked_clusters(...)
+      dipsaus::make_forked_clusters(..., workers = workers)
     } else if(strategy == 'callr'){
-      future::plan(future.callr::callr, ...)
+      future::plan(future.callr::callr, ..., workers = workers)
     } else {
-      future::plan(strategy, ...)
+      args <- list(...)
+      tryCatch({
+        future::plan(strategy, ..., workers = workers)
+      }, error = function(e){
+        do.call(future::plan, c(list(strategy), args))
+      })
     }
     
   } else {

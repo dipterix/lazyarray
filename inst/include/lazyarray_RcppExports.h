@@ -24,17 +24,17 @@ namespace lazyarray {
         }
     }
 
-    inline int getLazyThread() {
-        typedef SEXP(*Ptr_getLazyThread)();
+    inline int getLazyThread(bool max = false) {
+        typedef SEXP(*Ptr_getLazyThread)(SEXP);
         static Ptr_getLazyThread p_getLazyThread = NULL;
         if (p_getLazyThread == NULL) {
-            validateSignature("int(*getLazyThread)()");
+            validateSignature("int(*getLazyThread)(bool)");
             p_getLazyThread = (Ptr_getLazyThread)R_GetCCallable("lazyarray", "_lazyarray_getLazyThread");
         }
         RObject rcpp_result_gen;
         {
             RNGScope RCPP_rngScope_gen;
-            rcpp_result_gen = p_getLazyThread();
+            rcpp_result_gen = p_getLazyThread(Shield<SEXP>(Rcpp::wrap(max)));
         }
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();

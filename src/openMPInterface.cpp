@@ -7,10 +7,13 @@
 #endif
 
 
-int getLazyThread(){
+int getLazyThread(bool max){
 #ifdef _OPENMP
   if(detectFork){
     return 1;
+  }
+  if( max ){
+    return omp_get_max_threads();
   }
   int t = lazyThreads < 0 ? omp_get_max_threads() : std::min(lazyThreads, omp_get_max_threads());
   return std::max(t, 1);

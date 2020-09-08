@@ -7,6 +7,7 @@
 using namespace Rcpp;
 
 SEXP lazySubset_double(StringVector& files, NumericVector& dim, List& subparsed){
+  Rcpp::Timer _rcpp_timer;
   
   const int subset_mode = subparsed["subset_mode"];
   const NumericVector target_dimension = subparsed["target_dimension"];
@@ -15,12 +16,11 @@ SEXP lazySubset_double(StringVector& files, NumericVector& dim, List& subparsed)
   List location_indices = subparsed["location_indices"];
   
   StringVector cnames = StringVector::create("V1"); 
-  
   SEXP res = PROTECT(Rf_allocVector(REALSXP, expected_length));
   double *ptr_res = REAL(res);
   double *ptr_alt = ptr_res;
-  int64_t block_size = std::accumulate(target_dimension.begin(), target_dimension.end()-1, 1, std::multiplies<int64_t>());
-  int64_t expect_nrows = std::accumulate(dim.begin(), dim.end()-1, 1, std::multiplies<int64_t>());
+  int64_t block_size = std::accumulate(target_dimension.begin(), target_dimension.end()-1, INTEGER64_ONE, std::multiplies<int64_t>());
+  int64_t expect_nrows = std::accumulate(dim.begin(), dim.end()-1, INTEGER64_ONE, std::multiplies<int64_t>());
   List tmp;
   CharacterVector colNames;
   
@@ -30,12 +30,12 @@ SEXP lazySubset_double(StringVector& files, NumericVector& dim, List& subparsed)
   if(subset_mode == 2){
     // case: subset_mode == 2, x[]
     
+    _rcpp_timer.step("mode 2");
+    
     ptr_res = REAL(res);
     
     for(StringVector::iterator ptr_files = files.begin(); ptr_files != files.end(); ptr_files++ ){
-      
       checkUserInterrupt();
-      
       if( !checkFstMeta(*ptr_files, expect_nrows, cnames) ){
         // this file is invalid, fill with na
         ptr_alt = ptr_res + block_size;
@@ -50,19 +50,30 @@ SEXP lazySubset_double(StringVector& files, NumericVector& dim, List& subparsed)
         SEXP buffer = tmp["V1"];
         
         // check if we can memcpy
+        int n_protected = 0;
         if(TYPEOF(buffer) != REALSXP){
-          buffer = Rf_coerceVector(buffer, REALSXP);
+          buffer = PROTECT(Rf_coerceVector(buffer, REALSXP));
+          n_protected++;
         }
         
         std::memcpy(ptr_res, REAL(buffer), block_size * sizeof(double));
         
         ptr_res += block_size;
+        
+        if(n_protected > 0){
+          UNPROTECT(n_protected);
+        }
+        
       }
       
     }
     
+    
     Rf_setAttrib(res, wrap("dim"), wrap(target_dimension));
   } else if(subset_mode == 1){
+    
+    _rcpp_timer.step("mode 1");
+    
     // case: subset_mode == 1, x[i], and i can't be R missing value
     NumericVector indices = as<NumericVector>(location_indices[0]);
     bool is_negative = negative_subscript[0];
@@ -100,7 +111,9 @@ SEXP lazySubset_double(StringVector& files, NumericVector& dim, List& subparsed)
       
       for(StringVector::iterator ptr_file = files.begin(); ptr_file != files.end(); 
       ptr_file++, chunk_start += expect_nrows, chunk_end += expect_nrows ) {
+        
         checkUserInterrupt();
+        
         
         sel = !(is_na(indices) | indices <= chunk_start | indices > chunk_end);
         // get sub index for this chunk, note no NA is included
@@ -158,10 +171,9 @@ SEXP lazySubset_double(StringVector& files, NumericVector& dim, List& subparsed)
       
     }
     
-    
   } else if (subset_mode == 0) {
     // case: subset_mode == 0, x[i,j,k,l,...], and ijk might be R missing value
-    
+    _rcpp_timer.step("mode 0");
     // get partition dim
     R_xlen_t ndims = dim.size();
     NumericVector part_dim = NumericVector(dim.begin(), dim.end());
@@ -172,7 +184,7 @@ SEXP lazySubset_double(StringVector& files, NumericVector& dim, List& subparsed)
     int64_t part_block_size = 1;
     R_xlen_t buffer_margin = 0;
     for(buffer_margin = 0; buffer_margin < ndims - 1; buffer_margin++ ){
-      if(part_block_size > BLOCKSIZE){
+      if(part_block_size > getBlockSize()){
         break;
       }
       part_block_size *= part_dim[buffer_margin];
@@ -272,6 +284,13 @@ SEXP lazySubset_double(StringVector& files, NumericVector& dim, List& subparsed)
       mfactor *= part_dim[dd];
     }
     
+    // If part block size is too large (happends when first several dimensions are too large)
+    // don't calculate index set as it takes time
+    std::vector<int64_t> subblock_idx = std::vector<int64_t>(0);
+    if(subblock_ndim >= 2 && part_block_size < 62500000){
+      subblock_idx = loc2idx3(partition_subblocklocs, partition_subblockdim);
+    }
+    
     std::vector<int64_t> block_idx = loc2idx3(partition_blocklocs, partition_blockdim);
     nblocks = block_idx.size();
     
@@ -279,10 +298,8 @@ SEXP lazySubset_double(StringVector& files, NumericVector& dim, List& subparsed)
     // Rcout << std::to_string(part_block_size) << "\n";
     // Rcout << std::to_string(nblocks) << "\n";
     
-    
     ptr_res = REAL(res);
     for(R_xlen_t li = 0; li < last_indices.size(); li++){
-      
       checkUserInterrupt();
       
       int64_t lidx = last_indices[li];
@@ -341,8 +358,10 @@ SEXP lazySubset_double(StringVector& files, NumericVector& dim, List& subparsed)
         tmp = tmp["resTable"];
         
         SEXP buffer = tmp["V1"];
+        int n_protected = 0;
         if(TYPEOF(buffer) != REALSXP){
-          buffer = Rf_coerceVector(buffer, REALSXP);
+          buffer = PROTECT(Rf_coerceVector(buffer, REALSXP));
+          n_protected++;
         }
         
         /*
@@ -364,83 +383,110 @@ SEXP lazySubset_double(StringVector& files, NumericVector& dim, List& subparsed)
           nThread = 1;
         }
         
+        if(subblock_idx.size() != subblock_len){
+          
         // openmp-able indexing
         // 800MB single index took 2+sec now 1.3s
 #pragma omp parallel num_threads(nThread)
-      {
+          {
 #pragma omp for schedule(static, 1) nowait
-        for(int64_t ii = 0; ii < subblock_len; ii++ ){
-          // int current_thread = ii % nThread;
-          // std::vector<int64_t> index = index_buffer[current_thread];
-          
-          int64_t mod;
-          int64_t rest = ii;
-          int64_t sub_index = 0;
-          int64_t subblock_dim_ii;
-          int64_t tmp;
-          // print(wrap(ii));
-          // Rcout << subblock_dim[0] << " "<< subblock_dim[1] << " "<< subblock_dim[2] << " \n";
-          for(int64_t di = 0; di < subblock_ndim; di++ ){
-            
-            if(sub_index != NA_INTEGER64){
-              subblock_dim_ii = *(subblock_dim.begin() + di);
-              mod = rest % subblock_dim_ii;
-              rest = (rest - mod) / subblock_dim_ii;
+            for(int64_t ii = 0; ii < subblock_len; ii++ ){
+              // int current_thread = ii % nThread;
+              // std::vector<int64_t> index = index_buffer[current_thread];
               
-              // Rcout << mod<< " ";
-              // get di^th margin element mod
-              // partition_subblocklocs[di][mod]
-              SEXP location_ii = VECTOR_ELT(partition_subblocklocs, di);
-              if(location_ii == R_MissingArg){
-                // index[di]
-                tmp = mod;
-              } else {
-                // index[di]
-                // location_ii starts from 1 but we need starting from 0
-                tmp = *(REAL(location_ii) + mod) - 1;
+              int64_t mod;
+              int64_t rest = ii;
+              int64_t sub_index = 0;
+              int64_t subblock_dim_ii;
+              int64_t tmp;
+              // print(wrap(ii));
+              // Rcout << subblock_dim[0] << " "<< subblock_dim[1] << " "<< subblock_dim[2] << " \n";
+              for(int64_t di = 0; di < subblock_ndim; di++ ){
+                
+                if(sub_index != NA_INTEGER64){
+                  subblock_dim_ii = *(subblock_dim.begin() + di);
+                  mod = rest % subblock_dim_ii;
+                  rest = (rest - mod) / subblock_dim_ii;
+                  
+                  // Rcout << mod<< " ";
+                  // get di^th margin element mod
+                  // partition_subblocklocs[di][mod]
+                  SEXP location_ii = VECTOR_ELT(partition_subblocklocs, di);
+                  if(location_ii == R_MissingArg){
+                    // index[di]
+                    tmp = mod;
+                  } else {
+                    // index[di]
+                    // location_ii starts from 1 but we need starting from 0
+                    tmp = *(REAL(location_ii) + mod) - 1;
+                  }
+                  
+                  if(tmp == NA_REAL || tmp == NA_INTEGER64){
+                    sub_index = NA_INTEGER64;
+                  } else {
+                    sub_index += *(partition_subblockdim_cumprod.begin() + di) * tmp;
+                  }
+                }
+                
+                
               }
+              // Rcout << "\n";
+              // 
+              // print(wrap(ii));
+              // print(wrap(sub_index));
+              // Rcout << partition_subblockdim_cumprod[0] << " "<< partition_subblockdim_cumprod[1] << " "<< partition_subblockdim_cumprod[2] << " \n";
+              // Rcout<<"\n";
               
-              if(tmp == NA_REAL || tmp == NA_INTEGER64){
-                sub_index = NA_INTEGER64;
+              // locate ii in re
+              // *(ptr_res + ii) = xxx
+              
+              // for c(2,3,4), ii=11-1 => index=[0,2,1]
+              // sub_index converts back to index within sub-block
+              // in this example, partition_subblockdim_cumprod = c(1,4,20) if dim = c(4,5,6)
+              // sub_index = 0 + 2 * 4 + 1 * 20 = 28
+              
+              // get sub_index^th actual element from buffer
+              // buffer starts from subblock_min, hence buffer[sub_index + 1 - subblock_min]
+              
+              if( sub_index == NA_INTEGER64 ) {
+                *(ptr_res + ii) = NA_REAL;
               } else {
-                sub_index += *(partition_subblockdim_cumprod.begin() + di) * tmp;
+                sub_index = sub_index + 1 - subblock_min;
+                *(ptr_res + ii) = *(REAL(buffer) + sub_index);
               }
+                
             }
-            
-            
-          }
-          // Rcout << "\n";
-          // 
-          // print(wrap(ii));
-          // print(wrap(sub_index));
-          // Rcout << partition_subblockdim_cumprod[0] << " "<< partition_subblockdim_cumprod[1] << " "<< partition_subblockdim_cumprod[2] << " \n";
-          // Rcout<<"\n";
+          } // end parallel
           
-          // locate ii in re
-          // *(ptr_res + ii) = xxx
+          ptr_res += subblock_len;
+        
+        } else {
+          // don't calculate index on the fly.
+          // subblock_idx
+          // subblock_idx.size() == subblock_len
+          double *buffer_start = REAL(buffer);
+#pragma omp parallel num_threads(nThread)
+          {
+#pragma omp for schedule(static, 1) nowait
+            for(int64_t ii = 0; ii < subblock_len; ii++ ){
+              int64_t shift = *(subblock_idx.begin() + ii);
+              if(shift == NA_REAL || shift == NA_INTEGER64){
+                *(ptr_res + ii) = NA_REAL;
+              } else {
+                *(ptr_res + ii) = *(buffer_start + (shift - subblock_min));
+              }
+              
+            }
+          } // end parallel
           
-          // for c(2,3,4), ii=11-1 => index=[0,2,1]
-          // sub_index converts back to index within sub-block
-          // in this example, partition_subblockdim_cumprod = c(1,4,20) if dim = c(4,5,6)
-          // sub_index = 0 + 2 * 4 + 1 * 20 = 28
-          
-          // get sub_index^th actual element from buffer
-          // buffer starts from subblock_min, hence buffer[sub_index + 1 - subblock_min]
-          
-          if( sub_index == NA_INTEGER64 ) {
-            *(ptr_res + ii) = NA_REAL;
-          } else {
-            sub_index = sub_index + 1 - subblock_min;
-            *(ptr_res + ii) = *(REAL(buffer) + sub_index);
-          }
-            
+          ptr_res += subblock_len;
+
         }
-      }
         
         
-        
-        // end parallel
-        ptr_res += subblock_len;
+        if(n_protected > 0){
+          UNPROTECT(n_protected);
+        }
         
       }
       // int64_t chunk_start, chunk_end;
@@ -463,11 +509,13 @@ SEXP lazySubset_double(StringVector& files, NumericVector& dim, List& subparsed)
     stop("Unknown subset method");
   }
   
-  
+  _rcpp_timer.step("finished");
   
   UNPROTECT(1);
   
-  
+  // NumericVector _res(_rcpp_timer);
+  // _res = _res / 1000000.0;
+  // Rcpp::print(_res);
   
   return res;
   
@@ -486,8 +534,8 @@ SEXP lazySubset_integer(StringVector& files, NumericVector& dim, List& subparsed
   SEXP res = PROTECT(Rf_allocVector(INTSXP, expected_length));
   int *ptr_res = INTEGER(res);
   int *ptr_alt = ptr_res;
-  int64_t block_size = std::accumulate(target_dimension.begin(), target_dimension.end()-1, 1, std::multiplies<int64_t>());
-  int64_t expect_nrows = std::accumulate(dim.begin(), dim.end()-1, 1, std::multiplies<int64_t>());
+  int64_t block_size = std::accumulate(target_dimension.begin(), target_dimension.end()-1, INTEGER64_ONE, std::multiplies<int64_t>());
+  int64_t expect_nrows = std::accumulate(dim.begin(), dim.end()-1, INTEGER64_ONE, std::multiplies<int64_t>());
   List tmp;
   CharacterVector colNames;
   
@@ -517,13 +565,19 @@ SEXP lazySubset_integer(StringVector& files, NumericVector& dim, List& subparsed
         SEXP buffer = tmp["V1"];
         
         // check if we can memcpy
+        int n_protected = 0;
         if(TYPEOF(buffer) != INTSXP){
-          buffer = Rf_coerceVector(buffer, INTSXP);
+          buffer = PROTECT(Rf_coerceVector(buffer, INTSXP));
+          n_protected++;
         }
         
         std::memcpy(ptr_res, INTEGER(buffer), block_size * sizeof(int));
         
         ptr_res += block_size;
+        
+        if(n_protected > 0){
+          UNPROTECT(n_protected);
+        }
       }
       
     }
@@ -639,7 +693,7 @@ SEXP lazySubset_integer(StringVector& files, NumericVector& dim, List& subparsed
     int64_t part_block_size = 1;
     R_xlen_t buffer_margin = 0;
     for(buffer_margin = 0; buffer_margin < ndims - 1; buffer_margin++ ){
-      if(part_block_size > BLOCKSIZE){
+      if(part_block_size > getBlockSize()){
         break;
       }
       part_block_size *= part_dim[buffer_margin];
@@ -739,6 +793,13 @@ SEXP lazySubset_integer(StringVector& files, NumericVector& dim, List& subparsed
       mfactor *= part_dim[dd];
     }
     
+    // If part block size is too large (happends when first several dimensions are too large)
+    // don't calculate index set as it takes time
+    std::vector<int64_t> subblock_idx = std::vector<int64_t>(0);
+    if(subblock_ndim >= 2 && part_block_size < 62500000){
+      subblock_idx = loc2idx3(partition_subblocklocs, partition_subblockdim);
+    }
+    
     std::vector<int64_t> block_idx = loc2idx3(partition_blocklocs, partition_blockdim);
     nblocks = block_idx.size();
     
@@ -808,8 +869,10 @@ SEXP lazySubset_integer(StringVector& files, NumericVector& dim, List& subparsed
         tmp = tmp["resTable"];
         
         SEXP buffer = tmp["V1"];
+        int n_protected = 0;
         if(TYPEOF(buffer) != INTSXP){
-          buffer = Rf_coerceVector(buffer, INTSXP);
+          buffer = PROTECT(Rf_coerceVector(buffer, INTSXP));
+          n_protected++;
         }
         
         /*
@@ -831,6 +894,7 @@ SEXP lazySubset_integer(StringVector& files, NumericVector& dim, List& subparsed
           nThread = 1;
         }
         
+        if(subblock_idx.size() != subblock_len){
         // openmp-able indexing
         // 800MB single index took 2+sec now 1.3s
 #pragma omp parallel num_threads(nThread)
@@ -909,6 +973,31 @@ SEXP lazySubset_integer(StringVector& files, NumericVector& dim, List& subparsed
 // end parallel
 ptr_res += subblock_len;
 
+        } else {
+          // don't calculate index on the fly.
+          // subblock_idx
+          // subblock_idx.size() == subblock_len
+          int *ptr_buffer = INTEGER(buffer);
+#pragma omp parallel num_threads(nThread)
+{
+#pragma omp for schedule(static, 1) nowait
+  for(int64_t ii = 0; ii < subblock_len; ii++ ){
+    int64_t shift = *(subblock_idx.begin() + ii);
+    if(shift == NA_REAL || shift == NA_INTEGER64){
+      *(ptr_res + ii) = NA_INTEGER;
+    } else {
+      *(ptr_res + ii) = *(ptr_buffer + (shift - subblock_min));
+    }
+    
+  }
+} // end parallel
+
+ptr_res += subblock_len;
+        }
+        
+        if(n_protected > 0){
+          UNPROTECT(n_protected);
+        }
       }
       // int64_t chunk_start, chunk_end;
       // int reader_start, reader_end;
@@ -953,8 +1042,8 @@ SEXP lazySubset_character(StringVector& files, NumericVector& dim, List& subpars
   StringVector res = StringVector(expected_length);
   StringVector::iterator ptr_res = res.begin();
   StringVector::iterator ptr_alt = ptr_res;
-  int64_t block_size = std::accumulate(target_dimension.begin(), target_dimension.end()-1, 1, std::multiplies<int64_t>());
-  int64_t expect_nrows = std::accumulate(dim.begin(), dim.end()-1, 1, std::multiplies<int64_t>());
+  int64_t block_size = std::accumulate(target_dimension.begin(), target_dimension.end()-1, INTEGER64_ONE, std::multiplies<int64_t>());
+  int64_t expect_nrows = std::accumulate(dim.begin(), dim.end()-1, INTEGER64_ONE, std::multiplies<int64_t>());
   List tmp;
   CharacterVector colNames;
   
@@ -1096,7 +1185,7 @@ SEXP lazySubset_character(StringVector& files, NumericVector& dim, List& subpars
     int64_t part_block_size = 1;
     R_xlen_t buffer_margin = 0;
     for(buffer_margin = 0; buffer_margin < ndims - 1; buffer_margin++ ){
-      if(part_block_size > BLOCKSIZE){
+      if(part_block_size > getBlockSize()){
         break;
       }
       part_block_size *= part_dim[buffer_margin];
@@ -1194,6 +1283,13 @@ SEXP lazySubset_character(StringVector& files, NumericVector& dim, List& subpars
         subblock_len *= subblock_dim[dd];
       }
       mfactor *= part_dim[dd];
+    }
+    
+    // If part block size is too large (happends when first several dimensions are too large)
+    // don't calculate index set as it takes time
+    std::vector<int64_t> subblock_idx = std::vector<int64_t>(0);
+    if(subblock_ndim >= 2 && part_block_size < 62500000){
+      subblock_idx = loc2idx3(partition_subblocklocs, partition_subblockdim);
     }
     
     std::vector<int64_t> block_idx = loc2idx3(partition_blocklocs, partition_blockdim);
@@ -1285,83 +1381,97 @@ SEXP lazySubset_character(StringVector& files, NumericVector& dim, List& subpars
           nThread = 1;
         }
         
+        if(subblock_idx.size() != subblock_len){
         // openmp-able indexing
         // 800MB single index took 2+sec now 1.3s
-#pragma omp parallel num_threads(nThread)
-{
-#pragma omp for schedule(static, 1) nowait
-  for(int64_t ii = 0; ii < subblock_len; ii++ ){
-    // int current_thread = ii % nThread;
-    // std::vector<int64_t> index = index_buffer[current_thread];
-    
-    int64_t mod;
-    int64_t rest = ii;
-    int64_t sub_index = 0;
-    int64_t subblock_dim_ii;
-    int64_t tmp;
-    // print(wrap(ii));
-    // Rcout << subblock_dim[0] << " "<< subblock_dim[1] << " "<< subblock_dim[2] << " \n";
-    for(int64_t di = 0; di < subblock_ndim; di++ ){
-      
-      if(sub_index != NA_INTEGER64){
-        subblock_dim_ii = *(subblock_dim.begin() + di);
-        mod = rest % subblock_dim_ii;
-        rest = (rest - mod) / subblock_dim_ii;
-        
-        // Rcout << mod<< " ";
-        // get di^th margin element mod
-        // partition_subblocklocs[di][mod]
-        SEXP location_ii = VECTOR_ELT(partition_subblocklocs, di);
-        if(location_ii == R_MissingArg){
-          // index[di]
-          tmp = mod;
+          for(int64_t ii = 0; ii < subblock_len; ii++ ){
+            // int current_thread = ii % nThread;
+            // std::vector<int64_t> index = index_buffer[current_thread];
+            
+            int64_t mod;
+            int64_t rest = ii;
+            int64_t sub_index = 0;
+            int64_t subblock_dim_ii;
+            int64_t tmp;
+            // print(wrap(ii));
+            // Rcout << subblock_dim[0] << " "<< subblock_dim[1] << " "<< subblock_dim[2] << " \n";
+            for(int64_t di = 0; di < subblock_ndim; di++ ){
+              
+              if(sub_index != NA_INTEGER64){
+                subblock_dim_ii = *(subblock_dim.begin() + di);
+                mod = rest % subblock_dim_ii;
+                rest = (rest - mod) / subblock_dim_ii;
+                
+                // Rcout << mod<< " ";
+                // get di^th margin element mod
+                // partition_subblocklocs[di][mod]
+                SEXP location_ii = VECTOR_ELT(partition_subblocklocs, di);
+                if(location_ii == R_MissingArg){
+                  // index[di]
+                  tmp = mod;
+                } else {
+                  // index[di]
+                  // location_ii starts from 1 but we need starting from 0
+                  tmp = *(REAL(location_ii) + mod) - 1;
+                }
+                
+                if(tmp == NA_REAL || tmp == NA_INTEGER64){
+                  sub_index = NA_INTEGER64;
+                } else {
+                  sub_index += *(partition_subblockdim_cumprod.begin() + di) * tmp;
+                }
+              }
+              
+              
+            }
+            // Rcout << "\n";
+            // 
+            // print(wrap(ii));
+            // print(wrap(sub_index));
+            // Rcout << partition_subblockdim_cumprod[0] << " "<< partition_subblockdim_cumprod[1] << " "<< partition_subblockdim_cumprod[2] << " \n";
+            // Rcout<<"\n";
+            
+            // locate ii in re
+            // *(ptr_res + ii) = xxx
+            
+            // for c(2,3,4), ii=11-1 => index=[0,2,1]
+            // sub_index converts back to index within sub-block
+            // in this example, partition_subblockdim_cumprod = c(1,4,20) if dim = c(4,5,6)
+            // sub_index = 0 + 2 * 4 + 1 * 20 = 28
+            
+            // get sub_index^th actual element from buffer
+            // buffer starts from subblock_min, hence buffer[sub_index + 1 - subblock_min]
+            
+            if( sub_index == NA_INTEGER64 ) {
+              *(ptr_res + ii) = NA_STRING;
+            } else {
+              sub_index = sub_index + 1 - subblock_min;
+              *(ptr_res + ii) = *(buffer.begin() + sub_index);
+            }
+            
+          }
+          
+          
+          
+          // end parallel
+          ptr_res += subblock_len;
         } else {
-          // index[di]
-          // location_ii starts from 1 but we need starting from 0
-          tmp = *(REAL(location_ii) + mod) - 1;
+          // don't calculate index on the fly.
+          // subblock_idx
+          // subblock_idx.size() == subblock_len
+          StringVector::iterator ptr_buffer = buffer.begin();
+
+          for(int64_t ii = 0; ii < subblock_len; ii++ ){
+            int64_t shift = *(subblock_idx.begin() + ii);
+            if(shift == NA_REAL || shift == NA_INTEGER64){
+              *ptr_res++ = NA_STRING;
+            } else {
+              *ptr_res++ = *(ptr_buffer + (shift - subblock_min));
+            }
+            
+          }
+
         }
-        
-        if(tmp == NA_REAL || tmp == NA_INTEGER64){
-          sub_index = NA_INTEGER64;
-        } else {
-          sub_index += *(partition_subblockdim_cumprod.begin() + di) * tmp;
-        }
-      }
-      
-      
-    }
-    // Rcout << "\n";
-    // 
-    // print(wrap(ii));
-    // print(wrap(sub_index));
-    // Rcout << partition_subblockdim_cumprod[0] << " "<< partition_subblockdim_cumprod[1] << " "<< partition_subblockdim_cumprod[2] << " \n";
-    // Rcout<<"\n";
-    
-    // locate ii in re
-    // *(ptr_res + ii) = xxx
-    
-    // for c(2,3,4), ii=11-1 => index=[0,2,1]
-    // sub_index converts back to index within sub-block
-    // in this example, partition_subblockdim_cumprod = c(1,4,20) if dim = c(4,5,6)
-    // sub_index = 0 + 2 * 4 + 1 * 20 = 28
-    
-    // get sub_index^th actual element from buffer
-    // buffer starts from subblock_min, hence buffer[sub_index + 1 - subblock_min]
-    
-    if( sub_index == NA_INTEGER64 ) {
-      *(ptr_res + ii) = NA_STRING;
-    } else {
-      sub_index = sub_index + 1 - subblock_min;
-      *(ptr_res + ii) = *(buffer.begin() + sub_index);
-    }
-    
-  }
-}
-
-
-
-// end parallel
-ptr_res += subblock_len;
 
       }
       // int64_t chunk_start, chunk_end;
@@ -1405,8 +1515,8 @@ SEXP lazySubset_complex(StringVector& files, NumericVector& dim, List& subparsed
   SEXP res = PROTECT(Rf_allocVector(CPLXSXP, expected_length));
   Rcomplex *ptr_res = COMPLEX(res);
   Rcomplex *ptr_alt = ptr_res;
-  int64_t block_size = std::accumulate(target_dimension.begin(), target_dimension.end()-1, 1, std::multiplies<int64_t>());
-  int64_t expect_nrows = std::accumulate(dim.begin(), dim.end()-1, 1, std::multiplies<int64_t>());
+  int64_t block_size = std::accumulate(target_dimension.begin(), target_dimension.end()-1, INTEGER64_ONE, std::multiplies<int64_t>());
+  int64_t expect_nrows = std::accumulate(dim.begin(), dim.end()-1, INTEGER64_ONE, std::multiplies<int64_t>());
   List tmp;
   CharacterVector colNames;
   
@@ -1441,11 +1551,14 @@ SEXP lazySubset_complex(StringVector& files, NumericVector& dim, List& subparsed
         buffer_imag = tmp["V1I"];
         
         // check if we can memcpy
+        int n_protected = 0;
         if(TYPEOF(buffer_real) != REALSXP){
-          buffer_real = Rf_coerceVector(buffer_real, REALSXP);
+          buffer_real = PROTECT(Rf_coerceVector(buffer_real, REALSXP));
+          n_protected++;
         }
         if(TYPEOF(buffer_imag) != REALSXP){
-          buffer_imag = Rf_coerceVector(buffer_imag, REALSXP);
+          buffer_imag = PROTECT(Rf_coerceVector(buffer_imag, REALSXP));
+          n_protected++;
         }
         
         ptr_alt = ptr_res + block_size;
@@ -1454,6 +1567,10 @@ SEXP lazySubset_complex(StringVector& files, NumericVector& dim, List& subparsed
         for(;ptr_res != ptr_alt; ptr_res++, ptr_buffer_real++, ptr_buffer_imag++){
           (*ptr_res).r = *ptr_buffer_real;
           (*ptr_res).i = *ptr_buffer_imag;
+        }
+        
+        if(n_protected > 0){
+          UNPROTECT(n_protected);
         }
         
       }
@@ -1525,11 +1642,14 @@ SEXP lazySubset_complex(StringVector& files, NumericVector& dim, List& subparsed
         tmp = tmp["resTable"];
         buffer_real = tmp["V1R"];
         buffer_imag = tmp["V1I"];
+        int n_protected = 0;
         if(TYPEOF(buffer_real) != REALSXP){
-          buffer_real = Rf_coerceVector(buffer_real, REALSXP);
+          buffer_real = PROTECT(Rf_coerceVector(buffer_real, REALSXP));
+          n_protected++;
         }
         if(TYPEOF(buffer_imag) != REALSXP){
-          buffer_imag = Rf_coerceVector(buffer_imag, REALSXP);
+          buffer_imag = PROTECT(Rf_coerceVector(buffer_imag, REALSXP));
+          n_protected++;
         }
         
         ptr_res = COMPLEX(res);
@@ -1562,6 +1682,10 @@ SEXP lazySubset_complex(StringVector& files, NumericVector& dim, List& subparsed
           ptr_indices++;
         }
         
+        
+        if(n_protected > 0){
+          UNPROTECT(n_protected);
+        }
       }
       
     }
@@ -1580,7 +1704,7 @@ SEXP lazySubset_complex(StringVector& files, NumericVector& dim, List& subparsed
     int64_t part_block_size = 1;
     R_xlen_t buffer_margin = 0;
     for(buffer_margin = 0; buffer_margin < ndims - 1; buffer_margin++ ){
-      if(part_block_size > BLOCKSIZE){
+      if(part_block_size > getBlockSize()){
         break;
       }
       part_block_size *= part_dim[buffer_margin];
@@ -1680,6 +1804,13 @@ SEXP lazySubset_complex(StringVector& files, NumericVector& dim, List& subparsed
       mfactor *= part_dim[dd];
     }
     
+    // If part block size is too large (happends when first several dimensions are too large)
+    // don't calculate index set as it takes time
+    std::vector<int64_t> subblock_idx = std::vector<int64_t>(0);
+    if(subblock_ndim >= 2 && part_block_size < 62500000){
+      subblock_idx = loc2idx3(partition_subblocklocs, partition_subblockdim);
+    }
+    
     std::vector<int64_t> block_idx = loc2idx3(partition_blocklocs, partition_blockdim);
     nblocks = block_idx.size();
     
@@ -1753,11 +1884,14 @@ SEXP lazySubset_complex(StringVector& files, NumericVector& dim, List& subparsed
         
         buffer_real = tmp["V1R"];
         buffer_imag = tmp["V1I"];
+        int n_protected = 0;
         if(TYPEOF(buffer_real) != REALSXP){
           buffer_real = Rf_coerceVector(buffer_real, REALSXP);
+          n_protected++;
         }
         if(TYPEOF(buffer_imag) != REALSXP){
           buffer_imag = Rf_coerceVector(buffer_imag, REALSXP);
+          n_protected++;
         }
         
         /*
@@ -1779,6 +1913,7 @@ SEXP lazySubset_complex(StringVector& files, NumericVector& dim, List& subparsed
           nThread = 1;
         }
         
+        if(subblock_idx.size() != subblock_len) {
         // openmp-able indexing
         // 800MB single index took 2+sec now 1.3s
 #pragma omp parallel num_threads(nThread)
@@ -1855,9 +1990,35 @@ SEXP lazySubset_complex(StringVector& files, NumericVector& dim, List& subparsed
         }
         // end parallel
         
+          ptr_res += subblock_len;
+        } else {
+          // don't calculate index on the fly.
+          // subblock_idx
+          // subblock_idx.size() == subblock_len
+          double *ptr_buffer_real = REAL(buffer_real);
+          double *ptr_buffer_imag = REAL(buffer_imag);
+#pragma omp parallel num_threads(nThread)
+{
+#pragma omp for schedule(static, 1) nowait
+  for(int64_t ii = 0; ii < subblock_len; ii++ ){
+    int64_t shift = *(subblock_idx.begin() + ii);
+    if(shift == NA_REAL || shift == NA_INTEGER64){
+      (ptr_res + ii)->i = NA_REAL;
+      (ptr_res + ii)->r = NA_REAL;
+    } else {
+      (ptr_res + ii)->r = *(ptr_buffer_real + (shift - subblock_min));
+      (ptr_res + ii)->i = *(ptr_buffer_imag + (shift - subblock_min));
+    }
+    
+  }
+} // end parallel
+
+ptr_res += subblock_len;
+        }
         
-        
-        ptr_res += subblock_len;
+        if(n_protected > 0){
+          UNPROTECT(n_protected);
+        }
 
       }
       // int64_t chunk_start, chunk_end;
@@ -1904,8 +2065,8 @@ SEXP lazySubset_complex(StringVector& files, NumericVector& dim, List& subparsed
 //   SEXP res = PROTECT(Rf_allocVector(REALSXP, expected_length));
 //   double *ptr_res = REAL(res);
 //   double *ptr_alt = ptr_res;
-//   int64_t block_size = std::accumulate(target_dimension.begin(), target_dimension.end()-1, 1, std::multiplies<int64_t>());
-//   int64_t expect_nrows = std::accumulate(dim.begin(), dim.end()-1, 1, std::multiplies<int64_t>());
+//   int64_t block_size = std::accumulate(target_dimension.begin(), target_dimension.end()-1, INTEGER64_ONE, std::multiplies<int64_t>());
+//   int64_t expect_nrows = std::accumulate(dim.begin(), dim.end()-1, INTEGER64_ONE, std::multiplies<int64_t>());
 //   List tmp;
 //   CharacterVector colNames;
 //   
@@ -2055,7 +2216,7 @@ SEXP lazySubset_complex(StringVector& files, NumericVector& dim, List& subparsed
 //     R_xlen_t buffer_margin = 0;
 //     for(buffer_margin = 0; buffer_margin < ndims - 1; buffer_margin++ ){
 //       part_block_size *= part_dim[buffer_margin];
-//       if(part_block_size > BLOCKSIZE){
+//       if(part_block_size > getBlockSize()){
 //         break;
 //       }
 //     }

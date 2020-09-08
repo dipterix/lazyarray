@@ -1,5 +1,6 @@
 // [[Rcpp::plugins("cpp11")]]
 
+#include "common.h"
 #include "loader1.h"
 #include "indexConvert.h"
 using namespace Rcpp; 
@@ -254,7 +255,7 @@ SEXP lazyLoadBaseOld(
   // R_xlen_t n_cols = meta["nrOfCols"];
   // R_xlen_t n_cols = *(partition_dim.end() - 1);
   // R_xlen_t n_rows = meta["nrOfRows"];
-  // R_xlen_t n_rows = std::accumulate(partition_dim.begin(), partition_dim.end() - 1, 1, std::multiplies<R_xlen_t>());
+  // R_xlen_t n_rows = std::accumulate(partition_dim.begin(), partition_dim.end() - 1, INTEGER_XLEN_ONE, std::multiplies<R_xlen_t>());
   
   // IntegerVector first_indices_copy = IntegerVector( first_indices );
   // R_xlen_t subset_nrows = first_indices_copy.size();
@@ -335,7 +336,7 @@ SEXP lazyLoadOld(StringVector& files, List& partition_locations,
     target_dim.push_back( files.size() );
   }
   
-  // int64_t target_length = std::accumulate(target_dim.begin(), target_dim.end(), 1, std::multiplies<int64_t>());
+  // int64_t target_length = std::accumulate(target_dim.begin(), target_dim.end(), INTEGER64_ONE, std::multiplies<int64_t>());
   
   // if( target_length == 0 )
   
@@ -360,7 +361,7 @@ SEXP lazyLoadOld(StringVector& files, List& partition_locations,
   _rcpp_timer.step("calculated target_dim");
   
   // TODO: check whether first_len is needed
-  int64_t first_len = std::accumulate(target_dim.begin(), target_dim.begin() + part_dim - 1, 1, std::multiplies<int64_t>());
+  int64_t first_len = std::accumulate(target_dim.begin(), target_dim.begin() + part_dim - 1, INTEGER64_ONE, std::multiplies<int64_t>());
   // What if re_len is 0?
   if( first_len == 0 || column_indices.size() == 0 || files.size() == 0 ){
     // return numeric(0)?

@@ -84,8 +84,12 @@ SEXP dropDimension(SEXP x){
 
 int64_t prod2(SEXP x, bool na_rm){
   SEXP x_alt = x;
+  
+  int n_protected = 0;
+  
   if(TYPEOF(x_alt) != REALSXP){
-    x_alt = Rf_coerceVector(x_alt, REALSXP);
+    x_alt = PROTECT(Rf_coerceVector(x_alt, REALSXP));
+    n_protected++;
   }
   int64_t res = 1;
   R_xlen_t xlen = Rf_xlength(x) - 1;
@@ -100,6 +104,11 @@ int64_t prod2(SEXP x, bool na_rm){
       res *= REAL(x_alt)[xlen];
     }
   }
+  
+  if( n_protected > 0 ){
+    UNPROTECT(n_protected);
+  }
+  
   return res;
 }
 
@@ -150,6 +159,7 @@ SEXP parseDots(Environment& env, bool eval){
   
   return res;
 }
+
 
 /*** R
 f <- function(...){

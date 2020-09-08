@@ -19,11 +19,11 @@ static int lazyThreads = 0;
 
 // stores n threads when fork occurs 
 static bool detectFork = false;
-static int reset_forked = false;
+static int reset_forked = true;
 
 
 // [[Rcpp::export]]
-int getLazyThread();
+int getLazyThread(bool max = false);
 
 // [[Rcpp::export]]
 int setLazyThread(int n, SEXP reset_after_fork = R_NilValue);
