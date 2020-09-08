@@ -1,4 +1,4 @@
-#include "loader2double.h"
+#include "loader2ext.h"
 
 #include "common.h"
 #include "fstWrapper.h"
@@ -323,7 +323,7 @@ SEXP lazySubset_double(StringVector& files, NumericVector& dim, List& subparsed)
         
         // print(wrap(*ptr_block));
         
-        if(*ptr_block == NA_INTEGER64 || !(subblock_min > 0 && subblock_min < subblock_max)){
+        if(*ptr_block == NA_INTEGER64 || !(subblock_min > 0 && subblock_min <= subblock_max)){
           // fill NAs
           ptr_alt = ptr_res + subblock_len; // subblock_idx.size();
           for(;ptr_res != ptr_alt; ptr_res++){
@@ -449,8 +449,8 @@ SEXP lazySubset_double(StringVector& files, NumericVector& dim, List& subparsed)
     }
     
     
-    UNPROTECT(2);
     Rf_setAttrib(res, wrap("dim"), target_dimension);
+    UNPROTECT(2);
     
     // 
     // // Get max and min for each dim
@@ -669,7 +669,7 @@ SEXP lazySubset_integer(StringVector& files, NumericVector& dim, List& subparsed
     SEXP one = PROTECT(Rf_allocVector(REALSXP, 1));
     REAL(one)[0] = 1;
     
-    // 
+    // [5,16] => buffer_margin=0, [5] x [1,1] x [16]
     // [3000,7,3] if buffer_margin=0 => [3000] x [7,1] x [3]
     // [3000,7,3] if buffer_margin=1 => [3000] x [7,1] x [3]
     // [3000,7,3] if buffer_margin=2 => [3000,7] x [1,1] x [3]
@@ -790,7 +790,7 @@ SEXP lazySubset_integer(StringVector& files, NumericVector& dim, List& subparsed
         
         // print(wrap(*ptr_block));
         
-        if(*ptr_block == NA_INTEGER64 || !(subblock_min > 0 && subblock_min < subblock_max)){
+        if(*ptr_block == NA_INTEGER64 || !(subblock_min > 0 && subblock_min <= subblock_max)){
           // fill NAs
           ptr_alt = ptr_res + subblock_len; // subblock_idx.size();
           for(;ptr_res != ptr_alt; ptr_res++){
@@ -916,8 +916,8 @@ ptr_res += subblock_len;
     }
     
     
-    UNPROTECT(2);
     Rf_setAttrib(res, wrap("dim"), target_dimension);
+    UNPROTECT(2);
     
     // 
     // // Get max and min for each dim
@@ -1247,7 +1247,7 @@ SEXP lazySubset_character(StringVector& files, NumericVector& dim, List& subpars
         
         // print(wrap(*ptr_block));
         
-        if(*ptr_block == NA_INTEGER64 || !(subblock_min > 0 && subblock_min < subblock_max)){
+        if(*ptr_block == NA_INTEGER64 || !(subblock_min > 0 && subblock_min <= subblock_max)){
           // fill NAs
           ptr_alt = ptr_res + subblock_len; // subblock_idx.size();
           for(;ptr_res != ptr_alt; ptr_res++){
@@ -1370,8 +1370,8 @@ ptr_res += subblock_len;
     }
     
     
-    UNPROTECT(2);
     Rf_setAttrib(res, wrap("dim"), target_dimension);
+    UNPROTECT(2);
     
     // 
     // // Get max and min for each dim
@@ -1733,7 +1733,7 @@ SEXP lazySubset_complex(StringVector& files, NumericVector& dim, List& subparsed
         
         // print(wrap(*ptr_block));
         
-        if(*ptr_block == NA_INTEGER64 || !(subblock_min > 0 && subblock_min < subblock_max)){
+        if(*ptr_block == NA_INTEGER64 || !(subblock_min > 0 && subblock_min <= subblock_max)){
           // fill NAs
           ptr_alt = ptr_res + subblock_len; // subblock_idx.size();
           for(;ptr_res != ptr_alt; ptr_res++){
@@ -1866,8 +1866,8 @@ SEXP lazySubset_complex(StringVector& files, NumericVector& dim, List& subparsed
     }
     
     
-    UNPROTECT(2);
     Rf_setAttrib(res, wrap("dim"), target_dimension);
+    UNPROTECT(2);
     
     // 
     // // Get max and min for each dim
@@ -2153,7 +2153,7 @@ SEXP lazySubset_complex(StringVector& files, NumericVector& dim, List& subparsed
 //         // NumericVector subblock_idx = loc2idx2(partition_subblocklocs, partition_subblockdim);
 //         // NumericVector block_idx = loc2idx2(partition_blocklocs, partition_blockdim);
 //         // nblocks = block_idx.size();
-//         if(*ptr_block == NA_INTEGER64 || !(subblock_min > 0 && subblock_min < subblock_max)){
+//         if(*ptr_block == NA_INTEGER64 || !(subblock_min > 0 && subblock_min <= subblock_max)){
 //           // fill NAs
 //           ptr_alt = ptr_res + subblock_idx.size();
 //           for(;ptr_res != ptr_alt; ptr_res++){

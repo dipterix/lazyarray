@@ -2,6 +2,7 @@
 context("Getter/Setter mode = 2")
 
 test_that("Getter/Setter mode = 2", {
+  skip("mode = 2 is not supported anymore")
   path <- tempfile()
   suppressWarnings({
     self <- create_lazyarray(path, 'double', c(1,3,4), multipart = TRUE, multipart_mode = 2)
@@ -58,7 +59,7 @@ test_that("Getter/Setter mode = 1", {
   
   expect_equal(self$`@get_data`(1, 1:3, 1), c(1,2,NA))
   
-  expect_identical(self[drop = FALSE], array(c(1,2,NA, 3,4,NA, rep(NA, 6)), c(1,3,4)))
+  expect_equivalent(self[drop = FALSE], array(c(1,2,NA, 3,4,NA, rep(NA, 6)), c(1,3,4)))
   
   self[1, 1:2, c(3,10)] <- 1:4
   
@@ -66,7 +67,7 @@ test_that("Getter/Setter mode = 1", {
   private$read_only <- TRUE
   expect_false(self$can_write)
   
-  expect_identical(self[drop = FALSE], array(c(1,2,NA, 3,4,NA, 1,2,NA, rep(NA, 3)), c(1,3,4)))
+  expect_equivalent(self[drop = FALSE], array(c(1,2,NA, 3,4,NA, 1,2,NA, rep(NA, 3)), c(1,3,4)))
   
   expect_error({self[1, 1:2, c(3,10)] <- 1:4})
   
@@ -87,6 +88,7 @@ test_that("Getter/Setter mode = 1", {
 context("Getter/Setter no partition")
 
 test_that("Getter/Setter no partition", {
+  skip("No partition is not supported anymore")
   suppressWarnings({
     self <- create_lazyarray(tempfile(), 'double', c(1,3,4), multipart = FALSE)
   })

@@ -33,7 +33,9 @@ NumericVector asi(SEXP v, int nt) {
 }
 
 
+
 /*** R
-asi(rnorm(1000000), 4L)
-asi(rnorm(1000000), 1L)
+dropDimension(matrix(1:16,1))
+# asi(rnorm(1000000), 4L)
+# asi(rnorm(1000000), 1L)
 */

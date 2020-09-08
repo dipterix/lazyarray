@@ -11,15 +11,15 @@ test_that("Subset lazyarray & lazymatrix", {
   x <- as.lazymatrix(a)
   b <- x[]
   
-  expect_equal(dim(b), c(16,5))
+  expect_equivalent(as.integer(dim(b)), c(16,5))
   
   expect_equal(x[], b)
   
   idx <- sample(length(x), length(x) * 10, replace = TRUE)
   expect_equal(x[idx], b[idx])
   
-  expect_equal(x[,1], b[,1])
-  expect_equal(x[,1,drop=FALSE], b[,1,drop=FALSE])
+  expect_equivalent(x[,1], b[,1])
+  expect_equivalent(x[,1,drop=FALSE], b[,1,drop=FALSE])
 
   x <- t(x)  
   b <- t(b)

@@ -41,8 +41,8 @@ lazyLoadOld <- function(files, partition_locations, partition_dim, ndim, value_t
     .Call(`_lazyarray_lazyLoadOld`, files, partition_locations, partition_dim, ndim, value_type)
 }
 
-lazySubset <- function(files, env, dim, samp) {
-    .Call(`_lazyarray_lazySubset`, files, env, dim, samp)
+lazySubset <- function(files, env, dim, samp, reshape = NULL, drop = FALSE) {
+    .Call(`_lazyarray_lazySubset`, files, env, dim, samp, reshape, drop)
 }
 
 getLazyThread <- function() {
@@ -59,6 +59,18 @@ hasOpenMP <- function() {
 
 asi <- function(v, nt) {
     .Call(`_lazyarray_asi`, v, nt)
+}
+
+dropDimension <- function(x) {
+    .Call(`_lazyarray_dropDimension`, x)
+}
+
+prod2 <- function(x, na_rm = FALSE) {
+    .Call(`_lazyarray_prod2`, x, na_rm)
+}
+
+parseDots <- function(env, eval) {
+    .Call(`_lazyarray_parseDots`, env, eval)
 }
 
 # Register entry points for exported C++ functions

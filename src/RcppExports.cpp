@@ -141,8 +141,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // lazySubset
-SEXP lazySubset(Rcpp::StringVector& files, Rcpp::Environment& env, Rcpp::NumericVector& dim, SEXP samp);
-RcppExport SEXP _lazyarray_lazySubset(SEXP filesSEXP, SEXP envSEXP, SEXP dimSEXP, SEXP sampSEXP) {
+SEXP lazySubset(Rcpp::StringVector& files, Rcpp::Environment& env, Rcpp::NumericVector& dim, SEXP samp, SEXP reshape, bool drop);
+RcppExport SEXP _lazyarray_lazySubset(SEXP filesSEXP, SEXP envSEXP, SEXP dimSEXP, SEXP sampSEXP, SEXP reshapeSEXP, SEXP dropSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -150,7 +150,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::Environment& >::type env(envSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type dim(dimSEXP);
     Rcpp::traits::input_parameter< SEXP >::type samp(sampSEXP);
-    rcpp_result_gen = Rcpp::wrap(lazySubset(files, env, dim, samp));
+    Rcpp::traits::input_parameter< SEXP >::type reshape(reshapeSEXP);
+    Rcpp::traits::input_parameter< bool >::type drop(dropSEXP);
+    rcpp_result_gen = Rcpp::wrap(lazySubset(files, env, dim, samp, reshape, drop));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -267,6 +269,41 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// dropDimension
+SEXP dropDimension(SEXP x);
+RcppExport SEXP _lazyarray_dropDimension(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(dropDimension(x));
+    return rcpp_result_gen;
+END_RCPP
+}
+// prod2
+int64_t prod2(SEXP x, bool na_rm);
+RcppExport SEXP _lazyarray_prod2(SEXP xSEXP, SEXP na_rmSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type x(xSEXP);
+    Rcpp::traits::input_parameter< bool >::type na_rm(na_rmSEXP);
+    rcpp_result_gen = Rcpp::wrap(prod2(x, na_rm));
+    return rcpp_result_gen;
+END_RCPP
+}
+// parseDots
+SEXP parseDots(Rcpp::Environment& env, bool eval);
+RcppExport SEXP _lazyarray_parseDots(SEXP envSEXP, SEXP evalSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::Environment& >::type env(envSEXP);
+    Rcpp::traits::input_parameter< bool >::type eval(evalSEXP);
+    rcpp_result_gen = Rcpp::wrap(parseDots(env, eval));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 // validate (ensure exported C++ functions exist before calling them)
 static int _lazyarray_RcppExport_validate(const char* sig) { 
@@ -299,11 +336,14 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lazyarray_lazyMapReduceByPartition", (DL_FUNC) &_lazyarray_lazyMapReduceByPartition, 6},
     {"_lazyarray_setBlockSize", (DL_FUNC) &_lazyarray_setBlockSize, 1},
     {"_lazyarray_lazyLoadOld", (DL_FUNC) &_lazyarray_lazyLoadOld, 5},
-    {"_lazyarray_lazySubset", (DL_FUNC) &_lazyarray_lazySubset, 4},
+    {"_lazyarray_lazySubset", (DL_FUNC) &_lazyarray_lazySubset, 6},
     {"_lazyarray_getLazyThread", (DL_FUNC) &_lazyarray_getLazyThread, 0},
     {"_lazyarray_setLazyThread", (DL_FUNC) &_lazyarray_setLazyThread, 2},
     {"_lazyarray_hasOpenMP", (DL_FUNC) &_lazyarray_hasOpenMP, 0},
     {"_lazyarray_asi", (DL_FUNC) &_lazyarray_asi, 2},
+    {"_lazyarray_dropDimension", (DL_FUNC) &_lazyarray_dropDimension, 1},
+    {"_lazyarray_prod2", (DL_FUNC) &_lazyarray_prod2, 2},
+    {"_lazyarray_parseDots", (DL_FUNC) &_lazyarray_parseDots, 2},
     {"_lazyarray_RcppExport_registerCCallable", (DL_FUNC) &_lazyarray_RcppExport_registerCCallable, 0},
     {NULL, NULL, 0}
 };

@@ -1,96 +1,125 @@
 #' @export
-`[.LazyArray` <- function(x, ..., drop = TRUE){
+`[.LazyArray` <- function(x, ..., drop = TRUE, reshape = NULL){
   
-  # check dimensions
-  nidx <- ...length()
-  idx <- list()
-  dim <- x$dim
-  if(nidx == length(dim)){
-    for(ii in seq_len(nidx)){
-      idx[[ ii ]] <- tryCatch({
-        tmp <- ...elt(ii)
-        if(is.logical(tmp)){
-          if(length(tmp) < dim[ii]){
-            tmp <- rep(tmp, floor(dim[ii] / length(tmp)))
-            tmp <- tmp[seq_len(dim[ii])]
-          }
-          if(length(tmp) > dim[ii]){
-            stop("index out of bound at index ", ii)
-          }
-          which(tmp)
-        } else if (is.numeric(tmp)){
-          tmp
-        } else if (is.character(tmp)){
-          unlist(lapply(tmp, function(s){
-            re <- which(x$dimnames[[ii]] == s)
-            if(length(re)){ re[[1]] } else { -1 }
-          }))
-        }
-      }, error = function(e){
-        seq_len(dim[[ii]])
-      })
+  dim <- dim(x)
+  ndots <- ...length()
+  if(!ndots %in% c(0,1,length(dim))){
+    stop("Dimension not match: 0, 1, ", length(dim))
+  }
+  
+  
+  dots_value <- parseDots(environment(), TRUE)
+  
+  files <- x$get_partition_fpath()
+  
+  subf <- function(i, ...){
+    .Call(`_lazyarray_lazySubset`, files, environment(), dim,
+          x$`@sample_data`(), reshape, drop)
+  }
+  
+  if(length(dots_value) == 0){
+    return(subf())
+  }
+  
+  element_type <- attr(dots_value, 'element_type')
+  
+  # element_type is SEXP type
+  # 13: integer
+  # 14: double
+  # 10: logical
+  
+  is_logical <- element_type == 10
+  if(any(is_logical)){
+    logical_dim <- which(is_logical)
+    
+    dots_value[is_logical] <- lapply(logical_dim, function(ii){
+      seq_len(dim[ii])[dots_value[[ii]]]
+    })
+  }
+  
+  do.call('subf', dots_value)
+  
+}
+
+
+get_missing_value <- function(){
+  (function(...){
+    parseDots(environment(), FALSE)[[1]]
+  })(,)
+}
+
+
+#' @export
+`[.LazyMatrix` <- function(x, i, j, drop = TRUE){
+  
+  miss_j <- missing(j)
+  
+  if(x$`@transposed`){
+    y <- t(x)
+  } else {
+    y <- x
+  }
+  
+  # x[]
+  if(missing(i) && miss_j){
+    re <- `[.LazyArray`(y, drop = FALSE)
+    if(x$`@transposed`){
+      re <- t(re)
     }
-    target_dim <- sapply(idx, length)
-    if(prod(target_dim) == 0){
-      if(drop){
-        return(x$`@sample_data`()[NULL])
+    if(drop){
+      re <- drop(re)
+    }
+    return(re)
+  }
+  
+  # x[i,j]
+  if(!miss_j){
+    if(missing(i)){
+      if(x$`@transposed`){
+        re <- t(`[.LazyArray`(y, j, , drop = FALSE))
       } else {
-        return(array(x$`@sample_data`(), dim = target_dim))
+        re <- `[.LazyArray`(y, , j, drop = FALSE)
       }
-      
-    }
-    
-    idx$drop <- drop
-    return(do.call(x$`@get_data`, idx))
-  }
-  
-  has_idx <- FALSE
-  if(...length() == 1){
-    tryCatch({
-      idx <- ...elt(1)
-      has_idx <- TRUE
-    }, error = function(e){})
-  }
-  
-  if(has_idx){
-    if(!length(idx)){
-      return(logical(0))
     } else {
-      # stop('lazyarray x[a:b] is not supported right now')
-      
-      # idx to each partition?
-      dm <- dim(x)
-      part_size<- length(x) / dm[[length(dm)]]
-      
-      partition_idx <- ((idx - 1) %% part_size) + 1
-      partition <- (idx - partition_idx) / part_size + 1
-      
-      if(isTRUE(x$`@transposed`)){
-        tmp <- partition
-        partition <- partition_idx
-        partition_idx <- tmp
+      if(x$`@transposed`){
+        re <- t(`[.LazyArray`(y, j, i, drop = FALSE))
+      } else {
+        re <- `[.LazyArray`(y, i, j, drop = FALSE)
       }
-      
-      re <- partition_map(x, function(slice, part){
-        sel <- partition == part
-        list(
-          data = slice[partition_idx[sel]],
-          sel = sel
-        )
-      }, reduce = function(l){
-        re <- rep(NA, length(partition))
-        for(ii in seq_along(l)){
-          re[l[[ii]]$sel] <- l[[ii]]$data
-        }
-        re
-      })
-      return(re)
     }
     
+    if(drop){
+      re <- drop(re)
+    }
+    return(re)
   }
   
+  # x[i,]
+  if(!missing(i)){
+    if(x$`@transposed`){
+      re <- t(`[.LazyArray`(y, , i, drop = FALSE))
+    } else {
+      re <- `[.LazyArray`(y, i, , drop = FALSE)
+    }
+    if(drop){
+      re <- drop(re)
+    }
+    return(re)
+  }
   
-  x$`@get_data`(drop = drop)
+  # x[i]
+  dim <- dim(x)
+  
+  if(x$`@transposed`){
+    rows <- (i - 1) %% dim[1]
+    rows <- rows + 1
+    cols <- (i - rows) / dim[1] + 1
+    re <- `[.LazyArray`(y, cols + (rows-1) * dim[2])
+  } else {
+    re <- `[.LazyArray`(y, i)
+  }
+  
+  return(re)
   
 }
 

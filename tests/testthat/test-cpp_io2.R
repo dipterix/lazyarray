@@ -13,12 +13,12 @@ on.exit({
 
 x = array(1:prod(dim), dim)
 a = as.lazyarray(x, path = f)
-loader_f <- function(i, ..., samp){
-  lazyarray:::lazySubset(a$get_partition_fpath(), environment(), dim, samp)
+loader_f <- function(i, ..., samp, reshape, drop){
+  lazyarray:::lazySubset(a$get_partition_fpath(), environment(), dim, samp, reshape, drop)
 }
 
 lazy_test_unit <- function(samp_data, x_alt){
-  loader_double = function(...){ loader_f(samp = samp_data, ...) }
+  loader_double = function(..., reshape = NULL, drop = FALSE){ loader_f(samp = samp_data, ..., reshape = reshape, drop = drop) }
   if(missing(x_alt)){
     x <- x; storage.mode(x) <- storage.mode(samp_data)
   } else {
@@ -102,7 +102,25 @@ lazy_test_unit <- function(samp_data, x_alt){
   expect_equivalent(re, cp)
   expect_equivalent(dim(re), structure(dim(cp), class='integer64'))
   
-  # 7. Negative with missing
+  # 7. drop
+  re <- loader_double(,c(NA,1:0),c(2,NA,1), drop = TRUE)
+  cp <- x[,c(NA,1:0),c(2,NA,1),drop = TRUE]
+  expect_equivalent(re, cp)
+  expect_equivalent(dim(re), dim(cp))
+  re <- loader_double(,c(NA,1:0),c(3), drop = TRUE)
+  cp <- x[,c(NA,1:0),c(3),drop = TRUE]
+  expect_equivalent(re, cp)
+  expect_equivalent(dim(re), dim(cp))
+  
+  # 8. reshape
+  re <- loader_double(,c(NA,1:0),c(2,NA,1), reshape = c(20, 3))
+  cp <- x[,c(NA,1:0),c(2,NA,1),drop = TRUE]
+  expect_equivalent(as.vector(re), as.vector(cp))
+  expect_equivalent(dim(re), c(20, 3))
+  re <- loader_double(,c(NA,1:0),c(2,NA,1), reshape = c(60))
+  expect_equivalent(dim(re), NULL)
+  
+  # 9. Negative with missing
   re <- loader_double(,-c(NA,1:0),c(2,NA,1))
   cp <- x[,-c(1:0),c(2,NA,1),drop = FALSE]
   expect_equivalent(re, cp)
@@ -212,4 +230,18 @@ test_that("Loader2 complex", {
   x[,,2] <- NA
   expect_equal(x[], a[])
   lazy_test_unit(x[[1]], x)
+})
+
+context("Loader2 with matrix")
+test_that("Loader2 with matrix", {
+  x <- matrix(1:16,4)
+  a <- as.lazyarray(x)
+  loader_f <- function(i, ...){
+    lazyarray:::lazySubset(a$get_partition_fpath(), environment(), dim(x), 1L, NULL, FALSE)
+  }
+  
+  expect_equivalent(loader_f(), x)
+  expect_equivalent(loader_f(,1), x[,1,drop=TRUE])
+  expect_equivalent(loader_f(1,), x[1,,drop=TRUE])
+  
 })
