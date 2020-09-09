@@ -2,11 +2,11 @@ devtools::load_all()
 library(lazyarray)
 
 x <- as.lazyarray(array(1:27,c(3,3,3)), storage_format = 'double')
-lazyarray:::setBlockSize(2)
+lazyarray:::setLazyBlockSize(2)
 x[,,1]
 loc2idx2(list(c(NA,1,0), c(2,NA,1), 1), dim(x))
 
-lazyarray:::setBlockSize(-1)
+lazyarray:::setLazyBlockSize(-1)
 path <- "~/Desktop/lazyarray_data/"
 path <- "~/Desktop/junk/lazyarray_test2/"
 dimension <- c(287, 200, 601, 84)
@@ -24,9 +24,9 @@ subf <- function(i, ...){
 }
 
 (subf(,,,1))
-lazyarray:::setBlockSize(-1)
+lazyarray:::setLazyBlockSize(-1)
 system.time(subf(,,,1:10))
-lazyarray:::setBlockSize(31250000)
+lazyarray:::setLazyBlockSize(31250000)
 system.time(subf(,,,1:10))
 system.time(x$`@get_data`(1:287, 1:200, 1, 1:10))
 

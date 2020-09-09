@@ -43,6 +43,8 @@ system.time({x[,2]})
 }
 # Time difference of 26.069 secs
 
+biglm::biglm(rating ~ movie + customer + year + month - 1, data = x)
+
 
 future::plan('multisession')
 {
