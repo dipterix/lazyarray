@@ -2,6 +2,14 @@
 
 language: R
 warnings_are_errors: false
+os:
+  - linux
+  - osx
+compiler:
+  - gcc
+  - clang
+env:
+  - _R_CHECK_SYSTEM_CLOCK_=0
 cache:
   directories:
     - $TRAVIS_BUILD_DIR/packrat/src
