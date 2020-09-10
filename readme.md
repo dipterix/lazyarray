@@ -2,6 +2,8 @@
 
 Zhengjia Wang
 
+[![Travis build status](https://travis-ci.org/dipterix/lazyarray.svg?branch=master)](https://travis-ci.org/dipterix/lazyarray)
+
 ## Overview
 
 The `lazyarray` package for R provides a fast way to serialize arrays. With reading speeds of Gigabyte levels, `lazyarray` unlocks the potential of high speed solid state drive.
