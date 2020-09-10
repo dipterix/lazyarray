@@ -8,6 +8,17 @@
 
 using namespace Rcpp;
 
+// BigColSums
+NumericVector BigColSums(SEXP pBigMat);
+RcppExport SEXP _lazyarray_BigColSums(SEXP pBigMatSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type pBigMat(pBigMatSEXP);
+    rcpp_result_gen = Rcpp::wrap(BigColSums(pBigMat));
+    return rcpp_result_gen;
+END_RCPP
+}
 // setLazyBlockSize
 R_xlen_t setLazyBlockSize(R_xlen_t size);
 static SEXP _lazyarray_setLazyBlockSize_try(SEXP sizeSEXP) {
@@ -304,6 +315,18 @@ RcppExport SEXP _lazyarray_subsetIdx2(SEXP sliceIdxSEXP, SEXP dimSEXP, SEXP pos_
     UNPROTECT(1);
     return rcpp_result_gen;
 }
+// scheduleIndexing
+List scheduleIndexing(List locations, SEXP dimension);
+RcppExport SEXP _lazyarray_scheduleIndexing(SEXP locationsSEXP, SEXP dimensionSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type locations(locationsSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type dimension(dimensionSEXP);
+    rcpp_result_gen = Rcpp::wrap(scheduleIndexing(locations, dimension));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cpp_create_lazyarray
 SEXP cpp_create_lazyarray(SEXP& x, IntegerVector& dim, SEXP fileName, SEXP compression, SEXP uniformEncoding);
 RcppExport SEXP _lazyarray_cpp_create_lazyarray(SEXP xSEXP, SEXP dimSEXP, SEXP fileNameSEXP, SEXP compressionSEXP, SEXP uniformEncodingSEXP) {
@@ -542,6 +565,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// playground
+SEXP playground(NumericVector x);
+RcppExport SEXP _lazyarray_playground(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(playground(x));
+    return rcpp_result_gen;
+END_RCPP
+}
 // dropDimension
 SEXP dropDimension(SEXP x);
 static SEXP _lazyarray_dropDimension_try(SEXP xSEXP) {
@@ -729,9 +763,10 @@ RcppExport SEXP _lazyarray_RcppExport_registerCCallable() {
     return R_NilValue;
 }
 
-RcppExport SEXP _rcpp_module_boot_fst_LazyArray();
+RcppExport SEXP _rcpp_module_boot_LazyArrayModules();
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_lazyarray_BigColSums", (DL_FUNC) &_lazyarray_BigColSums, 1},
     {"_lazyarray_setLazyBlockSize", (DL_FUNC) &_lazyarray_setLazyBlockSize, 1},
     {"_lazyarray_getLazyBlockSize", (DL_FUNC) &_lazyarray_getLazyBlockSize, 0},
     {"_lazyarray_fstMeta", (DL_FUNC) &_lazyarray_fstMeta, 1},
@@ -743,6 +778,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lazyarray_loc2idx3", (DL_FUNC) &_lazyarray_loc2idx3, 2},
     {"_lazyarray_subsetIdx", (DL_FUNC) &_lazyarray_subsetIdx, 3},
     {"_lazyarray_subsetIdx2", (DL_FUNC) &_lazyarray_subsetIdx2, 3},
+    {"_lazyarray_scheduleIndexing", (DL_FUNC) &_lazyarray_scheduleIndexing, 2},
     {"_lazyarray_cpp_create_lazyarray", (DL_FUNC) &_lazyarray_cpp_create_lazyarray, 5},
     {"_lazyarray_lazyMapReduceByPartition", (DL_FUNC) &_lazyarray_lazyMapReduceByPartition, 6},
     {"_lazyarray_lazyLoadOld", (DL_FUNC) &_lazyarray_lazyLoadOld, 5},
@@ -752,11 +788,12 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lazyarray_setLazyThread", (DL_FUNC) &_lazyarray_setLazyThread, 2},
     {"_lazyarray_hasOpenMP", (DL_FUNC) &_lazyarray_hasOpenMP, 0},
     {"_lazyarray_asi", (DL_FUNC) &_lazyarray_asi, 2},
+    {"_lazyarray_playground", (DL_FUNC) &_lazyarray_playground, 1},
     {"_lazyarray_dropDimension", (DL_FUNC) &_lazyarray_dropDimension, 1},
     {"_lazyarray_prod2", (DL_FUNC) &_lazyarray_prod2, 2},
     {"_lazyarray_parseDots", (DL_FUNC) &_lazyarray_parseDots, 2},
     {"_lazyarray_stopIfNot", (DL_FUNC) &_lazyarray_stopIfNot, 3},
-    {"_rcpp_module_boot_fst_LazyArray", (DL_FUNC) &_rcpp_module_boot_fst_LazyArray, 0},
+    {"_rcpp_module_boot_LazyArrayModules", (DL_FUNC) &_rcpp_module_boot_LazyArrayModules, 0},
     {"_lazyarray_RcppExport_registerCCallable", (DL_FUNC) &_lazyarray_RcppExport_registerCCallable, 0},
     {NULL, NULL, 0}
 };

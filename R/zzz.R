@@ -1,3 +1,5 @@
+Rcpp::loadModule('LazyArrayModules', TRUE)
+
 .onUnload <- function (libpath) {
   setLazyThread(1L, FALSE)
   library.dynam.unload("lazyarray", libpath)

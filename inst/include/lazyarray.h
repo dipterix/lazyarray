@@ -155,6 +155,7 @@ inline SEXP FstLazyArray::subset(SEXP envOrList, SEXP reshape, bool drop){
     break;
   case VECSXP:
     li = getSubsetIdx2(envOrList, true);
+    break;
   default:
     Rcpp::stop("Input envOrList must be either a list of indices or an environment");
   }

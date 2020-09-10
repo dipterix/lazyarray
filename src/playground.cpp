@@ -1,6 +1,7 @@
 #include <Rcpp.h>
 #include <Rcpp/Benchmark/Timer.h>
-#include "openMPInterface.h"
+//include "openMPInterface.h"
+#include "utils.h"
 using namespace Rcpp;
 
 
@@ -32,10 +33,23 @@ NumericVector asi(SEXP v, int nt) {
   return _res;
 }
 
+// [[Rcpp::export]]
+SEXP playground(NumericVector x){
+  int64_t y;
+  double a = x[0];
+  y = (int64_t)a;
+  Rcout << (y) << "\n";
+  return wrap(x);
+}
+
 
 
 /*** R
-dropDimension(matrix(1:16,1))
+devtools::load_all();
+subsetIdx2(list(9223372036854775806, 9223372036854775806), c(9223372036854775806, 9223372036854775806), TRUE)
+playground(8023372036854775806)
+# (8023372036854775806/4) + (9223372036854775806 / 4)
+# dropDimension(matrix(1:16,1))
 # asi(rnorm(1000000), 4L)
 # asi(rnorm(1000000), 1L)
 */

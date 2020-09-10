@@ -32,10 +32,15 @@ Imports:
     Rcpp (>= 1.0.5),
     R6,
     fstcore,
+    bigmemory,
+    BH,
     yaml
 LinkingTo: 
     Rcpp,
-    fstcore
+    fstcore,
+    BH,
+    bigmemory
+RcppModules: LazyArrayModules
 Suggests: 
     future,
     future.callr,

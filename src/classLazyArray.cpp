@@ -6,7 +6,7 @@ using namespace Rcpp;
 
 // Expose class as S4 class
 
-RCPP_MODULE(fst_LazyArray) {
+RCPP_MODULE(LazyArrayModules) {
   
   using namespace lazyarray;
   
@@ -33,7 +33,7 @@ fs <- x$get_partition_fpath(1:3)
 mod <- new(FstLazyArray, fs, c(prod(x$partition_dim()), 3L), 14L)
 mod$validate(TRUE)
 
-# module <- Rcpp::Module('fst_LazyArray', PACKAGE = 'lazyarray')
+# module <- Rcpp::Module('LazyArrayModules', PACKAGE = 'lazyarray')
 # 
 # mod <- new(module$FstLazyArray, fs, c(prod(x$partition_dim()), 2L), 14L)
 
@@ -55,7 +55,9 @@ mod$subsetBare(
   mod$subset(environment(), NULL, FALSE)
 })(1,1)
 
-
+(function(...){
+  mod$subset(list(...), NULL, FALSE)
+})(1,1)
 
 
 
@@ -69,11 +71,11 @@ mod$subsetBare(
 # List location_indices = subparsed["location_indices"];
 
 
-# Rcpp::loadModule('fst_LazyArray', loadNow = TRUE, env = asNamespace('lazyarray'))
+# Rcpp::loadModule('LazyArrayModules', loadNow = TRUE, env = asNamespace('lazyarray'))
 
 
 
-# module <- Rcpp::Module('fst_LazyArray', PACKAGE = 'lazyarray')
+# module <- Rcpp::Module('LazyArrayModules', PACKAGE = 'lazyarray')
 # 
 # mod <- new(module$FstLazyArray, "", c(1L, 2L), 1L)
 
