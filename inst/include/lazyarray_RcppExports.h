@@ -171,6 +171,48 @@ namespace lazyarray {
         return Rcpp::as<SEXP >(rcpp_result_gen);
     }
 
+    inline List scheduleIndexing(SEXP locations, SEXP dimension) {
+        typedef SEXP(*Ptr_scheduleIndexing)(SEXP,SEXP);
+        static Ptr_scheduleIndexing p_scheduleIndexing = NULL;
+        if (p_scheduleIndexing == NULL) {
+            validateSignature("List(*scheduleIndexing)(SEXP,SEXP)");
+            p_scheduleIndexing = (Ptr_scheduleIndexing)R_GetCCallable("lazyarray", "_lazyarray_scheduleIndexing");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_scheduleIndexing(Shield<SEXP>(Rcpp::wrap(locations)), Shield<SEXP>(Rcpp::wrap(dimension)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<List >(rcpp_result_gen);
+    }
+
+    inline List parseAndScheduleBlocks(SEXP sliceIdx, NumericVector dim) {
+        typedef SEXP(*Ptr_parseAndScheduleBlocks)(SEXP,SEXP);
+        static Ptr_parseAndScheduleBlocks p_parseAndScheduleBlocks = NULL;
+        if (p_parseAndScheduleBlocks == NULL) {
+            validateSignature("List(*parseAndScheduleBlocks)(SEXP,NumericVector)");
+            p_parseAndScheduleBlocks = (Ptr_parseAndScheduleBlocks)R_GetCCallable("lazyarray", "_lazyarray_parseAndScheduleBlocks");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_parseAndScheduleBlocks(Shield<SEXP>(Rcpp::wrap(sliceIdx)), Shield<SEXP>(Rcpp::wrap(dim)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<List >(rcpp_result_gen);
+    }
+
     inline SEXP lazySubsetBare(Rcpp::StringVector& files, Rcpp::NumericVector& dim, const List& subparsed, SEXPTYPE dtype, SEXP reshape = R_NilValue, bool drop = false) {
         typedef SEXP(*Ptr_lazySubsetBare)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
         static Ptr_lazySubsetBare p_lazySubsetBare = NULL;

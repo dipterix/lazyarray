@@ -22,5 +22,11 @@ SEXP subsetIdx(Rcpp::Environment expr_env, Rcpp::NumericVector dim, bool pos_sub
 // [[Rcpp::export]]
 SEXP subsetIdx2(const Rcpp::List sliceIdx, Rcpp::NumericVector dim, bool pos_subscript = false);
 
+// [[Rcpp::export]]
+List scheduleIndexing(SEXP locations, SEXP dimension);
+
+
+// [[Rcpp::export]]
+List parseAndScheduleBlocks(SEXP sliceIdx, NumericVector dim);
 
 #endif // LAZYARRAY_INDEX_H

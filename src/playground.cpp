@@ -34,20 +34,17 @@ NumericVector asi(SEXP v, int nt) {
 }
 
 // [[Rcpp::export]]
-SEXP playground(NumericVector x){
-  int64_t y;
-  double a = x[0];
-  y = (int64_t)a;
-  Rcout << (y) << "\n";
-  return wrap(x);
+SEXP playground(int x){
+  SEXP i = wrap(seq_len(x));
+  return i;
 }
 
 
 
 /*** R
-devtools::load_all();
-subsetIdx2(list(9223372036854775806, 9223372036854775806), c(9223372036854775806, 9223372036854775806), TRUE)
-playground(8023372036854775806)
+# devtools::load_all();
+# subsetIdx2(list(9223372036854775806, 9223372036854775806), c(9223372036854775806, 9223372036854775806), TRUE)
+playground(2)
 # (8023372036854775806/4) + (9223372036854775806 / 4)
 # dropDimension(matrix(1:16,1))
 # asi(rnorm(1000000), 4L)

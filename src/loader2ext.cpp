@@ -286,7 +286,7 @@ SEXP lazySubset_double(StringVector& files, NumericVector& dim, const List& subp
     // If part block size is too large (happends when first several dimensions are too large)
     // don't calculate index set as it takes time
     std::vector<int64_t> subblock_idx = std::vector<int64_t>(0);
-    if(subblock_ndim >= 2 && part_block_size < 62500000){
+    if(subblock_ndim >= 2 && part_block_size < BLOCKLARGE){
       subblock_idx = loc2idx3(partition_subblocklocs, partition_subblockdim);
     }
     
@@ -795,7 +795,7 @@ SEXP lazySubset_integer(StringVector& files, NumericVector& dim, const List& sub
     // If part block size is too large (happends when first several dimensions are too large)
     // don't calculate index set as it takes time
     std::vector<int64_t> subblock_idx = std::vector<int64_t>(0);
-    if(subblock_ndim >= 2 && part_block_size < 62500000){
+    if(subblock_ndim >= 2 && part_block_size < BLOCKLARGE){
       subblock_idx = loc2idx3(partition_subblocklocs, partition_subblockdim);
     }
     
@@ -1287,7 +1287,7 @@ SEXP lazySubset_character(StringVector& files, NumericVector& dim, const List& s
     // If part block size is too large (happends when first several dimensions are too large)
     // don't calculate index set as it takes time
     std::vector<int64_t> subblock_idx = std::vector<int64_t>(0);
-    if(subblock_ndim >= 2 && part_block_size < 62500000){
+    if(subblock_ndim >= 2 && part_block_size < BLOCKLARGE){
       subblock_idx = loc2idx3(partition_subblocklocs, partition_subblockdim);
     }
     
@@ -1806,7 +1806,7 @@ SEXP lazySubset_complex(StringVector& files, NumericVector& dim, const List& sub
     // If part block size is too large (happends when first several dimensions are too large)
     // don't calculate index set as it takes time
     std::vector<int64_t> subblock_idx = std::vector<int64_t>(0);
-    if(subblock_ndim >= 2 && part_block_size < 62500000){
+    if(subblock_ndim >= 2 && part_block_size < BLOCKLARGE){
       subblock_idx = loc2idx3(partition_subblocklocs, partition_subblockdim);
     }
     

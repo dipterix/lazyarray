@@ -1,3 +1,4 @@
+#include "utils.h"
 #include "indexConvert.h"
 using namespace Rcpp; 
 
@@ -824,5 +825,218 @@ std::vector<int64_t> loc2idx3(SEXP locations, std::vector<int64_t>& parent_dim){
   }
   
   return(re);
+}
+
+List scheduleIndexing(SEXP locations, SEXP dimension){
+  R_xlen_t ndims = Rf_xlength(dimension);
+  
+  stopIfNot(
+    Rf_xlength(locations) == ndims && ndims >= 2,
+    "`scheduleIndexing`: locations and dim have different sizes or dimension size is less than 2"
+  );
+  
+  std::vector<int64_t> dim(ndims);
+  if(TYPEOF(dimension) == REALSXP){
+    for(R_xlen_t ii = 0; ii < ndims; ii++ ){
+      dim[ii] = REAL(dimension)[ii];
+    }
+  } else {
+    SEXP tmp = PROTECT(Rf_coerceVector(dimension, REALSXP));
+    for(R_xlen_t ii = 0; ii < ndims; ii++ ){
+      dim[ii] = REAL(tmp)[ii];
+    }
+    UNPROTECT(1);
+  }
+  
+  // Find split
+  // dim -> dim1 x dim2 length(dim1) <= length(dim)-1
+  // std::vector<int64_t> dim_int64 = numeric2Int64t(dim);
+  int64_t block_size = 1;
+  R_xlen_t buffer_margin = 0;
+  for(buffer_margin = 0; buffer_margin < ndims - 1; buffer_margin++ ){
+    if(block_size > getLazyBlockSize()){
+      break;
+    }
+    block_size *= dim[buffer_margin];
+  }
+  
+  // sub-block size is buffer_margin
+  std::vector<int64_t> block_dim = std::vector<int64_t>(dim.begin(), dim.begin() + buffer_margin);
+  int64_t block_length = std::accumulate(block_dim.begin(), block_dim.end(), INTEGER64_ONE, std::multiplies<int64_t>());
+  std::vector<int64_t> block_dim_prod(buffer_margin);
+  block_dim_prod[0] = 1;
+  for(R_xlen_t ii = 1; ii < buffer_margin; ii++){
+    block_dim_prod[ii] = block_dim_prod[ii-1] * block_dim[ii];
+  }
+  std::vector<int64_t> rest_dim = std::vector<int64_t>(dim.begin() + buffer_margin, dim.end());
+  SEXP rest_loc = PROTECT(Rf_allocVector(VECSXP, ndims - buffer_margin));
+  
+  // std::vector<int64_t> loc2idx3(SEXP locations, std::vector<int64_t>& parent_dim);
+  for(R_xlen_t ii = buffer_margin; ii < ndims - 1; ii++){
+    SEXP loc_ii = VECTOR_ELT(locations, ii);
+    SET_VECTOR_ELT(rest_loc, ii - buffer_margin, loc_ii);
+  }
+  
+  SET_VECTOR_ELT(rest_loc, ndims - buffer_margin - 1, wrap(1));
+  rest_dim[ndims - buffer_margin - 1] = 1;
+  
+  std::vector<int64_t> rest_idx = loc2idx3(rest_loc, rest_dim);
+  rest_dim[ndims - buffer_margin - 1] = dim[ndims - 1];
+  UNPROTECT(1);
+  
+  // generate index set for block
+  std::vector<int64_t> subblock_idx(0);
+  bool buffer_expanded = false;
+  int64_t subblock_idx_min = 1; 
+  int64_t subblock_idx_max = block_length;
+  int64_t subblock_idx_size = block_length;
+  SEXP buffer_loc;
+  if(buffer_margin >= 2 && block_size < BLOCKLARGE){
+    buffer_expanded = true;
+    buffer_loc = PROTECT(Rf_allocVector(VECSXP, buffer_margin));
+    for(R_xlen_t ii = 0; ii < buffer_margin; ii++){
+      SEXP loc_ii = VECTOR_ELT(locations, ii);
+      SET_VECTOR_ELT(buffer_loc, ii, loc_ii);
+    }
+    subblock_idx = loc2idx3(buffer_loc, block_dim);
+    UNPROTECT(1);
+    
+    // calculate min and max
+    subblock_idx_min = block_length;
+    subblock_idx_max = 1;
+    subblock_idx_size = subblock_idx.size();
+    for(std::vector<int64_t>::iterator ptr_subblock_idx = subblock_idx.begin(); ptr_subblock_idx != subblock_idx.end(); ptr_subblock_idx++){
+      if((*ptr_subblock_idx) != NA_REAL && (*ptr_subblock_idx) != NA_INTEGER64){
+        if(*ptr_subblock_idx > subblock_idx_max){
+          subblock_idx_max = *ptr_subblock_idx;
+        }
+        if(*ptr_subblock_idx < subblock_idx_min){
+          subblock_idx_min = *ptr_subblock_idx;
+        }
+      }
+    }
+    
+  } else {
+    buffer_loc = PROTECT(Rf_allocVector(VECSXP, buffer_margin));
+    for(R_xlen_t ii = 0; ii < buffer_margin; ii++){
+      SEXP loc_ii = VECTOR_ELT(locations, ii);
+      SET_VECTOR_ELT(buffer_loc, ii, loc_ii);
+    }
+    UNPROTECT(1);
+  }
+  
+  SEXP partition_id = VECTOR_ELT(locations, ndims - 1);
+  int64_t nblocks;
+  
+  if(partition_id == R_MissingArg){
+    int64_t nparts = *(dim.end() - 1);
+    partition_id = wrap(seq_len(nparts));
+    nblocks = rest_idx.size() * nparts;
+  } else {
+    nblocks = rest_idx.size() * Rf_xlength(partition_id);
+  }
+  
+    
+  
+  // int64_t expected_length = 1;
+  // NumericVector target_dimension = NumericVector(dim.begin(), dim.end());
+  // for(R_xlen_t ii = 0; ii < ndims; ii++ ){
+  //   SEXP loc_ii = locations[ii];
+  //   
+  //   expected_length *= Rf_xlength( loc_ii );
+  //   target_dimension[ii] = Rf_xlength( loc_ii );
+  // }
+  
+  List re = List::create(
+    _["dimension"] = dimension,
+    _["partition_index"] = partition_id,
+    // number of blocks and index to schedule
+    _["schedule_count"] = nblocks,
+    _["schedule_index"] = rest_idx,
+    _["schedule_dimension"] = rest_dim,
+    
+    // block information
+    _["block_ndims"] = buffer_margin,
+    _["block_dimension"] = block_dim,
+    _["block_prod_dim"] = block_dim_prod,
+    _["block_schedule"] = subblock_idx,
+    _["block_schedule_start"] = subblock_idx_min,
+    _["block_schedule_end"] = subblock_idx_max,
+    _["block_length"] = block_length,
+    _["block_expected_length"] = subblock_idx_size,
+    _["block_indexed"] = buffer_expanded,
+    _["block_location"] = buffer_loc
+    
+    // _["expected_length"] = expected_length,
+    // _["target_dimension"] = target_dimension
+  );
+  return re;
+  
+  // Split dimension by two: 
+  
+  
+  
+  
+  
+}
+
+
+List parseAndScheduleBlocks(SEXP listOrEnv, NumericVector dim){
+  
+  List subparsed;  // VECSXP
+  
+  switch(TYPEOF(listOrEnv)) {
+  case ENVSXP: {
+    
+    // function should be called with 
+    // 1. f(...){ parseAndScheduleBlocks(environment(), TRUE) }, or
+    // 2. f(i, ...){ parseAndScheduleBlocks(environment(), TRUE) }
+    
+    // check if `i` exists and valid
+    bool has_i = false;
+    
+    try {
+      Rcpp::Environment env = listOrEnv;
+      env.find("i");
+      has_i = true;
+    } catch (...){}
+    
+    
+    if(has_i){
+      // If i exists, scenario 2
+      subparsed = as<List>(subsetIdx(listOrEnv, dim, true));
+    } else {
+      // i is missing, scenario 1
+      SEXP dots = Rf_findVarInFrame(listOrEnv, R_DotsSymbol);
+      int64_t idx_size = 0;
+      R_xlen_t ndims = dim.size();
+      Rcpp::List sliceIdx = Rcpp::List::create();
+      for(; dots != R_NilValue & dots != R_MissingArg; dots = CDR(dots), idx_size++ ){
+        if(idx_size >= ndims){
+          stop("Incorrect subscript dimensions, required: 0, 1, ndim.");
+        }
+        sliceIdx.push_back(CAR(dots));
+      }
+      subparsed = as<List>(subsetIdx2(sliceIdx, dim, true));
+    }
+    break;
+  }
+  case VECSXP:
+    subparsed = as<List>(subsetIdx2(listOrEnv, dim, true));
+    break;
+  default:
+    Rcpp::stop("Input `listOrEnv` must be either a list of indices or an environment");
+  }
+  
+  int subset_mode = subparsed["subset_mode"];
+  if(subset_mode == 0){
+    SEXP location_indices = subparsed["location_indices"];
+    List schedule = scheduleIndexing(location_indices, dim);
+    subparsed["schedule"] = wrap(schedule);
+  } else {
+    subparsed["schedule"] = R_NilValue;
+  }
+  
+  return subparsed;
 }
 

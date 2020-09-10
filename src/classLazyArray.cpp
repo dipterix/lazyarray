@@ -19,8 +19,7 @@ RCPP_MODULE(LazyArrayModules) {
   .method("validate", &FstLazyArray::validate)
   .method("dataType", &FstLazyArray::dataType)
   .method("subsetBare", &FstLazyArray::subsetBare)
-  .method("getSubsetIdx", &FstLazyArray::getSubsetIdx)
-  .method("getSubsetIdx2", &FstLazyArray::getSubsetIdx2)
+  .method("scheduleBlocks", &FstLazyArray::scheduleBlocks)
   .method("subset", &FstLazyArray::subset)
   ;
 }
@@ -38,20 +37,29 @@ mod$validate(TRUE)
 # mod <- new(module$FstLazyArray, fs, c(prod(x$partition_dim()), 2L), 14L)
 
 mod$dim
-li <- mod$getSubsetIdx2(
-  list(1,-1),
-  TRUE
-)
+l2 <- (function(...){
+  mod$scheduleBlocks(environment())
+})(1,1)
+
+li <- (function(...){
+  mod$scheduleBlocks(list(...))
+})(1,1)
+
+li <- (function(i, ...){
+  mod$scheduleBlocks(environment())
+})(1,1:2, 1:3)
+
 mod$subsetBare(
   li,
   NULL,
   FALSE
 )
-(function(...){
-  mod$getSubsetIdx(environment(), TRUE)
-})(1,1)
 
 (function(...){
+  mod$subset(environment(), NULL, FALSE)
+})(1,1)
+
+(function(i, ...){
   mod$subset(environment(), NULL, FALSE)
 })(1,1)
 

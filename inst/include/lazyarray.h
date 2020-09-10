@@ -54,10 +54,9 @@ public:
   // methods
   bool validate(bool stopIfError = true);
   
-  SEXP subsetBare(const List& subparsed, SEXP reshape = R_NilValue, bool drop = false);
+  SEXP subsetBare(const Rcpp::List& subparsed, SEXP reshape = R_NilValue, bool drop = false);
   
-  SEXP getSubsetIdx2(Rcpp::List sliceIdx, bool pos_subscript = true);
-  SEXP getSubsetIdx(Rcpp::Environment env, bool pos_subscript = true);
+  Rcpp::List scheduleBlocks(SEXP sliceIdx);
   
   SEXP subset(SEXP envOrList, SEXP reshape = R_NilValue, bool drop = false);
   
@@ -72,8 +71,6 @@ protected:
   
   
 };
-
-
 
 
 // Define methods inline
@@ -115,53 +112,14 @@ inline SEXP FstLazyArray::subsetBare(const List& subparsed, SEXP reshape, bool d
   
 }
 
-inline SEXP FstLazyArray::getSubsetIdx2(Rcpp::List sliceIdx, bool pos_subscript) {
-  return subsetIdx2(sliceIdx, int64t2NumericVector(dimension), pos_subscript);
-}
-
-
-inline SEXP FstLazyArray::getSubsetIdx(Rcpp::Environment env, bool pos_subscript){
-  
-  // function should be called with f(...){ x$getSubsetIdx(environment(), TRUE) }
-  SEXP dots = Rf_findVarInFrame(env, R_DotsSymbol);
-  SEXP el;
-  
-  int64_t idx_size = 0;
-  R_xlen_t ndims = dimension.size();
-  
-  Rcpp::List sliceIdx = Rcpp::List::create();
-  
-  for(; dots != R_NilValue & dots != R_MissingArg; dots = CDR(dots), idx_size++ ){
-    
-    if(idx_size >= ndims){
-      stop("Incorrect subscript dimensions, required: 0, 1, ndim.");
-    }
-    
-    el = CAR(dots);
-    sliceIdx.push_back(el);
-  }
-  return getSubsetIdx2(sliceIdx, pos_subscript);
-  
+inline Rcpp::List FstLazyArray::scheduleBlocks(SEXP sliceIdx) {
+  NumericVector dim = int64t2NumericVector(dimension);
+  return parseAndScheduleBlocks(sliceIdx, dim);
 }
 
 inline SEXP FstLazyArray::subset(SEXP envOrList, SEXP reshape, bool drop){
-  
-  SEXPTYPE intype = TYPEOF(envOrList);
-  
-  Rcpp::List li;
-  switch(intype) {
-  case ENVSXP:
-    li = getSubsetIdx(envOrList, true);
-    break;
-  case VECSXP:
-    li = getSubsetIdx2(envOrList, true);
-    break;
-  default:
-    Rcpp::stop("Input envOrList must be either a list of indices or an environment");
-  }
-  
+  Rcpp::List li = scheduleBlocks(envOrList);
   SEXP re = subsetBare(li, reshape, drop);
-  
   return re;
 }
 
