@@ -3,7 +3,7 @@
 #ifndef LAZYARRAY_LOADER1_H
 #define LAZYARRAY_LOADER1_H
 
-#include "common.h"
+#include <Rcpp.h>
 
 // [[Rcpp::export]]
 SEXP lazyLoadOld(Rcpp::StringVector& files, Rcpp::List& partition_locations, 

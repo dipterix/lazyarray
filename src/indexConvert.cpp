@@ -1,8 +1,254 @@
-#include "common.h"
 #include "indexConvert.h"
 using namespace Rcpp; 
 
-SEXP subsetIdx(Environment expr_env, NumericVector dim, bool pos_subscript = false){
+SEXP subsetIdx2(const Rcpp::List sliceIdx, Rcpp::NumericVector dim, bool pos_subscript){
+  
+  // SEXP i = expr_env["i"];
+  
+  List location_idx = List::create();
+  R_xlen_t ndims = dim.size();
+  
+  // mode: 
+  // 0: x[i,j,k,l,...]
+  // 1: x[i]
+  // 2: x[]
+  int subset_mode = 0;
+  
+  SEXP el;
+  
+  SEXP i = R_MissingArg;
+  if(sliceIdx.size() > 0){
+    i = sliceIdx[0];
+    // el might be promise SEXP, if so, evaluate
+    if ( TYPEOF(i) == PROMSXP ){
+      // This is a promise, need to evaluate
+      i = Rf_eval( PREXPR(i), PRENV( i ));
+    }
+  }
+  
+  location_idx.push_front( R_MissingArg );
+  R_xlen_t idx_size = 1;
+  
+  // used to estimate expected dimension
+  int64_t total_length = std::accumulate(dim.begin(), dim.end(), INTEGER64_ONE, std::multiplies<int64_t>());
+  NumericVector target_dim = NumericVector(dim.begin(), dim.end());
+  LogicalVector neg_subscr = LogicalVector(ndims, false);
+  
+  target_dim.attr("class") = "integer64";
+  
+  int64_t di;
+  NumericVector sidx;
+  NumericVector neg_sidx;
+  
+  
+  for(; idx_size < sliceIdx.size(); idx_size++ ){
+    
+    if( idx_size > ndims ){
+      stop("Incorrect dimension while subsetting an array");
+    }
+    
+    el = sliceIdx[idx_size];
+    
+    // el might be promise SEXP, if so, evaluate
+    if ( TYPEOF(el) == PROMSXP ){
+      // This is a promise, need to evaluate
+      el = Rf_eval( PREXPR(el), PRENV( el ));
+    }
+    
+    // current margin size
+    di = dim[ idx_size ];
+    
+    // Check if el is missing value, this means 
+    if( el == R_MissingArg ){
+      
+      neg_subscr[ idx_size ] = false;
+      target_dim[ idx_size ] = di;
+      
+      location_idx.push_back( el );
+      continue;
+    }
+    
+    sidx = as<NumericVector>(el);
+    sidx.attr("class") = "integer64";
+    
+    neg_sidx = sidx[ !(is_na(sidx) | sidx >= 0) ];
+    
+    
+    if( neg_sidx.length() > 0 ){
+      if( is_true( any( !(is_na(sidx) | sidx <= 0) ) ) ){
+        stop("only 0's may be mixed with negative subscripts");
+      }
+      neg_sidx = neg_sidx * (-1);
+      sidx = sort_unique( neg_sidx );
+      sidx.attr("class") = "integer64";
+      sidx = sidx[sidx <= di];
+      if( pos_subscript ){
+        NumericVector tmp = no_init( di - sidx.size() );
+        tmp.attr("class") = "integer64";
+        NumericVector::iterator ptr_neg_sidx = tmp.begin();
+        NumericVector::iterator ptr_sidx = sidx.begin();
+        for(int64_t el = 1; el <= di & ptr_neg_sidx != tmp.end(); el++){
+          if( ptr_sidx != sidx.end() && el - *ptr_sidx >= 0 ){
+            ptr_sidx++;
+          } else {
+            *ptr_neg_sidx++ = el;
+          }
+        }
+        
+        sidx = tmp;
+        neg_subscr[ idx_size ] = false;
+        target_dim[ idx_size ] = sidx.size();
+      } else {
+        neg_subscr[ idx_size ] = true;
+        target_dim[ idx_size ] = di - sidx.size();
+      }
+      
+    } else {
+      
+      if( is_true( any( !(is_na(sidx) | sidx <= di) ) ) ){
+        stop("incorrect number of dimensions");
+      }
+      
+      sidx = sidx[ is_na(sidx) | sidx > 0];
+      
+      neg_subscr[ idx_size ] = false;
+      target_dim[ idx_size ] = sidx.size();
+    }
+    
+    
+    location_idx.push_back( sidx );
+  }
+  
+  if(location_idx.size() == 1){
+    if(i == R_MissingArg){
+      subset_mode = 2;
+    } else {
+      subset_mode = 1;
+    }
+  } else if (ndims != location_idx.size()){
+    stop("Dimension mismatch while subseting an array");
+  }
+  
+  // come back for the first i
+  di = dim[ 0 ];
+  int64_t expected_len = -1;
+  if(subset_mode == 2){
+    // x[] is called, target_dim is dim and neg_subscr are all false
+    // no need to do anything
+    
+  } else if(i != R_MissingArg){
+    sidx = as<NumericVector>( i );
+    sidx.attr("class") = "integer64";
+    neg_sidx = sidx[ !(is_na(sidx) | sidx >= 0) ];
+    
+    if( neg_sidx.length() > 0 ){
+      if( is_true( any( !(is_na(sidx) | sidx <= 0) ) ) ){
+        stop("only 0's may be mixed with negative subscripts");
+      }
+      neg_sidx = neg_sidx * (-1);
+      sidx = sort_unique(neg_sidx);
+      sidx.attr("class") = "integer64";
+      neg_subscr[ 0 ] = true;
+    } else {
+      neg_subscr[ 0 ] = false;
+    }
+    
+    
+    if(subset_mode == 1) {
+      // if subset_mode == 1,
+      // i has value, subset is called as x[i]
+      // target_dim will be ignored
+      
+      if(neg_subscr[ 0 ]){
+        // need to make sure i is all valid - negative idx
+        sidx = sidx[sidx <= total_length];
+        
+        if(pos_subscript){
+          NumericVector tmp = no_init( total_length - sidx.size() );
+          tmp.attr("class") = "integer64";
+          NumericVector::iterator ptr_neg_sidx = tmp.begin();
+          NumericVector::iterator ptr_sidx = sidx.begin();
+          for(int64_t el = 1; el <= total_length & ptr_neg_sidx != tmp.end(); el++){
+            if( ptr_sidx != sidx.end() && el - *ptr_sidx >= 0 ){
+              ptr_sidx++;
+            } else {
+              *ptr_neg_sidx++ = el;
+            }
+          }
+          
+          sidx = tmp;
+          neg_subscr[ 0 ] = false;
+          target_dim[ 0 ] = sidx.size();
+          expected_len = sidx.size();
+        } else {
+          location_idx[0] = sidx;
+          expected_len = total_length - sidx.size();
+        }
+        
+      } else {
+        sidx = sidx[is_na(sidx) | sidx > 0];
+        sidx[ is_na(sidx) | sidx > total_length ] = NA_REAL;
+        expected_len = sidx.size();
+      }
+      
+      location_idx[ 0 ] = sidx;
+      
+    } else {
+      // x[i,j,k,l,...]
+      
+      if( neg_subscr[ 0 ] ){
+        sidx = sidx[sidx <= di];
+        if( pos_subscript ){
+          NumericVector tmp = no_init( di - sidx.size() );
+          tmp.attr("class") = "integer64";
+          NumericVector::iterator ptr_neg_sidx = tmp.begin();
+          NumericVector::iterator ptr_sidx = sidx.begin();
+          for(int64_t el = 1; el <= di & ptr_neg_sidx != tmp.end(); el++){
+            if( ptr_sidx != sidx.end() && el - *ptr_sidx >= 0 ){
+              ptr_sidx++;
+            } else {
+              *ptr_neg_sidx++ = el;
+            }
+          }
+          
+          sidx = tmp;
+          neg_subscr[ 0 ] = false;
+          target_dim[ 0 ] = sidx.size();
+        } else {
+          sidx = sidx[sidx <= di];
+          neg_subscr[ 0 ] = true;
+          target_dim[ 0 ] = di - sidx.size();
+        }
+        
+      } else {
+        if( is_true( any( sidx > di ) ) ){
+          stop("incorrect number of dimensions");
+        }
+        sidx = sidx[is_na(sidx) | sidx > 0];
+        target_dim[ 0 ] = sidx.size();
+      }
+      
+      location_idx[ 0 ] = sidx;
+    }
+    
+  }
+  
+  if(expected_len < 0){
+    expected_len = std::accumulate(target_dim.begin(), target_dim.end(), INTEGER64_ONE, std::multiplies<int64_t>());
+  }
+  
+  
+  
+  return List::create(
+    _["subset_mode"] = subset_mode,
+    _["target_dimension"] = target_dim,
+    _["expected_length"] = expected_len,
+    _["location_indices"] = location_idx,
+    _["negative_subscript"] = neg_subscr
+  );
+}
+
+SEXP subsetIdx(Environment expr_env, NumericVector dim, bool pos_subscript){
   
   // // Get environment
   // Environment env(-1);

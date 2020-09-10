@@ -1,6 +1,10 @@
 #' @export
 `[.LazyArray` <- function(x, ..., drop = TRUE, reshape = NULL){
   
+  if(!x$is_valid){
+    stop("`[.LazyArray`: x is no longer valid (data has been removed).")
+  }
+  
   dim <- dim(x)
   ndots <- ...length()
   if(!ndots %in% c(0,1,length(dim))){
@@ -50,6 +54,10 @@ get_missing_value <- function(){
 
 #' @export
 `[.LazyMatrix` <- function(x, i, j, drop = TRUE){
+  
+  if(!x$is_valid){
+    stop("`[.LazyArray`: x is no longer valid (data has been removed).")
+  }
   
   miss_j <- missing(j)
   miss_i <- missing(i)
@@ -141,6 +149,10 @@ get_missing_value <- function(){
 
 #' @export
 `[<-.LazyArray` <- function(x, ..., value){
+  
+  if(!x$is_valid){
+    stop("`[.LazyArray`: x is no longer valid (data has been removed).")
+  }
   
   # check dimensions
   nidx <- ...length()

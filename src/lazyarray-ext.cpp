@@ -1,19 +1,20 @@
 // [[Rcpp::plugins("cpp11")]]
 
-#include "common.h"
 #include "utils.h"
-#include "indexConvert.h"
 #include "reshape.h"
 #include "loader1.h"
 #include "loader2.h"
 #include "fstWrapper.h"
+
+#include "lazycommon.h"
+
 using namespace Rcpp; 
 
 /**
  * Write array to fst files
  * @param x array or vector
  * @param dim array dimension
- * @param fileName,compression,uniformEncoding passed to fstcore::fststore
+ * @param fileName,compression,uniformEncoding passed to fstStore
  */
 // [[Rcpp::export]]
 SEXP cpp_create_lazyarray(SEXP& x, IntegerVector& dim, SEXP fileName,
@@ -49,7 +50,7 @@ SEXP cpp_create_lazyarray(SEXP& x, IntegerVector& dim, SEXP fileName,
   Rcpp::List table = arr2df(x, first_dim, last_dim);
   // return table;
   // Rcpp::print(table);
-  fstcore::fststore(fileName, table, compression, uniformEncoding);
+  fstStore(fileName, table, compression, uniformEncoding);
   return R_NilValue;
 }
 
@@ -66,7 +67,7 @@ SEXP lazyMapReduceByPartition(
     Rcpp::Nullable<IntegerVector> reshape = R_NilValue){
   
   SEXP tmp;
-  tmp = fstcore::fstretrieve(fileName, wrap(colSel), start, end);
+  tmp = fstRetrieve(fileName, wrap(colSel), start, end);
   
   tmp = getListElement(tmp, "resTable");
   

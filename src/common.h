@@ -14,17 +14,21 @@
 #include <Rcpp.h>
 #include <Rcpp/Benchmark/Timer.h>
 
-// [[Rcpp::depends(fstcore)]]
-#include <fstcore.h>
-
-const bool LAZYARRAY_DEBUG = true;
+using namespace Rcpp;
 
 /*
  * Number of bytes fst uses to compress as a unit
  * We use it differently, basically 4x or 8x or 16x this number as our block size
  * to avoid repeating too many blocks
  */ 
+#ifdef NA_INTEGER64
+#undef NA_INTEGER64
+#endif // NA_INTEGER64
+
+
 #define NA_INTEGER64 LLONG_MIN
+
+const bool LAZYARRAY_DEBUG = true;
 
 /*
  * For array with dimension [287 x 200 x 601 x 84]
@@ -57,9 +61,14 @@ static R_xlen_t BLOCKLARGE = 31250000;
 const static int64_t INTEGER64_ONE = 1;
 const static R_xlen_t INTEGER_XLEN_ONE = 1;
 
+// [[Rcpp::interfaces(r, cpp)]]
 // [[Rcpp::export]]
-R_xlen_t setBlockSize(R_xlen_t size = 0);
+R_xlen_t setLazyBlockSize(R_xlen_t size);
 
-R_xlen_t getBlockSize();
+// [[Rcpp::export]]
+R_xlen_t getLazyBlockSize();
+
+
+
 
 #endif // DIP_LAZYARRAY_COMMON_H

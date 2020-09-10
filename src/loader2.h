@@ -3,9 +3,13 @@
 #ifndef LAZYARRAY_LOADER2_H
 #define LAZYARRAY_LOADER2_H
 
-#include "common.h"
-#include "indexConvert.h"
+#include "lazycommon.h"
 
+// [[Rcpp::interfaces(r,cpp)]]
+
+// [[Rcpp::export]]
+SEXP lazySubsetBare(Rcpp::StringVector& files, Rcpp::NumericVector& dim, 
+                    const List& subparsed, SEXPTYPE dtype, SEXP reshape = R_NilValue, bool drop = false);
 
 // [[Rcpp::export]]
 SEXP lazySubset(Rcpp::StringVector& files, Rcpp::Environment& env, Rcpp::NumericVector& dim, 

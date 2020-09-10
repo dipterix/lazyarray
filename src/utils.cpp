@@ -74,9 +74,14 @@ SEXP dropDimension(SEXP x){
   default:
     stop("unknown dimension storage type");
   }
-  SETLENGTH(new_dim, ii);
+  if(ii >= 2){
+    SETLENGTH(new_dim, ii);
+    
+    Rf_setAttrib(x, wrap("dim"), new_dim);
+  } else {
+    Rf_setAttrib(x, wrap("dim"), R_NilValue);
+  }
   
-  Rf_setAttrib(x, wrap("dim"), new_dim);
   UNPROTECT(1);
   return x;
 }
@@ -160,6 +165,18 @@ SEXP parseDots(Environment& env, bool eval){
   return res;
 }
 
+
+bool stopIfNot(const bool isValid, const std::string& message, bool stopIfError){
+  if(!isValid){
+    if( stopIfError ){
+      Rcpp::stop(message);
+    } else {
+      Rcpp::warning(message);
+    }
+    return false;
+  }
+  return true;
+}
 
 /*** R
 f <- function(...){

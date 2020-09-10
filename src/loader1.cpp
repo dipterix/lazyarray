@@ -1,8 +1,8 @@
 // [[Rcpp::plugins("cpp11")]]
 
-#include "common.h"
+#include "lazycommon.h"
 #include "loader1.h"
-#include "indexConvert.h"
+#include "fstWrapper.h"
 using namespace Rcpp; 
 
 
@@ -47,7 +47,7 @@ SEXP lazyLoadOld_base_internal(
   for(StringVector::iterator ptr_f = files.begin(); ptr_f != files.end(); ptr_f++ ){
     fileName = *ptr_f;
     // get meta information
-    meta = fstcore::fstmetadata(fileName);
+    meta = fstMeta(fileName);
     // print(meta.attr("class"));
     
     // It's possible that the file is missing or correputed, in this case, fill the chunks with NA
@@ -77,7 +77,7 @@ SEXP lazyLoadOld_base_internal(
         ptr_first += subset_nrows;
       } else{
         colname = "V" + std::to_string( *ptr_sec );
-        tmp = fstcore::fstretrieve(fileName, wrap(colname), wrap(start), wrap(end));
+        tmp = fstRetrieve(fileName, wrap(colname), wrap(start), wrap(end));
         
         // Read error, just fill with NAs
         if( Rf_inherits(tmp, "fst_error") || 
@@ -145,7 +145,7 @@ ComplexVector lazyLoadOld_base_complex(
   for(StringVector::iterator ptr_f = files.begin(); ptr_f != files.end(); ptr_f++ ){
     String fileName = *ptr_f;
     // get meta information
-    meta = fstcore::fstmetadata(fileName);
+    meta = fstMeta(fileName);
     if( Rf_inherits(meta, "fst_error") || 
         !meta.containsElementNamed("nrOfRows") ||
         !meta.containsElementNamed("nrOfCols") ){
@@ -170,7 +170,7 @@ ComplexVector lazyLoadOld_base_complex(
         
         // Read Real and Imaginary columns
         buf = "V" + std::to_string( *ptr_sec ) + "R";
-        tmp = fstcore::fstretrieve(fileName, wrap(buf), wrap(start), wrap(end));
+        tmp = fstRetrieve(fileName, wrap(buf), wrap(start), wrap(end));
         
         if( Rf_inherits(tmp, "fst_error") || 
             !tmp.containsElementNamed("resTable") ){
@@ -186,7 +186,7 @@ ComplexVector lazyLoadOld_base_complex(
         real = Shield<NumericVector>(wrap(tmp[buf]));
         
         buf = "V" + std::to_string( *ptr_sec ) + "I";
-        tmp = fstcore::fstretrieve(fileName, wrap(buf), wrap(start), wrap(end));
+        tmp = fstRetrieve(fileName, wrap(buf), wrap(start), wrap(end));
         
         if( Rf_inherits(tmp, "fst_error") || 
             !tmp.containsElementNamed("resTable") ){
@@ -239,7 +239,7 @@ SEXP lazyLoadBaseOld(
     IntegerVector& first_indices, IntegerVector& second_indices,
     int type){
   // SEXP columnSelection, SEXP startRow, SEXP endRow
-  // return fstcore::fstretrieve(fileName, columnSelection, startRow, endRow);
+  // return fstRetrieve(fileName, columnSelection, startRow, endRow);
   
   if(files.size() == 0){
     // it's garanteed, but just in case
@@ -250,7 +250,7 @@ SEXP lazyLoadBaseOld(
   }
   
   // get meta information
-  // List meta = fstcore::fstmetadata(files[0]);
+  // List meta = fstMeta(files[0]);
   
   // R_xlen_t n_cols = meta["nrOfCols"];
   // R_xlen_t n_cols = *(partition_dim.end() - 1);

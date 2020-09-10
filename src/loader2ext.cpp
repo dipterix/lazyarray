@@ -1,12 +1,11 @@
 #include "loader2ext.h"
 
-#include "common.h"
+#include "lazycommon.h"
 #include "fstWrapper.h"
-#include "indexConvert.h"
 #include "openMPInterface.h"
 using namespace Rcpp;
 
-SEXP lazySubset_double(StringVector& files, NumericVector& dim, List& subparsed){
+SEXP lazySubset_double(StringVector& files, NumericVector& dim, const List& subparsed){
   Rcpp::Timer _rcpp_timer;
   
   const int subset_mode = subparsed["subset_mode"];
@@ -45,7 +44,7 @@ SEXP lazySubset_double(StringVector& files, NumericVector& dim, List& subparsed)
         
       } else {
         // Read from fst file, abuse name "meta" a little bit
-        tmp = fstcore::fstretrieve(*ptr_files, wrap(cnames), wrap(1), R_NilValue);
+        tmp = fstRetrieve(*ptr_files, wrap(cnames), wrap(1), R_NilValue);
         tmp = tmp["resTable"];
         SEXP buffer = tmp["V1"];
         
@@ -134,7 +133,7 @@ SEXP lazySubset_double(StringVector& files, NumericVector& dim, List& subparsed)
           continue;
         }
         // Read from fst file, abuse name "meta" a little bit
-        tmp = fstcore::fstretrieve(*ptr_file, wrap(cnames), wrap(reader_start), wrap(reader_end));
+        tmp = fstRetrieve(*ptr_file, wrap(cnames), wrap(reader_start), wrap(reader_end));
         tmp = tmp["resTable"];
         const NumericVector& buffer_vec(tmp["V1"]);
         
@@ -184,7 +183,7 @@ SEXP lazySubset_double(StringVector& files, NumericVector& dim, List& subparsed)
     int64_t part_block_size = 1;
     R_xlen_t buffer_margin = 0;
     for(buffer_margin = 0; buffer_margin < ndims - 1; buffer_margin++ ){
-      if(part_block_size > getBlockSize()){
+      if(part_block_size > getLazyBlockSize()){
         break;
       }
       part_block_size *= part_dim[buffer_margin];
@@ -354,7 +353,7 @@ SEXP lazySubset_double(StringVector& files, NumericVector& dim, List& subparsed)
         // int64_t subblock_min = (min subblock_idx), subblock_max = max subblock_idx;
         reader_start = (int)(chunk_start + subblock_min);
         reader_end = (int)(chunk_start + subblock_max);
-        tmp = fstcore::fstretrieve(file, wrap(cnames), wrap(reader_start), wrap(reader_end));
+        tmp = fstRetrieve(file, wrap(cnames), wrap(reader_start), wrap(reader_end));
         tmp = tmp["resTable"];
         
         SEXP buffer = tmp["V1"];
@@ -521,7 +520,7 @@ SEXP lazySubset_double(StringVector& files, NumericVector& dim, List& subparsed)
   
 }
 
-SEXP lazySubset_integer(StringVector& files, NumericVector& dim, List& subparsed){
+SEXP lazySubset_integer(StringVector& files, NumericVector& dim, const List& subparsed){
   
   const int subset_mode = subparsed["subset_mode"];
   const NumericVector target_dimension = subparsed["target_dimension"];
@@ -560,7 +559,7 @@ SEXP lazySubset_integer(StringVector& files, NumericVector& dim, List& subparsed
         
       } else {
         // Read from fst file, abuse name "meta" a little bit
-        tmp = fstcore::fstretrieve(*ptr_files, wrap(cnames), wrap(1), R_NilValue);
+        tmp = fstRetrieve(*ptr_files, wrap(cnames), wrap(1), R_NilValue);
         tmp = tmp["resTable"];
         SEXP buffer = tmp["V1"];
         
@@ -642,7 +641,7 @@ SEXP lazySubset_integer(StringVector& files, NumericVector& dim, List& subparsed
           continue;
         }
         // Read from fst file, abuse name "meta" a little bit
-        tmp = fstcore::fstretrieve(*ptr_file, wrap(cnames), wrap(reader_start), wrap(reader_end));
+        tmp = fstRetrieve(*ptr_file, wrap(cnames), wrap(reader_start), wrap(reader_end));
         tmp = tmp["resTable"];
         const IntegerVector& buffer_vec(tmp["V1"]);
         
@@ -693,7 +692,7 @@ SEXP lazySubset_integer(StringVector& files, NumericVector& dim, List& subparsed
     int64_t part_block_size = 1;
     R_xlen_t buffer_margin = 0;
     for(buffer_margin = 0; buffer_margin < ndims - 1; buffer_margin++ ){
-      if(part_block_size > getBlockSize()){
+      if(part_block_size > getLazyBlockSize()){
         break;
       }
       part_block_size *= part_dim[buffer_margin];
@@ -865,7 +864,7 @@ SEXP lazySubset_integer(StringVector& files, NumericVector& dim, List& subparsed
         // int64_t subblock_min = (min subblock_idx), subblock_max = max subblock_idx;
         reader_start = (int)(chunk_start + subblock_min);
         reader_end = (int)(chunk_start + subblock_max);
-        tmp = fstcore::fstretrieve(file, wrap(cnames), wrap(reader_start), wrap(reader_end));
+        tmp = fstRetrieve(file, wrap(cnames), wrap(reader_start), wrap(reader_end));
         tmp = tmp["resTable"];
         
         SEXP buffer = tmp["V1"];
@@ -1029,7 +1028,7 @@ ptr_res += subblock_len;
   
 }
 
-SEXP lazySubset_character(StringVector& files, NumericVector& dim, List& subparsed){
+SEXP lazySubset_character(StringVector& files, NumericVector& dim, const List& subparsed){
   
   const int subset_mode = subparsed["subset_mode"];
   const NumericVector target_dimension = subparsed["target_dimension"];
@@ -1067,7 +1066,7 @@ SEXP lazySubset_character(StringVector& files, NumericVector& dim, List& subpars
         
       } else {
         // Read from fst file, abuse name "meta" a little bit
-        tmp = fstcore::fstretrieve(*ptr_files, wrap(cnames), wrap(1), R_NilValue);
+        tmp = fstRetrieve(*ptr_files, wrap(cnames), wrap(1), R_NilValue);
         tmp = tmp["resTable"];
         StringVector buffer = tmp["V1"];
         
@@ -1134,7 +1133,7 @@ SEXP lazySubset_character(StringVector& files, NumericVector& dim, List& subpars
           continue;
         }
         // Read from fst file, abuse name "meta" a little bit
-        tmp = fstcore::fstretrieve(*ptr_file, wrap(cnames), wrap(reader_start), wrap(reader_end));
+        tmp = fstRetrieve(*ptr_file, wrap(cnames), wrap(reader_start), wrap(reader_end));
         tmp = tmp["resTable"];
         const StringVector& buffer_vec(tmp["V1"]);
         
@@ -1185,7 +1184,7 @@ SEXP lazySubset_character(StringVector& files, NumericVector& dim, List& subpars
     int64_t part_block_size = 1;
     R_xlen_t buffer_margin = 0;
     for(buffer_margin = 0; buffer_margin < ndims - 1; buffer_margin++ ){
-      if(part_block_size > getBlockSize()){
+      if(part_block_size > getLazyBlockSize()){
         break;
       }
       part_block_size *= part_dim[buffer_margin];
@@ -1357,7 +1356,7 @@ SEXP lazySubset_character(StringVector& files, NumericVector& dim, List& subpars
         // int64_t subblock_min = (min subblock_idx), subblock_max = max subblock_idx;
         reader_start = (int)(chunk_start + subblock_min);
         reader_end = (int)(chunk_start + subblock_max);
-        tmp = fstcore::fstretrieve(file, wrap(cnames), wrap(reader_start), wrap(reader_end));
+        tmp = fstRetrieve(file, wrap(cnames), wrap(reader_start), wrap(reader_end));
         tmp = tmp["resTable"];
         
         StringVector buffer = tmp["V1"];
@@ -1502,7 +1501,7 @@ SEXP lazySubset_character(StringVector& files, NumericVector& dim, List& subpars
 }
 
 
-SEXP lazySubset_complex(StringVector& files, NumericVector& dim, List& subparsed){
+SEXP lazySubset_complex(StringVector& files, NumericVector& dim, const List& subparsed){
   
   const int subset_mode = subparsed["subset_mode"];
   const NumericVector target_dimension = subparsed["target_dimension"];
@@ -1545,7 +1544,7 @@ SEXP lazySubset_complex(StringVector& files, NumericVector& dim, List& subparsed
         
       } else {
         // Read from fst file, abuse name "meta" a little bit
-        tmp = fstcore::fstretrieve(*ptr_files, wrap(cnames), wrap(1), R_NilValue);
+        tmp = fstRetrieve(*ptr_files, wrap(cnames), wrap(1), R_NilValue);
         tmp = tmp["resTable"];
         buffer_real = tmp["V1R"];
         buffer_imag = tmp["V1I"];
@@ -1638,7 +1637,7 @@ SEXP lazySubset_complex(StringVector& files, NumericVector& dim, List& subparsed
           continue;
         }
         // Read from fst file, abuse name "meta" a little bit
-        tmp = fstcore::fstretrieve(*ptr_file, wrap(cnames), wrap(reader_start), wrap(reader_end));
+        tmp = fstRetrieve(*ptr_file, wrap(cnames), wrap(reader_start), wrap(reader_end));
         tmp = tmp["resTable"];
         buffer_real = tmp["V1R"];
         buffer_imag = tmp["V1I"];
@@ -1704,7 +1703,7 @@ SEXP lazySubset_complex(StringVector& files, NumericVector& dim, List& subparsed
     int64_t part_block_size = 1;
     R_xlen_t buffer_margin = 0;
     for(buffer_margin = 0; buffer_margin < ndims - 1; buffer_margin++ ){
-      if(part_block_size > getBlockSize()){
+      if(part_block_size > getLazyBlockSize()){
         break;
       }
       part_block_size *= part_dim[buffer_margin];
@@ -1879,7 +1878,7 @@ SEXP lazySubset_complex(StringVector& files, NumericVector& dim, List& subparsed
         // int64_t subblock_min = (min subblock_idx), subblock_max = max subblock_idx;
         reader_start = (int)(chunk_start + subblock_min);
         reader_end = (int)(chunk_start + subblock_max);
-        tmp = fstcore::fstretrieve(file, wrap(cnames), wrap(reader_start), wrap(reader_end));
+        tmp = fstRetrieve(file, wrap(cnames), wrap(reader_start), wrap(reader_end));
         tmp = tmp["resTable"];
         
         buffer_real = tmp["V1R"];
@@ -2089,7 +2088,7 @@ ptr_res += subblock_len;
 //         
 //       } else {
 //         // Read from fst file, abuse name "meta" a little bit
-//         tmp = fstcore::fstretrieve(*ptr_files, wrap(cnames), wrap(1), R_NilValue);
+//         tmp = fstRetrieve(*ptr_files, wrap(cnames), wrap(1), R_NilValue);
 //         tmp = tmp["resTable"];
 //         SEXP buffer = tmp["V1"];
 // 
@@ -2164,7 +2163,7 @@ ptr_res += subblock_len;
 //           continue;
 //         }
 //         // Read from fst file, abuse name "meta" a little bit
-//         tmp = fstcore::fstretrieve(*ptr_file, wrap(cnames), wrap(reader_start), wrap(reader_end));
+//         tmp = fstRetrieve(*ptr_file, wrap(cnames), wrap(reader_start), wrap(reader_end));
 //         tmp = tmp["resTable"];
 //         const NumericVector& buffer_vec(tmp["V1"]);
 //         
@@ -2216,7 +2215,7 @@ ptr_res += subblock_len;
 //     R_xlen_t buffer_margin = 0;
 //     for(buffer_margin = 0; buffer_margin < ndims - 1; buffer_margin++ ){
 //       part_block_size *= part_dim[buffer_margin];
-//       if(part_block_size > getBlockSize()){
+//       if(part_block_size > getLazyBlockSize()){
 //         break;
 //       }
 //     }
@@ -2328,7 +2327,7 @@ ptr_res += subblock_len;
 //         // int64_t subblock_min = (min subblock_idx), subblock_max = max subblock_idx;
 //         reader_start = (int)(chunk_start + subblock_min);
 //         reader_end = (int)(chunk_start + subblock_max);
-//         tmp = fstcore::fstretrieve(file, wrap(cnames), wrap(reader_start), wrap(reader_end));
+//         tmp = fstRetrieve(file, wrap(cnames), wrap(reader_start), wrap(reader_end));
 //         tmp = tmp["resTable"];
 //         const NumericVector& buffer_vec(tmp["V1"]);
 //         

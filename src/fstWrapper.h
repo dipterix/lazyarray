@@ -6,10 +6,13 @@
 #include <Rcpp.h>
 
 // [[Rcpp::export]]
-SEXP fstMeta(SEXP fileName);
+SEXP fstMeta(Rcpp::String fileName);
 
 // [[Rcpp::export]]
-SEXP fstRetrieve(SEXP fileName, SEXP colSel, SEXP start, SEXP end);
+SEXP fstRetrieve(Rcpp::String fileName, SEXP colSel, SEXP start, SEXP end);
+
+// [[Rcpp::export]]
+SEXP fstStore(Rcpp::String fileName, SEXP table, SEXP compression, SEXP uniformEncoding);
 
 /*
  * Validate fst header information

@@ -1,7 +1,7 @@
 #include "common.h"
 using namespace Rcpp;
 
-R_xlen_t setBlockSize(R_xlen_t size){
+R_xlen_t setLazyBlockSize(R_xlen_t size){
   if( size < 0 ){
     BLOCKSIZE = 16384;
   } else if( size > 0 ){
@@ -11,7 +11,7 @@ R_xlen_t setBlockSize(R_xlen_t size){
   return BLOCKSIZE;
 }
 
-R_xlen_t getBlockSize(){
+R_xlen_t getLazyBlockSize(){
   if(BLOCKSIZE < 1){
     BLOCKSIZE = 16384;
   }

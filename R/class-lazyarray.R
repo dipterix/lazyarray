@@ -816,6 +816,11 @@ ClassLazyArray <- R6::R6Class(
     #' @field storage_formats_avail storage format supported
     storage_formats_avail = function(){
       c('double', 'integer', 'character', 'complex')
+    },
+    
+    #' @field is_valid whether the array is valid
+    is_valid = function(){
+      private$.valid
     }
     
   )

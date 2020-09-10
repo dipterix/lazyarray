@@ -3,7 +3,7 @@
 #ifndef LAZYARRAY_RESHAPE_H
 #define LAZYARRAY_RESHAPE_H
 
-#include "common.h"
+#include "lazycommon.h"
 
 Rcpp::List arr2df(SEXP x, int64_t nrows, int64_t ncols);
 

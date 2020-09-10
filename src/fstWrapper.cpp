@@ -1,22 +1,27 @@
-#include "fstWrapper.h"
+// [[Rcpp::plugins("cpp11")]]
 
 #include <Rcpp.h>
 #include <fstcore.h>
 #include "utils.h"
+#include "fstWrapper.h"
 
 using namespace Rcpp;
 
 
-SEXP fstMeta(SEXP fileName){
-  return fstcore::fstmetadata(as<String>(fileName));
+SEXP fstMeta(String fileName){
+  return fstcore::fstmetadata(fileName);
 }
 
 /*
  * Slightly different than fscore::fstretrieve. It supports 
  * 
  */
-SEXP fstRetrieve(SEXP fileName, SEXP colSel, SEXP start, SEXP end){
-  return fstcore::fstretrieve(as<String>(fileName), colSel, start, end);
+SEXP fstRetrieve(String fileName, SEXP colSel, SEXP start, SEXP end){
+  return fstcore::fstretrieve(fileName, colSel, start, end);
+}
+
+SEXP fstStore(String fileName, SEXP table, SEXP compression, SEXP uniformEncoding){
+  return fstcore::fststore(fileName, table, compression, uniformEncoding);
 }
 
 
