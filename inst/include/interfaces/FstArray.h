@@ -46,7 +46,7 @@ public:
   
   SEXP subset(SEXP listOrEnv, SEXP reshape = R_NilValue, bool drop = false) override {
     NumericVector dim = getDim();
-    return lazySubset(fstFiles, listOrEnv, dim, _dataType, reshape, drop);
+    return subsetFST(fstFiles, listOrEnv, dim, _dataType, reshape, drop);
   };
   
 };

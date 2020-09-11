@@ -495,9 +495,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// lazySubset
-SEXP lazySubset(Rcpp::StringVector& files, SEXP listOrEnv, Rcpp::NumericVector& dim, SEXPTYPE dtype, SEXP reshape, bool drop);
-static SEXP _lazyarray_lazySubset_try(SEXP filesSEXP, SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP dtypeSEXP, SEXP reshapeSEXP, SEXP dropSEXP) {
+// subsetFST
+SEXP subsetFST(Rcpp::StringVector& files, SEXP listOrEnv, Rcpp::NumericVector& dim, SEXPTYPE dtype, SEXP reshape, bool drop);
+static SEXP _lazyarray_subsetFST_try(SEXP filesSEXP, SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP dtypeSEXP, SEXP reshapeSEXP, SEXP dropSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< Rcpp::StringVector& >::type files(filesSEXP);
@@ -506,15 +506,15 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< SEXPTYPE >::type dtype(dtypeSEXP);
     Rcpp::traits::input_parameter< SEXP >::type reshape(reshapeSEXP);
     Rcpp::traits::input_parameter< bool >::type drop(dropSEXP);
-    rcpp_result_gen = Rcpp::wrap(lazySubset(files, listOrEnv, dim, dtype, reshape, drop));
+    rcpp_result_gen = Rcpp::wrap(subsetFST(files, listOrEnv, dim, dtype, reshape, drop));
     return rcpp_result_gen;
 END_RCPP_RETURN_ERROR
 }
-RcppExport SEXP _lazyarray_lazySubset(SEXP filesSEXP, SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP dtypeSEXP, SEXP reshapeSEXP, SEXP dropSEXP) {
+RcppExport SEXP _lazyarray_subsetFST(SEXP filesSEXP, SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP dtypeSEXP, SEXP reshapeSEXP, SEXP dropSEXP) {
     SEXP rcpp_result_gen;
     {
         Rcpp::RNGScope rcpp_rngScope_gen;
-        rcpp_result_gen = PROTECT(_lazyarray_lazySubset_try(filesSEXP, listOrEnvSEXP, dimSEXP, dtypeSEXP, reshapeSEXP, dropSEXP));
+        rcpp_result_gen = PROTECT(_lazyarray_subsetFST_try(filesSEXP, listOrEnvSEXP, dimSEXP, dtypeSEXP, reshapeSEXP, dropSEXP));
     }
     Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
     if (rcpp_isInterrupt_gen) {
@@ -849,7 +849,7 @@ static int _lazyarray_RcppExport_validate(const char* sig) {
         signatures.insert("List(*scheduleIndexing)(SEXP,SEXP)");
         signatures.insert("List(*parseAndScheduleBlocks)(SEXP,NumericVector)");
         signatures.insert("SEXP(*reshapeOrDrop)(SEXP,SEXP,bool)");
-        signatures.insert("SEXP(*lazySubset)(Rcpp::StringVector&,SEXP,Rcpp::NumericVector&,SEXPTYPE,SEXP,bool)");
+        signatures.insert("SEXP(*subsetFST)(Rcpp::StringVector&,SEXP,Rcpp::NumericVector&,SEXPTYPE,SEXP,bool)");
         signatures.insert("int(*getLazyThread)(bool)");
         signatures.insert("int(*setLazyThread)(int,SEXP)");
         signatures.insert("bool(*hasOpenMP)()");
@@ -875,7 +875,7 @@ RcppExport SEXP _lazyarray_RcppExport_registerCCallable() {
     R_RegisterCCallable("lazyarray", "_lazyarray_scheduleIndexing", (DL_FUNC)_lazyarray_scheduleIndexing_try);
     R_RegisterCCallable("lazyarray", "_lazyarray_parseAndScheduleBlocks", (DL_FUNC)_lazyarray_parseAndScheduleBlocks_try);
     R_RegisterCCallable("lazyarray", "_lazyarray_reshapeOrDrop", (DL_FUNC)_lazyarray_reshapeOrDrop_try);
-    R_RegisterCCallable("lazyarray", "_lazyarray_lazySubset", (DL_FUNC)_lazyarray_lazySubset_try);
+    R_RegisterCCallable("lazyarray", "_lazyarray_subsetFST", (DL_FUNC)_lazyarray_subsetFST_try);
     R_RegisterCCallable("lazyarray", "_lazyarray_getLazyThread", (DL_FUNC)_lazyarray_getLazyThread_try);
     R_RegisterCCallable("lazyarray", "_lazyarray_setLazyThread", (DL_FUNC)_lazyarray_setLazyThread_try);
     R_RegisterCCallable("lazyarray", "_lazyarray_hasOpenMP", (DL_FUNC)_lazyarray_hasOpenMP_try);
@@ -909,7 +909,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lazyarray_cpp_create_lazyarray", (DL_FUNC) &_lazyarray_cpp_create_lazyarray, 5},
     {"_lazyarray_lazyMapReduceByPartition", (DL_FUNC) &_lazyarray_lazyMapReduceByPartition, 6},
     {"_lazyarray_lazyLoadOld", (DL_FUNC) &_lazyarray_lazyLoadOld, 5},
-    {"_lazyarray_lazySubset", (DL_FUNC) &_lazyarray_lazySubset, 6},
+    {"_lazyarray_subsetFST", (DL_FUNC) &_lazyarray_subsetFST, 6},
     {"_lazyarray_getLazyThread", (DL_FUNC) &_lazyarray_getLazyThread, 1},
     {"_lazyarray_setLazyThread", (DL_FUNC) &_lazyarray_setLazyThread, 2},
     {"_lazyarray_hasOpenMP", (DL_FUNC) &_lazyarray_hasOpenMP, 0},

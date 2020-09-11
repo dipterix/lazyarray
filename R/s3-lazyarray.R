@@ -19,7 +19,7 @@
   sexptype <- getSexpType(x$`@sample_data`())
   
   if(length(dots_value) == 0){
-    res <- .Call(`_lazyarray_lazySubset`, files, environment(), dim, sexptype, reshape, drop)
+    res <- .Call(`_lazyarray_subsetFST`, files, environment(), dim, sexptype, reshape, drop)
   } else {
     element_type <- attr(dots_value, 'element_type')
     
@@ -37,7 +37,7 @@
       })
     }
     
-    res <- .Call(`_lazyarray_lazySubset`, files, dots_value, dim, sexptype, reshape, drop)
+    res <- .Call(`_lazyarray_subsetFST`, files, dots_value, dim, sexptype, reshape, drop)
   }
   
   return( res )

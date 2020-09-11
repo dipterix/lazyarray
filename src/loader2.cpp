@@ -7,7 +7,7 @@
 
 using namespace Rcpp;
 
-SEXP lazySubset(StringVector& files, SEXP listOrEnv, NumericVector& dim, SEXPTYPE dtype, SEXP reshape, bool drop){
+SEXP subsetFST(StringVector& files, SEXP listOrEnv, NumericVector& dim, SEXPTYPE dtype, SEXP reshape, bool drop){
   if(dim.size() < 2){
     stop("Dimension size must >= 2");
   }
@@ -26,17 +26,17 @@ SEXP lazySubset(StringVector& files, SEXP listOrEnv, NumericVector& dim, SEXPTYP
   
   switch(dtype){
   case REALSXP: 
-    res = lazySubset_double(files, dim, subparsed);
+    res = subsetFST_double(files, dim, subparsed);
     break;
   case INTSXP:
-    res = lazySubset_integer(files, dim, subparsed);
+    res = subsetFST_integer(files, dim, subparsed);
     break;
   case STRSXP:
   case CHARSXP:
-    res = lazySubset_character(files, dim, subparsed);
+    res = subsetFST_character(files, dim, subparsed);
     break;
   case CPLXSXP:
-    res = lazySubset_complex(files, dim, subparsed);
+    res = subsetFST_complex(files, dim, subparsed);
     break;
   default:
     stop("Unknown data type: only numeric, integer, character, and complex arrays are supported - provided SEXPTYPE: " + std::to_string(dtype));

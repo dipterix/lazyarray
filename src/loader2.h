@@ -9,7 +9,7 @@
 
 
 // [[Rcpp::export]]
-SEXP lazySubset(Rcpp::StringVector& files, SEXP listOrEnv, Rcpp::NumericVector& dim, 
+SEXP subsetFST(Rcpp::StringVector& files, SEXP listOrEnv, Rcpp::NumericVector& dim, 
                 SEXPTYPE dtype, SEXP reshape = R_NilValue, bool drop = false);
 
 
