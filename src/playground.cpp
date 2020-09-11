@@ -35,8 +35,8 @@ NumericVector asi(SEXP v, int nt) {
 
 // [[Rcpp::export]]
 SEXP playground(int x){
-  SEXP i = wrap(seq_len(x));
-  return i;
+  print(wrap("asda" + std::to_string(1)));
+  return wrap(x);
 }
 
 

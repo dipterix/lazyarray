@@ -40,7 +40,6 @@ LinkingTo:
     fstcore,
     BH,
     bigmemory
-RcppModules: LazyArrayModules
 Suggests: 
     future,
     future.callr,

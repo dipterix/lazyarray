@@ -24,6 +24,8 @@ SEXP parseDots(Rcpp::Environment& env, bool eval);
 // [[Rcpp::export]]
 bool stopIfNot(const bool isValid, const std::string& message, bool stopIfError = true);
 
+// [[Rcpp::export]]
+SEXPTYPE getSexpType(SEXP x);
 
 // std::vector<int64_t> numericVector2Int64tVec(const Rcpp::NumericVector& x);
 // 

@@ -3,7 +3,7 @@
 # especailly specials like %*% don't fully support S3
 
 
-# FstLazyArray
+# FstArray
 
 setClass(
   "LazyArray2",
@@ -36,7 +36,7 @@ lazyarray2 <- function(paths, dim, storage_format = "double"){
   paths <- normalizePath(paths, mustWork = TRUE)
   paths <- file.path(paths, sprintf("%s.fst", seq_len(nparts)))
   
-  xPtr <- new(FstLazyArray, paths, dim, sxpcode)
+  xPtr <- new(FstArray, paths, dim, sxpcode)
   
   re <- new("LazyArray2", xPtr = xPtr, xMethods = '', xFields = "")
   re

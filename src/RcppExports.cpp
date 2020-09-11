@@ -9,19 +9,43 @@
 using namespace Rcpp;
 
 // subsetBM
-SEXP subsetBM(SEXP pBigMat, SEXP listOrEnv, NumericVector dim, SEXP reshape, bool drop);
-RcppExport SEXP _lazyarray_subsetBM(SEXP pBigMatSEXP, SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP reshapeSEXP, SEXP dropSEXP) {
+SEXP subsetBM(SEXP pBigMat, SEXP listOrEnv, Rcpp::NumericVector dim, SEXPTYPE dtype, SEXP reshape, bool drop);
+static SEXP _lazyarray_subsetBM_try(SEXP pBigMatSEXP, SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP dtypeSEXP, SEXP reshapeSEXP, SEXP dropSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type pBigMat(pBigMatSEXP);
     Rcpp::traits::input_parameter< SEXP >::type listOrEnv(listOrEnvSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type dim(dimSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type dim(dimSEXP);
+    Rcpp::traits::input_parameter< SEXPTYPE >::type dtype(dtypeSEXP);
     Rcpp::traits::input_parameter< SEXP >::type reshape(reshapeSEXP);
     Rcpp::traits::input_parameter< bool >::type drop(dropSEXP);
-    rcpp_result_gen = Rcpp::wrap(subsetBM(pBigMat, listOrEnv, dim, reshape, drop));
+    rcpp_result_gen = Rcpp::wrap(subsetBM(pBigMat, listOrEnv, dim, dtype, reshape, drop));
     return rcpp_result_gen;
-END_RCPP
+END_RCPP_RETURN_ERROR
+}
+RcppExport SEXP _lazyarray_subsetBM(SEXP pBigMatSEXP, SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP dtypeSEXP, SEXP reshapeSEXP, SEXP dropSEXP) {
+    SEXP rcpp_result_gen;
+    {
+        Rcpp::RNGScope rcpp_rngScope_gen;
+        rcpp_result_gen = PROTECT(_lazyarray_subsetBM_try(pBigMatSEXP, listOrEnvSEXP, dimSEXP, dtypeSEXP, reshapeSEXP, dropSEXP));
+    }
+    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
+    if (rcpp_isInterrupt_gen) {
+        UNPROTECT(1);
+        Rf_onintr();
+    }
+    bool rcpp_isLongjump_gen = Rcpp::internal::isLongjumpSentinel(rcpp_result_gen);
+    if (rcpp_isLongjump_gen) {
+        Rcpp::internal::resumeJump(rcpp_result_gen);
+    }
+    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
+    if (rcpp_isError_gen) {
+        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
+        UNPROTECT(1);
+        Rf_error(CHAR(rcpp_msgSEXP_gen));
+    }
+    UNPROTECT(1);
+    return rcpp_result_gen;
 }
 // setLazyBlockSize
 R_xlen_t setLazyBlockSize(R_xlen_t size);
@@ -471,65 +495,26 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// lazySubsetBare
-SEXP lazySubsetBare(Rcpp::StringVector& files, Rcpp::NumericVector& dim, const List& subparsed, SEXPTYPE dtype, SEXP reshape, bool drop);
-static SEXP _lazyarray_lazySubsetBare_try(SEXP filesSEXP, SEXP dimSEXP, SEXP subparsedSEXP, SEXP dtypeSEXP, SEXP reshapeSEXP, SEXP dropSEXP) {
+// lazySubset
+SEXP lazySubset(Rcpp::StringVector& files, SEXP listOrEnv, Rcpp::NumericVector& dim, SEXPTYPE dtype, SEXP reshape, bool drop);
+static SEXP _lazyarray_lazySubset_try(SEXP filesSEXP, SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP dtypeSEXP, SEXP reshapeSEXP, SEXP dropSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< Rcpp::StringVector& >::type files(filesSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type listOrEnv(listOrEnvSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type dim(dimSEXP);
-    Rcpp::traits::input_parameter< const List& >::type subparsed(subparsedSEXP);
     Rcpp::traits::input_parameter< SEXPTYPE >::type dtype(dtypeSEXP);
     Rcpp::traits::input_parameter< SEXP >::type reshape(reshapeSEXP);
     Rcpp::traits::input_parameter< bool >::type drop(dropSEXP);
-    rcpp_result_gen = Rcpp::wrap(lazySubsetBare(files, dim, subparsed, dtype, reshape, drop));
+    rcpp_result_gen = Rcpp::wrap(lazySubset(files, listOrEnv, dim, dtype, reshape, drop));
     return rcpp_result_gen;
 END_RCPP_RETURN_ERROR
 }
-RcppExport SEXP _lazyarray_lazySubsetBare(SEXP filesSEXP, SEXP dimSEXP, SEXP subparsedSEXP, SEXP dtypeSEXP, SEXP reshapeSEXP, SEXP dropSEXP) {
+RcppExport SEXP _lazyarray_lazySubset(SEXP filesSEXP, SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP dtypeSEXP, SEXP reshapeSEXP, SEXP dropSEXP) {
     SEXP rcpp_result_gen;
     {
         Rcpp::RNGScope rcpp_rngScope_gen;
-        rcpp_result_gen = PROTECT(_lazyarray_lazySubsetBare_try(filesSEXP, dimSEXP, subparsedSEXP, dtypeSEXP, reshapeSEXP, dropSEXP));
-    }
-    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
-    if (rcpp_isInterrupt_gen) {
-        UNPROTECT(1);
-        Rf_onintr();
-    }
-    bool rcpp_isLongjump_gen = Rcpp::internal::isLongjumpSentinel(rcpp_result_gen);
-    if (rcpp_isLongjump_gen) {
-        Rcpp::internal::resumeJump(rcpp_result_gen);
-    }
-    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
-    if (rcpp_isError_gen) {
-        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
-        UNPROTECT(1);
-        Rf_error(CHAR(rcpp_msgSEXP_gen));
-    }
-    UNPROTECT(1);
-    return rcpp_result_gen;
-}
-// lazySubset
-SEXP lazySubset(Rcpp::StringVector& files, Rcpp::Environment& env, Rcpp::NumericVector& dim, SEXP samp, SEXP reshape, bool drop);
-static SEXP _lazyarray_lazySubset_try(SEXP filesSEXP, SEXP envSEXP, SEXP dimSEXP, SEXP sampSEXP, SEXP reshapeSEXP, SEXP dropSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< Rcpp::StringVector& >::type files(filesSEXP);
-    Rcpp::traits::input_parameter< Rcpp::Environment& >::type env(envSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type dim(dimSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type samp(sampSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type reshape(reshapeSEXP);
-    Rcpp::traits::input_parameter< bool >::type drop(dropSEXP);
-    rcpp_result_gen = Rcpp::wrap(lazySubset(files, env, dim, samp, reshape, drop));
-    return rcpp_result_gen;
-END_RCPP_RETURN_ERROR
-}
-RcppExport SEXP _lazyarray_lazySubset(SEXP filesSEXP, SEXP envSEXP, SEXP dimSEXP, SEXP sampSEXP, SEXP reshapeSEXP, SEXP dropSEXP) {
-    SEXP rcpp_result_gen;
-    {
-        Rcpp::RNGScope rcpp_rngScope_gen;
-        rcpp_result_gen = PROTECT(_lazyarray_lazySubset_try(filesSEXP, envSEXP, dimSEXP, sampSEXP, reshapeSEXP, dropSEXP));
+        rcpp_result_gen = PROTECT(_lazyarray_lazySubset_try(filesSEXP, listOrEnvSEXP, dimSEXP, dtypeSEXP, reshapeSEXP, dropSEXP));
     }
     Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
     if (rcpp_isInterrupt_gen) {
@@ -814,11 +799,46 @@ RcppExport SEXP _lazyarray_stopIfNot(SEXP isValidSEXP, SEXP messageSEXP, SEXP st
     UNPROTECT(1);
     return rcpp_result_gen;
 }
+// getSexpType
+SEXPTYPE getSexpType(SEXP x);
+static SEXP _lazyarray_getSexpType_try(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< SEXP >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(getSexpType(x));
+    return rcpp_result_gen;
+END_RCPP_RETURN_ERROR
+}
+RcppExport SEXP _lazyarray_getSexpType(SEXP xSEXP) {
+    SEXP rcpp_result_gen;
+    {
+        Rcpp::RNGScope rcpp_rngScope_gen;
+        rcpp_result_gen = PROTECT(_lazyarray_getSexpType_try(xSEXP));
+    }
+    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
+    if (rcpp_isInterrupt_gen) {
+        UNPROTECT(1);
+        Rf_onintr();
+    }
+    bool rcpp_isLongjump_gen = Rcpp::internal::isLongjumpSentinel(rcpp_result_gen);
+    if (rcpp_isLongjump_gen) {
+        Rcpp::internal::resumeJump(rcpp_result_gen);
+    }
+    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
+    if (rcpp_isError_gen) {
+        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
+        UNPROTECT(1);
+        Rf_error(CHAR(rcpp_msgSEXP_gen));
+    }
+    UNPROTECT(1);
+    return rcpp_result_gen;
+}
 
 // validate (ensure exported C++ functions exist before calling them)
 static int _lazyarray_RcppExport_validate(const char* sig) { 
     static std::set<std::string> signatures;
     if (signatures.empty()) {
+        signatures.insert("SEXP(*subsetBM)(SEXP,SEXP,Rcpp::NumericVector,SEXPTYPE,SEXP,bool)");
         signatures.insert("R_xlen_t(*setLazyBlockSize)(R_xlen_t)");
         signatures.insert("R_xlen_t(*getLazyBlockSize)()");
         signatures.insert("Rcpp::IntegerVector(*loc2idx)(Rcpp::List&,Rcpp::IntegerVector&)");
@@ -829,8 +849,7 @@ static int _lazyarray_RcppExport_validate(const char* sig) {
         signatures.insert("List(*scheduleIndexing)(SEXP,SEXP)");
         signatures.insert("List(*parseAndScheduleBlocks)(SEXP,NumericVector)");
         signatures.insert("SEXP(*reshapeOrDrop)(SEXP,SEXP,bool)");
-        signatures.insert("SEXP(*lazySubsetBare)(Rcpp::StringVector&,Rcpp::NumericVector&,const List&,SEXPTYPE,SEXP,bool)");
-        signatures.insert("SEXP(*lazySubset)(Rcpp::StringVector&,Rcpp::Environment&,Rcpp::NumericVector&,SEXP,SEXP,bool)");
+        signatures.insert("SEXP(*lazySubset)(Rcpp::StringVector&,SEXP,Rcpp::NumericVector&,SEXPTYPE,SEXP,bool)");
         signatures.insert("int(*getLazyThread)(bool)");
         signatures.insert("int(*setLazyThread)(int,SEXP)");
         signatures.insert("bool(*hasOpenMP)()");
@@ -838,12 +857,14 @@ static int _lazyarray_RcppExport_validate(const char* sig) {
         signatures.insert("int64_t(*prod2)(SEXP,bool)");
         signatures.insert("SEXP(*parseDots)(Rcpp::Environment&,bool)");
         signatures.insert("bool(*stopIfNot)(const bool,const std::string&,bool)");
+        signatures.insert("SEXPTYPE(*getSexpType)(SEXP)");
     }
     return signatures.find(sig) != signatures.end();
 }
 
 // registerCCallable (register entry points for exported C++ functions)
 RcppExport SEXP _lazyarray_RcppExport_registerCCallable() { 
+    R_RegisterCCallable("lazyarray", "_lazyarray_subsetBM", (DL_FUNC)_lazyarray_subsetBM_try);
     R_RegisterCCallable("lazyarray", "_lazyarray_setLazyBlockSize", (DL_FUNC)_lazyarray_setLazyBlockSize_try);
     R_RegisterCCallable("lazyarray", "_lazyarray_getLazyBlockSize", (DL_FUNC)_lazyarray_getLazyBlockSize_try);
     R_RegisterCCallable("lazyarray", "_lazyarray_loc2idx", (DL_FUNC)_lazyarray_loc2idx_try);
@@ -854,7 +875,6 @@ RcppExport SEXP _lazyarray_RcppExport_registerCCallable() {
     R_RegisterCCallable("lazyarray", "_lazyarray_scheduleIndexing", (DL_FUNC)_lazyarray_scheduleIndexing_try);
     R_RegisterCCallable("lazyarray", "_lazyarray_parseAndScheduleBlocks", (DL_FUNC)_lazyarray_parseAndScheduleBlocks_try);
     R_RegisterCCallable("lazyarray", "_lazyarray_reshapeOrDrop", (DL_FUNC)_lazyarray_reshapeOrDrop_try);
-    R_RegisterCCallable("lazyarray", "_lazyarray_lazySubsetBare", (DL_FUNC)_lazyarray_lazySubsetBare_try);
     R_RegisterCCallable("lazyarray", "_lazyarray_lazySubset", (DL_FUNC)_lazyarray_lazySubset_try);
     R_RegisterCCallable("lazyarray", "_lazyarray_getLazyThread", (DL_FUNC)_lazyarray_getLazyThread_try);
     R_RegisterCCallable("lazyarray", "_lazyarray_setLazyThread", (DL_FUNC)_lazyarray_setLazyThread_try);
@@ -863,14 +883,13 @@ RcppExport SEXP _lazyarray_RcppExport_registerCCallable() {
     R_RegisterCCallable("lazyarray", "_lazyarray_prod2", (DL_FUNC)_lazyarray_prod2_try);
     R_RegisterCCallable("lazyarray", "_lazyarray_parseDots", (DL_FUNC)_lazyarray_parseDots_try);
     R_RegisterCCallable("lazyarray", "_lazyarray_stopIfNot", (DL_FUNC)_lazyarray_stopIfNot_try);
+    R_RegisterCCallable("lazyarray", "_lazyarray_getSexpType", (DL_FUNC)_lazyarray_getSexpType_try);
     R_RegisterCCallable("lazyarray", "_lazyarray_RcppExport_validate", (DL_FUNC)_lazyarray_RcppExport_validate);
     return R_NilValue;
 }
 
-RcppExport SEXP _rcpp_module_boot_LazyArrayModules();
-
 static const R_CallMethodDef CallEntries[] = {
-    {"_lazyarray_subsetBM", (DL_FUNC) &_lazyarray_subsetBM, 5},
+    {"_lazyarray_subsetBM", (DL_FUNC) &_lazyarray_subsetBM, 6},
     {"_lazyarray_setLazyBlockSize", (DL_FUNC) &_lazyarray_setLazyBlockSize, 1},
     {"_lazyarray_getLazyBlockSize", (DL_FUNC) &_lazyarray_getLazyBlockSize, 0},
     {"_lazyarray_fstMeta", (DL_FUNC) &_lazyarray_fstMeta, 1},
@@ -888,7 +907,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lazyarray_cpp_create_lazyarray", (DL_FUNC) &_lazyarray_cpp_create_lazyarray, 5},
     {"_lazyarray_lazyMapReduceByPartition", (DL_FUNC) &_lazyarray_lazyMapReduceByPartition, 6},
     {"_lazyarray_lazyLoadOld", (DL_FUNC) &_lazyarray_lazyLoadOld, 5},
-    {"_lazyarray_lazySubsetBare", (DL_FUNC) &_lazyarray_lazySubsetBare, 6},
     {"_lazyarray_lazySubset", (DL_FUNC) &_lazyarray_lazySubset, 6},
     {"_lazyarray_getLazyThread", (DL_FUNC) &_lazyarray_getLazyThread, 1},
     {"_lazyarray_setLazyThread", (DL_FUNC) &_lazyarray_setLazyThread, 2},
@@ -899,7 +917,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lazyarray_prod2", (DL_FUNC) &_lazyarray_prod2, 2},
     {"_lazyarray_parseDots", (DL_FUNC) &_lazyarray_parseDots, 2},
     {"_lazyarray_stopIfNot", (DL_FUNC) &_lazyarray_stopIfNot, 3},
-    {"_rcpp_module_boot_LazyArrayModules", (DL_FUNC) &_rcpp_module_boot_LazyArrayModules, 0},
+    {"_lazyarray_getSexpType", (DL_FUNC) &_lazyarray_getSexpType, 1},
     {"_lazyarray_RcppExport_registerCCallable", (DL_FUNC) &_lazyarray_RcppExport_registerCCallable, 0},
     {NULL, NULL, 0}
 };

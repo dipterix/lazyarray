@@ -224,6 +224,10 @@ bool stopIfNot(const bool isValid, const std::string& message, bool stopIfError)
   return true;
 }
 
+SEXPTYPE getSexpType(SEXP x){
+  return TYPEOF(x);
+}
+
 /*** R
 f <- function(...){
   parseDots(environment(), F)

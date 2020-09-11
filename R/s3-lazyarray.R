@@ -16,32 +16,31 @@
   
   files <- x$get_partition_fpath()
   
-  subf <- function(i, ...){
-    .Call(`_lazyarray_lazySubset`, files, environment(), dim,
-          x$`@sample_data`(), reshape, drop)
-  }
+  sexptype <- getSexpType(x$`@sample_data`())
   
   if(length(dots_value) == 0){
-    return(subf())
-  }
-  
-  element_type <- attr(dots_value, 'element_type')
-  
-  # element_type is SEXP type
-  # 13: integer
-  # 14: double
-  # 10: logical
-  
-  is_logical <- element_type == 10
-  if(any(is_logical)){
-    logical_dim <- which(is_logical)
+    res <- .Call(`_lazyarray_lazySubset`, files, environment(), dim, sexptype, reshape, drop)
+  } else {
+    element_type <- attr(dots_value, 'element_type')
     
-    dots_value[is_logical] <- lapply(logical_dim, function(ii){
-      seq_len(dim[ii])[dots_value[[ii]]]
-    })
+    # element_type is SEXP type
+    # 13: integer
+    # 14: double
+    # 10: logical
+    
+    is_logical <- element_type == 10
+    if(any(is_logical)){
+      logical_dim <- which(is_logical)
+      
+      dots_value[is_logical] <- lapply(logical_dim, function(ii){
+        seq_len(dim[ii])[dots_value[[ii]]]
+      })
+    }
+    
+    res <- .Call(`_lazyarray_lazySubset`, files, dots_value, dim, sexptype, reshape, drop)
   }
-  do.call('subf', dots_value)
   
+  return( res )
 }
 
 

@@ -4,8 +4,6 @@ using namespace Rcpp;
 
 SEXP subsetIdx2(const Rcpp::List sliceIdx, Rcpp::NumericVector dim, bool pos_subscript){
   
-  // SEXP i = expr_env["i"];
-  
   List location_idx = List::create();
   R_xlen_t ndims = dim.size();
   
