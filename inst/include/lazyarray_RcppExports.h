@@ -213,6 +213,27 @@ namespace lazyarray {
         return Rcpp::as<List >(rcpp_result_gen);
     }
 
+    inline SEXP reshapeOrDrop(SEXP x, SEXP reshape = R_NilValue, bool drop = false) {
+        typedef SEXP(*Ptr_reshapeOrDrop)(SEXP,SEXP,SEXP);
+        static Ptr_reshapeOrDrop p_reshapeOrDrop = NULL;
+        if (p_reshapeOrDrop == NULL) {
+            validateSignature("SEXP(*reshapeOrDrop)(SEXP,SEXP,bool)");
+            p_reshapeOrDrop = (Ptr_reshapeOrDrop)R_GetCCallable("lazyarray", "_lazyarray_reshapeOrDrop");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_reshapeOrDrop(Shield<SEXP>(Rcpp::wrap(x)), Shield<SEXP>(Rcpp::wrap(reshape)), Shield<SEXP>(Rcpp::wrap(drop)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<SEXP >(rcpp_result_gen);
+    }
+
     inline SEXP lazySubsetBare(Rcpp::StringVector& files, Rcpp::NumericVector& dim, const List& subparsed, SEXPTYPE dtype, SEXP reshape = R_NilValue, bool drop = false) {
         typedef SEXP(*Ptr_lazySubsetBare)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
         static Ptr_lazySubsetBare p_lazySubsetBare = NULL;

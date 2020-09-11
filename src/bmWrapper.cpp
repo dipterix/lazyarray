@@ -10,7 +10,7 @@ using namespace Rcpp;
 
 // Logic for BigColSums.
 template <typename T>
-SEXP subsetBM(XPtr<BigMatrix> pMat, MatrixAccessor<T> mat, List idxParsed, SEXPTYPE dtype) {
+SEXP subsetBM_double(XPtr<BigMatrix> pMat, MatrixAccessor<T> mat, List idxParsed) {
   
   // Create the vector we'll store the column sums in.
   // NumericVector colSums(pMat->ncol());
@@ -23,7 +23,8 @@ SEXP subsetBM(XPtr<BigMatrix> pMat, MatrixAccessor<T> mat, List idxParsed, SEXPT
   SEXP target_dimension = idxParsed["target_dimension"];
   List location_indices = idxParsed["location_indices"];
   List schedule = idxParsed["schedule"];
-  int64_t schedule_count = schedule["schedule_count"];
+  int64_t partition_counts = schedule["partition_counts"];
+  std::vector<int64_t> partition_index = schedule["partition_index"];
   std::vector<int64_t> schedule_dimension = schedule["schedule_dimension"];
   std::vector<int64_t> block_dimension = schedule["block_dimension"];
   std::vector<int64_t> block_prod_dim = schedule["block_prod_dim"];
@@ -42,7 +43,7 @@ SEXP subsetBM(XPtr<BigMatrix> pMat, MatrixAccessor<T> mat, List idxParsed, SEXPT
   // print(block_schedule);
   // stop("");
   
-  SEXP re = PROTECT(Rf_allocVector(dtype, expected_length));
+  SEXP re = PROTECT(Rf_allocVector(REALSXP, expected_length));
   double *ptr_block_schedule = REAL(block_schedule);
   double *ptr_re = REAL(re);
   int64_t blocks_per_part = schedule_index.size();
@@ -51,28 +52,45 @@ SEXP subsetBM(XPtr<BigMatrix> pMat, MatrixAccessor<T> mat, List idxParsed, SEXPT
   int64_t rowIdx;
   
   // for each partition (column)
-  for(int64_t coln = 0; coln < schedule_count; coln++){
+  for(int64_t coln = 0; coln < partition_counts; coln++){
     // get starting point
-    double *rowAccessor = (double *)(mat[coln]);
+    int64_t column_ii = partition_index[coln];
+    
+    if(column_ii == NA_REAL || column_ii == NA_INTEGER64){
+      double *ptr_alt = ptr_re + blocks_per_part * block_expected_length;
+      for(; ptr_re != ptr_alt; ptr_re++ ){
+        *ptr_re = NA_REAL;
+      }
+      continue;
+    }
+    
+    T *rowAccessor = (T *)(mat[column_ii - 1]);
     
     for(int64_t block = 0; block < blocks_per_part; block++ ){
       block_id = *(schedule_index.begin() + block);
-      Rcout << ((block_id - 1) * block_length) << " ";//<< "\n";
-      double *blockAccessor = rowAccessor + (block_id - 1) * block_length;
+      
+      if(block_id == NA_REAL || block_id == NA_INTEGER64){
+        // block should be NA
+        double *ptr_alt = ptr_re + block_expected_length;
+        for(; ptr_re != ptr_alt; ptr_re++ ){
+          *ptr_re = NA_REAL;
+        }
+        continue;
+      }
+      
+      // Rcout << ((block_id - 1) * block_length) << " ";//<< "\n";
+      T *blockAccessor = rowAccessor + (block_id - 1) * block_length;
       ptr_block_schedule = REAL(block_schedule);
       
       
       if( block_indexed ){
         for(int64_t ii = 0; ii < block_expected_length; ii++ ){
-          if(expected_length == 0){
-            stop("asasdasad");
-          }
           rowIdx = *(ptr_block_schedule + ii);
           if(rowIdx == NA_REAL || rowIdx == NA_INTEGER64){
             *ptr_re++ = NA_REAL;
           } else {
-            Rcout << rowIdx << "\n";
-            *ptr_re++ = *(blockAccessor + (rowIdx - 1));
+            // Rcout << rowIdx << "\n";
+            *ptr_re++ = (double)(*(blockAccessor + (rowIdx - 1)));
           }
           expected_length--;
         }
@@ -87,9 +105,6 @@ SEXP subsetBM(XPtr<BigMatrix> pMat, MatrixAccessor<T> mat, List idxParsed, SEXPT
           // print(wrap(ii));
           // Rcout << subblock_dim[0] << " "<< subblock_dim[1] << " "<< subblock_dim[2] << " \n";
           for(int64_t di = 0; di < block_ndims; di++ ){
-            if(expected_length == 0){
-              stop("asasd");
-            }
             expected_length--;
             if(sub_index != NA_INTEGER64){
               subblock_dim_ii = *(block_dimension.begin() + di);
@@ -118,10 +133,10 @@ SEXP subsetBM(XPtr<BigMatrix> pMat, MatrixAccessor<T> mat, List idxParsed, SEXPT
           }
           
           if( sub_index == NA_INTEGER64 ) {
-            *(ptr_re + ii) = NA_INTEGER;
+            *(ptr_re + ii) = NA_REAL;
           } else {
             // sub_index = sub_index + 1 - subblock_min;
-            *(ptr_re + ii) = *(blockAccessor + sub_index);
+            *(ptr_re + ii) = (double)(*(blockAccessor + sub_index));
           }
         }
       }
@@ -140,7 +155,7 @@ SEXP subsetBM(XPtr<BigMatrix> pMat, MatrixAccessor<T> mat, List idxParsed, SEXPT
 // Dispatch function for BigColSums
 //
 // [[Rcpp::export]]
-SEXP subsetBM(SEXP pBigMat, SEXP listOrEnv, NumericVector dim) {
+SEXP subsetBM(SEXP pBigMat, SEXP listOrEnv, NumericVector dim, SEXP reshape = R_NilValue, bool drop = false) {
   // List parseAndScheduleBlocks(SEXP listOrEnv, NumericVector dim)
   // First we have to tell Rcpp what class to use for big.matrix objects.
   // This object stores the attributes of the big.matrix object passed to it
@@ -153,6 +168,8 @@ SEXP subsetBM(SEXP pBigMat, SEXP listOrEnv, NumericVector dim) {
   
   List idxParsed = parseAndScheduleBlocks(listOrEnv, dim);
   
+  SEXP res;
+  
   // To access values in the big.matrix, we need to create a MatrixAccessor
   // object of the appropriate type. Note that in every case we are still
   // returning a NumericVector: this is because big.matrix objects only store
@@ -164,28 +181,37 @@ SEXP subsetBM(SEXP pBigMat, SEXP listOrEnv, NumericVector dim) {
   // case 4:
   //   return subsetBM(xpMat, MatrixAccessor<int>(*xpMat), idxParsed, INTSXP);
   case 8:
-    return subsetBM(xpMat, MatrixAccessor<double>(*xpMat), idxParsed, REALSXP);
+    res = subsetBM_double(xpMat, MatrixAccessor<double>(*xpMat), idxParsed);
+    break;
   default:
+    print(wrap(xpMat->matrix_type()));
     // This case should never be encountered unless the implementation of
     // big.matrix changes, but is necessary to implement shut up compiler
     // warnings.
     throw Rcpp::exception("unknown type detected for big.matrix object!");
   }
+  
+  reshapeOrDrop(res, reshape, drop);
+  return res;
 }
+
 /*** R
 bigm <- bigmemory::attach.resource(file.path('~/Desktop/junk/', 'bigmemory-ieeg.testfile.desc'))
 lazy <- lazyarray::lazyarray('~/Desktop/lazyarray_data/')
 
-lazyarray:::parseAndScheduleBlocks(list(1:5,1,1:2,1:2), dim(lazy))
+lazyarray:::parseAndScheduleBlocks(list(1,1,c(1,NA),c(1,NA)), dim(lazy))
 
 lazy[1:5,1,1:2,1,drop=T]
 
 # Call the Rcpp function.
 a <- function(...){
-  subsetBM(bigm@address, environment(), dim(lazy)) 
+  lazyarray:::subsetBM(bigm@address, environment(), dim(lazy)) 
 }
 res <- a(1:5,1,1:2,1:2)
-res - lazy[1:5,1,1:2,1:2]
+res - lazy[1:5,1,1:2,1:2,drop=F]
+identical(a(c(2,NA),c(2,NA),c(2,NA),c(2,NA)), lazy[c(2,NA),c(2,NA),c(2,NA),c(2,NA),drop=F])
+sa <- sample(84, 20, replace = TRUE); sa[sample(20, 3)] <- NA
+identical(a(sa,,sa,), lazy[sa,,sa,,drop=F])
 
 print(res)
 */

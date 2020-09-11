@@ -866,7 +866,7 @@ List scheduleIndexing(SEXP locations, SEXP dimension){
   std::vector<int64_t> block_dim_prod(buffer_margin);
   block_dim_prod[0] = 1;
   for(R_xlen_t ii = 1; ii < buffer_margin; ii++){
-    block_dim_prod[ii] = block_dim_prod[ii-1] * block_dim[ii];
+    block_dim_prod[ii] = block_dim_prod[ii-1] * block_dim[ii - 1];
   }
   std::vector<int64_t> rest_dim = std::vector<int64_t>(dim.begin() + buffer_margin, dim.end());
   SEXP rest_loc = PROTECT(Rf_allocVector(VECSXP, ndims - buffer_margin));
@@ -926,14 +926,14 @@ List scheduleIndexing(SEXP locations, SEXP dimension){
   }
   
   SEXP partition_id = VECTOR_ELT(locations, ndims - 1);
-  int64_t nblocks;
+  int64_t nblocks = rest_idx.size();
+  int64_t nparts;
   
   if(partition_id == R_MissingArg){
-    int64_t nparts = *(dim.end() - 1);
+    nparts = *(dim.end() - 1);
     partition_id = wrap(seq_len(nparts));
-    nblocks = rest_idx.size() * nparts;
   } else {
-    nblocks = rest_idx.size() * Rf_xlength(partition_id);
+    nparts = Rf_xlength(partition_id);
   }
   
     
@@ -950,8 +950,9 @@ List scheduleIndexing(SEXP locations, SEXP dimension){
   List re = List::create(
     _["dimension"] = dimension,
     _["partition_index"] = partition_id,
+    _["partition_counts"] = nparts,
     // number of blocks and index to schedule
-    _["schedule_count"] = nblocks,
+    _["schedule_counts_per_part"] = nblocks,
     _["schedule_index"] = rest_idx,
     _["schedule_dimension"] = rest_dim,
     
@@ -1038,5 +1039,49 @@ List parseAndScheduleBlocks(SEXP listOrEnv, NumericVector dim){
   }
   
   return subparsed;
+}
+
+
+SEXP reshapeOrDrop(SEXP x, SEXP reshape, bool drop){
+  // SEXP reshape, bool drop = false
+  // if reshape is not null, drop is ignored
+  if(reshape == R_NilValue && !drop){
+    return x;
+  }
+  
+  if(reshape == R_NilValue && drop){
+    dropDimension(x);
+    return x;
+  }
+  
+  // reshape has length, hence need to check dimension length
+  
+  // subset_mode=0 => x[i,j,k]
+  // subset_mode=1 => x[i]
+  // subset_mode=2 => x[]
+  SEXP reshape_alt = reshape;
+  int n_protected = 0;
+  if(TYPEOF(reshape) != REALSXP){
+    reshape_alt = PROTECT(Rf_coerceVector(reshape_alt, REALSXP));
+    n_protected++;
+  }
+  const int64_t reshape_length = prod2(reshape_alt, false);
+  const int64_t expected_length = Rf_xlength(x);
+  
+  if(reshape_length == NA_INTEGER64 || reshape_length != expected_length){
+    warning("`reshape` has different length than expected. Request to reshape dimension is ignored.");
+  } else {
+    if(Rf_xlength(reshape_alt) >= 2){
+      Rf_setAttrib(x, wrap("dim"), reshape_alt);
+    } else {
+      Rf_setAttrib(x, wrap("dim"), R_NilValue);
+    }
+  }
+  
+  if(n_protected > 0){
+    UNPROTECT(n_protected);
+  }
+  
+  return x;
 }
 

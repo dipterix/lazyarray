@@ -29,4 +29,7 @@ List scheduleIndexing(SEXP locations, SEXP dimension);
 // [[Rcpp::export]]
 List parseAndScheduleBlocks(SEXP sliceIdx, NumericVector dim);
 
+// [[Rcpp::export]]
+SEXP reshapeOrDrop(SEXP x, SEXP reshape = R_NilValue, bool drop = false);
+  
 #endif // LAZYARRAY_INDEX_H
