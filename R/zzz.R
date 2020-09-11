@@ -1,4 +1,4 @@
-# Rcpp::loadModule('LazyArrayModules', TRUE)
+Rcpp::loadModule('LazyArrayModules', TRUE)
 
 .onUnload <- function (libpath) {
   setLazyThread(1L, FALSE)

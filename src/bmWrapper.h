@@ -6,7 +6,7 @@
 #include <bigmemory/MatrixAccessor.hpp>
 #include <numeric>
 
-// [[Rcpp::interfaces(r, cpp)]]
+// [[Rcpp::interfaces(cpp)]]
 
 // [[Rcpp::export]]
 SEXP subsetBM(SEXP pBigMat, SEXP listOrEnv, Rcpp::NumericVector dim, SEXPTYPE dtype,SEXP reshape = R_NilValue, bool drop = false);

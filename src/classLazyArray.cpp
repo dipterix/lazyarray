@@ -1,34 +1,43 @@
-#include "utils.h"
-
 #include "lazyarray.h"
-using namespace Rcpp;
+using namespace lazyarray;
 
 
 // Expose class as S4 class
 
-// RCPP_MODULE(LazyArrayModules) {
-//   
-//   using namespace lazyarray;
-//   
-//   Rcpp::class_<FstArray>( "FstArray" )
-//   .constructor<StringVector, std::vector<int64_t>, SEXPTYPE>()
-//   
-//   .field_readonly("dim", &FstArray::LazyArrayBase::dimension)
-//   
-//   .method("nparts", &FstArray::nparts)
-//   .method("validate", &FstArray::validate)
-//   .method("dataType", &FstArray::dataType)
-//   .method("scheduleBlocks", &FstArray::scheduleBlocks)
-//   .method("subset", &FstArray::subset)
-//   ;
-// }
+LazyArrayBase *newLazyArray( const std::string &arrType, SEXP filesOrPtrs, std::vector<int64_t> dimension, SEXPTYPE dataType ) {
+  if (arrType == "fst"){
+    return new FstArray(Rcpp::as<StringVector>(filesOrPtrs), dimension, dataType);
+  } else if (arrType == "bm"){
+    Rcpp::XPtr<BigMatrix> ptr(filesOrPtrs);
+    return new BMArray(ptr, dimension, dataType);;
+  } else {
+    Rcpp::stop("Array type not yet supported. Only `fst` and `bm` are supported.");
+  }
+}
+
+
+RCPP_MODULE(LazyArrayModules) {
+
+  using namespace lazyarray;
+  Rcpp::class_< LazyArrayBase >( "LazyArrayBase" )
+    .factory<const std::string&,SEXP,std::vector<int64_t>,SEXPTYPE>(newLazyArray)
+    .method("nparts", &LazyArrayBase::nparts)
+    .method<bool>("validate", &LazyArrayBase::validate)
+    .method("dataType", &LazyArrayBase::dataType)
+    .method("scheduleBlocks", &LazyArrayBase::scheduleBlocks)
+    .method("subset", &LazyArrayBase::subset)
+  ;
+}
 
 /*** R
+bigm <- bigmemory::attach.resource(file.path('~/Desktop/junk/', 'bigmemory-ieeg.testfile.desc'))
 x <- lazyarray::lazyarray('~/Desktop/lazyarray_data/')
-fs <- x$get_partition_fpath(1:3)
+fs <- x$get_partition_fpath()
 
+LazyArrayBase <- lazyarray:::LazyArrayBase
 
-mod <- new(FstArray, fs, c(prod(x$partition_dim()), 3L), 14L)
+mod <- new(LazyArrayBase, 'fst', fs, dim(x), 14L)
+mod <- new(LazyArrayBase, 'bm', bigm@address, dim(x), 14L)
 mod$validate(TRUE)
 
 # module <- Rcpp::Module('LazyArrayModules', PACKAGE = 'lazyarray')
@@ -59,7 +68,7 @@ li <- (function(i, ...){
 
 (function(...){
   mod$subset(list(...), NULL, FALSE)
-})(1,1)
+})(1,1,1,1)
 
 
 

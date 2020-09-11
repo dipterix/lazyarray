@@ -888,6 +888,8 @@ RcppExport SEXP _lazyarray_RcppExport_registerCCallable() {
     return R_NilValue;
 }
 
+RcppExport SEXP _rcpp_module_boot_LazyArrayModules();
+
 static const R_CallMethodDef CallEntries[] = {
     {"_lazyarray_subsetBM", (DL_FUNC) &_lazyarray_subsetBM, 6},
     {"_lazyarray_setLazyBlockSize", (DL_FUNC) &_lazyarray_setLazyBlockSize, 1},
@@ -918,6 +920,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lazyarray_parseDots", (DL_FUNC) &_lazyarray_parseDots, 2},
     {"_lazyarray_stopIfNot", (DL_FUNC) &_lazyarray_stopIfNot, 3},
     {"_lazyarray_getSexpType", (DL_FUNC) &_lazyarray_getSexpType, 1},
+    {"_rcpp_module_boot_LazyArrayModules", (DL_FUNC) &_rcpp_module_boot_LazyArrayModules, 0},
     {"_lazyarray_RcppExport_registerCCallable", (DL_FUNC) &_lazyarray_RcppExport_registerCCallable, 0},
     {NULL, NULL, 0}
 };
