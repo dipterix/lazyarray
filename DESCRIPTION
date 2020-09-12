@@ -32,14 +32,10 @@ Imports:
     Rcpp (>= 1.0.5),
     R6,
     fstcore,
-    bigmemory,
-    BH,
     yaml
 LinkingTo: 
     Rcpp,
     fstcore,
-    BH,
-    bigmemory
 Suggests: 
     future,
     future.callr,

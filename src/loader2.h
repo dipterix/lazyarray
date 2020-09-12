@@ -3,7 +3,7 @@
 #ifndef LAZYARRAY_LOADER2_H
 #define LAZYARRAY_LOADER2_H
 
-#include "lazycommon.h"
+#include "Rcpp.h"
 
 // [[Rcpp::interfaces(r,cpp)]]
 

@@ -1,6 +1,7 @@
 #include "loader2ext.h"
 
-#include "lazycommon.h"
+#include "common.h"
+#include "indexConvert.h"
 #include "fstWrapper.h"
 #include "openMPInterface.h"
 using namespace Rcpp;

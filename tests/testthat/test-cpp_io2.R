@@ -29,7 +29,7 @@ lazy_test_unit <- function(samp_data, x_alt){
   re <- loader_double()
   expect_equal(storage.mode(re), storage.mode(samp_data))
   expect_equivalent(re, x)
-  expect_equivalent(dim(re), structure(dim(x), class='integer64'))
+  expect_equivalent(dim(re), dim(x))
   
   # 2. a(i)
   idx <- sample(length(x), size = 200, replace = TRUE)
@@ -65,7 +65,7 @@ lazy_test_unit <- function(samp_data, x_alt){
   re <- do.call(loader_double, idx)
   cp <- eval(as.call(c(list(quote(`[`), quote(x)), idx)))
   expect_equivalent(re, cp)
-  expect_equivalent(dim(re), structure(dim(cp), class='integer64'))
+  expect_equivalent(dim(re), dim(cp))
   
   # 5. negative subscripts
   ii <- sample(2)[[1]] + 1
@@ -73,34 +73,34 @@ lazy_test_unit <- function(samp_data, x_alt){
   re <- do.call(loader_double, idx)
   cp <- eval(as.call(c(list(quote(`[`), quote(x)), idx)))
   expect_equivalent(re, cp)
-  expect_equivalent(dim(re), structure(dim(cp), class='integer64'))
+  expect_equivalent(dim(re), dim(cp))
   ii <- 1
   idx[[ii]] <- -idx[[ii]]
   re <- do.call(loader_double, idx)
   cp <- eval(as.call(c(list(quote(`[`), quote(x)), idx)))
   expect_equivalent(re, cp)
-  expect_equivalent(dim(re), structure(dim(cp), class='integer64'))
+  expect_equivalent(dim(re), dim(cp))
   
   # 6. With missing
   re <- loader_double(,c(NA,1:0),c(2,NA,1))
   cp <- x[,c(NA,1:0),c(2,NA,1),drop = FALSE]
   expect_equivalent(re, cp)
-  expect_equivalent(dim(re), structure(dim(cp), class='integer64'))
+  expect_equivalent(dim(re), dim(cp))
   
   re <- loader_double(c(NA,1:0),c(2,NA,1),)
   cp <- x[c(NA,1:0),c(2,NA,1),,drop = FALSE]
   expect_equivalent(re, cp)
-  expect_equivalent(dim(re), structure(dim(cp), class='integer64'))
+  expect_equivalent(dim(re), dim(cp))
   
   re <- loader_double(c(NA,1:0),,c(2,NA,1))
   cp <- x[c(NA,1:0),,c(2,NA,1),drop = FALSE]
   expect_equivalent(re, cp)
-  expect_equivalent(dim(re), structure(dim(cp), class='integer64'))
+  expect_equivalent(dim(re), dim(cp))
   
   re <- loader_double(,,)
   cp <- x[,,,drop = FALSE]
   expect_equivalent(re, cp)
-  expect_equivalent(dim(re), structure(dim(cp), class='integer64'))
+  expect_equivalent(dim(re), dim(cp))
   
   # 7. drop
   re <- loader_double(,c(NA,1:0),c(2,NA,1), drop = TRUE)
@@ -124,32 +124,32 @@ lazy_test_unit <- function(samp_data, x_alt){
   re <- loader_double(,-c(NA,1:0),c(2,NA,1))
   cp <- x[,-c(1:0),c(2,NA,1),drop = FALSE]
   expect_equivalent(re, cp)
-  expect_equivalent(dim(re), structure(dim(cp), class='integer64'))
+  expect_equivalent(dim(re), dim(cp))
   
   re <- loader_double(-c(NA,1:0),c(2,NA,1),)
   cp <- x[-c(1:0),c(2,NA,1),,drop = FALSE]
   expect_equivalent(re, cp)
-  expect_equivalent(dim(re), structure(dim(cp), class='integer64'))
+  expect_equivalent(dim(re), dim(cp))
   
   re <- loader_double(c(NA,1:0),,-c(2,NA,1))
   cp <- x[c(NA,1:0),,-c(2,1),drop = FALSE]
   expect_equivalent(re, cp)
-  expect_equivalent(dim(re), structure(dim(cp), class='integer64'))
+  expect_equivalent(dim(re), dim(cp))
   
   re <- loader_double(,,-1000)
   cp <- x[,,-1000,drop = FALSE]
   expect_equivalent(re, cp)
-  expect_equivalent(dim(re), structure(dim(cp), class='integer64'))
+  expect_equivalent(dim(re), dim(cp))
   
   re <- loader_double(,-1000,1)
   cp <- x[,-1000,1,drop = FALSE]
   expect_equivalent(re, cp)
-  expect_equivalent(dim(re), structure(dim(cp), class='integer64'))
+  expect_equivalent(dim(re), dim(cp))
   
   re <- loader_double(-1000,,)
   cp <- x[-1000,,,drop = FALSE]
   expect_equivalent(re, cp)
-  expect_equivalent(dim(re), structure(dim(cp), class='integer64'))
+  expect_equivalent(dim(re), dim(cp))
   
   
   # Wrong usages

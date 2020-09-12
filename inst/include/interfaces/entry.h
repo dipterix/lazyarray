@@ -2,7 +2,8 @@
 #define API_LAZYARRAY_ENTRY
 
 // This first
-#include <bigmemory/MatrixAccessor.hpp>
+// migrated to BMArray
+// include <bigmemory/MatrixAccessor.hpp>
 
 #include <Rcpp.h>
 

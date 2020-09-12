@@ -1,15 +1,31 @@
 #include "lazyarray.h"
+#include "utils.h"
 using namespace lazyarray;
 
 
 // Expose class as S4 class
 
-LazyArrayBase *newLazyArray( const std::string &arrType, SEXP filesOrPtrs, std::vector<int64_t> dimension, SEXPTYPE dataType ) {
+LazyArrayBase *newLazyArray( const std::string &arrType, SEXP filesOrPtrs, std::vector<int64_t> dimension, 
+                             SEXPTYPE dataType, SEXP moreArgs ) {
   if (arrType == "fst"){
-    return new FstArray(Rcpp::as<StringVector>(filesOrPtrs), dimension, dataType);
-  } else if (arrType == "bm"){
-    Rcpp::XPtr<BigMatrix> ptr(filesOrPtrs);
-    return new BMArray(ptr, dimension, dataType);;
+    
+    int compression = 50;
+    bool uniformEnc = true;
+    if( !Rf_isNull(moreArgs) ){
+      SEXP tmp = getListElement(moreArgs, "compression");
+      if( !Rf_isNull(tmp) ){
+        compression = as<int>(tmp);
+      }
+      tmp = getListElement(moreArgs, "uniform_encoding");
+      if( !Rf_isNull(tmp) ){
+        uniformEnc = as<bool>(tmp);
+      }
+    }
+    
+    return new FstArray(Rcpp::as<StringVector>(filesOrPtrs), dimension, dataType, compression, uniformEnc);
+  // } else if (arrType == "bm"){
+  //   Rcpp::XPtr<BigMatrix> ptr(filesOrPtrs);
+  //   return new BMArray(ptr, dimension, dataType);
   } else {
     Rcpp::stop("Array type not yet supported. Only `fst` and `bm` are supported.");
   }
@@ -26,6 +42,7 @@ RCPP_MODULE(LazyArrayModules) {
     .method("dataType", &LazyArrayBase::dataType)
     .method("scheduleBlocks", &LazyArrayBase::scheduleBlocks)
     .method("subset", &LazyArrayBase::subset)
+    .method("subsetAssign", &LazyArrayBase::subsetAssign)
   ;
 }
 

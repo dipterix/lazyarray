@@ -1,9 +1,11 @@
-#include "lazyarray.h"
-#include "utils.h"
 #include "loader2.h"
-
 // This file is too long, split into multiple files
 #include "loader2ext.h"
+
+#include "common.h"
+#include "utils.h"
+#include "indexConvert.h"
+
 
 using namespace Rcpp;
 

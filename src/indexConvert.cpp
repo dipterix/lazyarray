@@ -1,5 +1,8 @@
-#include "utils.h"
 #include "indexConvert.h"
+// [[Rcpp::plugins("cpp11")]]
+
+#include "common.h"
+#include "utils.h"
 using namespace Rcpp; 
 
 SEXP subsetIdx2(const Rcpp::List sliceIdx, Rcpp::NumericVector dim, bool pos_subscript){
@@ -32,8 +35,6 @@ SEXP subsetIdx2(const Rcpp::List sliceIdx, Rcpp::NumericVector dim, bool pos_sub
   int64_t total_length = std::accumulate(dim.begin(), dim.end(), INTEGER64_ONE, std::multiplies<int64_t>());
   NumericVector target_dim = NumericVector(dim.begin(), dim.end());
   LogicalVector neg_subscr = LogicalVector(ndims, false);
-  
-  target_dim.attr("class") = "integer64";
   
   int64_t di;
   NumericVector sidx;
@@ -68,7 +69,6 @@ SEXP subsetIdx2(const Rcpp::List sliceIdx, Rcpp::NumericVector dim, bool pos_sub
     }
     
     sidx = as<NumericVector>(el);
-    sidx.attr("class") = "integer64";
     
     neg_sidx = sidx[ !(is_na(sidx) | sidx >= 0) ];
     
@@ -79,11 +79,9 @@ SEXP subsetIdx2(const Rcpp::List sliceIdx, Rcpp::NumericVector dim, bool pos_sub
       }
       neg_sidx = neg_sidx * (-1);
       sidx = sort_unique( neg_sidx );
-      sidx.attr("class") = "integer64";
       sidx = sidx[sidx <= di];
       if( pos_subscript ){
         NumericVector tmp = no_init( di - sidx.size() );
-        tmp.attr("class") = "integer64";
         NumericVector::iterator ptr_neg_sidx = tmp.begin();
         NumericVector::iterator ptr_sidx = sidx.begin();
         for(int64_t el = 1; el <= di & ptr_neg_sidx != tmp.end(); el++){
@@ -137,7 +135,6 @@ SEXP subsetIdx2(const Rcpp::List sliceIdx, Rcpp::NumericVector dim, bool pos_sub
     
   } else if(i != R_MissingArg){
     sidx = as<NumericVector>( i );
-    sidx.attr("class") = "integer64";
     neg_sidx = sidx[ !(is_na(sidx) | sidx >= 0) ];
     
     if( neg_sidx.length() > 0 ){
@@ -146,7 +143,6 @@ SEXP subsetIdx2(const Rcpp::List sliceIdx, Rcpp::NumericVector dim, bool pos_sub
       }
       neg_sidx = neg_sidx * (-1);
       sidx = sort_unique(neg_sidx);
-      sidx.attr("class") = "integer64";
       neg_subscr[ 0 ] = true;
     } else {
       neg_subscr[ 0 ] = false;
@@ -164,7 +160,6 @@ SEXP subsetIdx2(const Rcpp::List sliceIdx, Rcpp::NumericVector dim, bool pos_sub
         
         if(pos_subscript){
           NumericVector tmp = no_init( total_length - sidx.size() );
-          tmp.attr("class") = "integer64";
           NumericVector::iterator ptr_neg_sidx = tmp.begin();
           NumericVector::iterator ptr_sidx = sidx.begin();
           for(int64_t el = 1; el <= total_length & ptr_neg_sidx != tmp.end(); el++){
@@ -199,7 +194,6 @@ SEXP subsetIdx2(const Rcpp::List sliceIdx, Rcpp::NumericVector dim, bool pos_sub
         sidx = sidx[sidx <= di];
         if( pos_subscript ){
           NumericVector tmp = no_init( di - sidx.size() );
-          tmp.attr("class") = "integer64";
           NumericVector::iterator ptr_neg_sidx = tmp.begin();
           NumericVector::iterator ptr_sidx = sidx.begin();
           for(int64_t el = 1; el <= di & ptr_neg_sidx != tmp.end(); el++){
@@ -278,7 +272,6 @@ SEXP subsetIdx(Environment expr_env, NumericVector dim, bool pos_subscript){
   NumericVector target_dim = NumericVector(dim.begin(), dim.end());
   LogicalVector neg_subscr = LogicalVector(ndims, false);
   
-  target_dim.attr("class") = "integer64";
   
   int64_t di;
   NumericVector sidx;
@@ -313,7 +306,6 @@ SEXP subsetIdx(Environment expr_env, NumericVector dim, bool pos_subscript){
     }
     
     sidx = as<NumericVector>(el);
-    sidx.attr("class") = "integer64";
     
     neg_sidx = sidx[ !(is_na(sidx) | sidx >= 0) ];
     
@@ -324,11 +316,9 @@ SEXP subsetIdx(Environment expr_env, NumericVector dim, bool pos_subscript){
       }
       neg_sidx = neg_sidx * (-1);
       sidx = sort_unique( neg_sidx );
-      sidx.attr("class") = "integer64";
       sidx = sidx[sidx <= di];
       if( pos_subscript ){
         NumericVector tmp = no_init( di - sidx.size() );
-        tmp.attr("class") = "integer64";
         NumericVector::iterator ptr_neg_sidx = tmp.begin();
         NumericVector::iterator ptr_sidx = sidx.begin();
         for(int64_t el = 1; el <= di & ptr_neg_sidx != tmp.end(); el++){
@@ -383,7 +373,6 @@ SEXP subsetIdx(Environment expr_env, NumericVector dim, bool pos_subscript){
     
   } else if(i != R_MissingArg){
     sidx = as<NumericVector>( i );
-    sidx.attr("class") = "integer64";
     neg_sidx = sidx[ !(is_na(sidx) | sidx >= 0) ];
     
     if( neg_sidx.length() > 0 ){
@@ -392,7 +381,6 @@ SEXP subsetIdx(Environment expr_env, NumericVector dim, bool pos_subscript){
       }
       neg_sidx = neg_sidx * (-1);
       sidx = sort_unique(neg_sidx);
-      sidx.attr("class") = "integer64";
       neg_subscr[ 0 ] = true;
     } else {
       neg_subscr[ 0 ] = false;
@@ -410,7 +398,6 @@ SEXP subsetIdx(Environment expr_env, NumericVector dim, bool pos_subscript){
         
         if(pos_subscript){
           NumericVector tmp = no_init( total_length - sidx.size() );
-          tmp.attr("class") = "integer64";
           NumericVector::iterator ptr_neg_sidx = tmp.begin();
           NumericVector::iterator ptr_sidx = sidx.begin();
           for(int64_t el = 1; el <= total_length & ptr_neg_sidx != tmp.end(); el++){
@@ -445,7 +432,6 @@ SEXP subsetIdx(Environment expr_env, NumericVector dim, bool pos_subscript){
         sidx = sidx[sidx <= di];
         if( pos_subscript ){
           NumericVector tmp = no_init( di - sidx.size() );
-          tmp.attr("class") = "integer64";
           NumericVector::iterator ptr_neg_sidx = tmp.begin();
           NumericVector::iterator ptr_sidx = sidx.begin();
           for(int64_t el = 1; el <= di & ptr_neg_sidx != tmp.end(); el++){
@@ -544,7 +530,6 @@ IntegerVector loc2idx(List& locations, IntegerVector& parent_dim){
   // Generate integer vector to be returned and assign dimension
   IntegerVector re(sub_size, 1);
   re.attr("dim") = sub_dim;
-  // re.attr("class") = "integer64";
   
   if( sub_size == 0 ){
     return re;
@@ -652,7 +637,6 @@ NumericVector loc2idx2(List& locations, NumericVector& parent_dim){
   // Generate integer vector to be returned and assign dimension
   NumericVector re(sub_size, 1);
   re.attr("dim") = sub_dim;
-  re.attr("class") = "integer64";
   
   if( sub_size == 0 ){
     return re;
@@ -980,7 +964,7 @@ List scheduleIndexing(SEXP locations, SEXP dimension){
 }
 
 
-List parseAndScheduleBlocks(SEXP listOrEnv, NumericVector dim){
+List parseSlices(SEXP listOrEnv, NumericVector dim, bool pos_subscript){
   
   List subparsed;  // VECSXP
   
@@ -1003,7 +987,7 @@ List parseAndScheduleBlocks(SEXP listOrEnv, NumericVector dim){
     
     if(has_i){
       // If i exists, scenario 2
-      subparsed = as<List>(subsetIdx(listOrEnv, dim, true));
+      subparsed = as<List>(subsetIdx(listOrEnv, dim, pos_subscript));
     } else {
       // i is missing, scenario 1
       SEXP dots = Rf_findVarInFrame(listOrEnv, R_DotsSymbol);
@@ -1016,16 +1000,23 @@ List parseAndScheduleBlocks(SEXP listOrEnv, NumericVector dim){
         }
         sliceIdx.push_back(CAR(dots));
       }
-      subparsed = as<List>(subsetIdx2(sliceIdx, dim, true));
+      subparsed = as<List>(subsetIdx2(sliceIdx, dim, pos_subscript));
     }
     break;
   }
   case VECSXP:
-    subparsed = as<List>(subsetIdx2(listOrEnv, dim, true));
+    subparsed = as<List>(subsetIdx2(listOrEnv, dim, pos_subscript));
     break;
   default:
     Rcpp::stop("Input `listOrEnv` must be either a list of indices or an environment");
   }
+  
+  return subparsed;
+}
+
+List parseAndScheduleBlocks(SEXP listOrEnv, NumericVector dim){
+  
+  List subparsed = parseSlices(listOrEnv, dim);  // VECSXP
   
   int subset_mode = subparsed["subset_mode"];
   if(subset_mode == 0){
@@ -1038,6 +1029,11 @@ List parseAndScheduleBlocks(SEXP listOrEnv, NumericVector dim){
   
   return subparsed;
 }
+
+
+
+
+
 
 
 SEXP reshapeOrDrop(SEXP x, SEXP reshape, bool drop){

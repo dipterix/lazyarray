@@ -139,6 +139,7 @@ SEXP subsetBM_double(XPtr<BigMatrix> pMat, MatrixAccessor<T> mat, List idxParsed
               *(ptr_re + ii) = static_cast<double>(*(blockAccessor + sub_index));
             }
           }
+          ptr_re += block_expected_length;
         }
       }
       

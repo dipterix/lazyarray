@@ -8,45 +8,6 @@
 
 using namespace Rcpp;
 
-// subsetBM
-SEXP subsetBM(SEXP pBigMat, SEXP listOrEnv, Rcpp::NumericVector dim, SEXPTYPE dtype, SEXP reshape, bool drop);
-static SEXP _lazyarray_subsetBM_try(SEXP pBigMatSEXP, SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP dtypeSEXP, SEXP reshapeSEXP, SEXP dropSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< SEXP >::type pBigMat(pBigMatSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type listOrEnv(listOrEnvSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type dim(dimSEXP);
-    Rcpp::traits::input_parameter< SEXPTYPE >::type dtype(dtypeSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type reshape(reshapeSEXP);
-    Rcpp::traits::input_parameter< bool >::type drop(dropSEXP);
-    rcpp_result_gen = Rcpp::wrap(subsetBM(pBigMat, listOrEnv, dim, dtype, reshape, drop));
-    return rcpp_result_gen;
-END_RCPP_RETURN_ERROR
-}
-RcppExport SEXP _lazyarray_subsetBM(SEXP pBigMatSEXP, SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP dtypeSEXP, SEXP reshapeSEXP, SEXP dropSEXP) {
-    SEXP rcpp_result_gen;
-    {
-        Rcpp::RNGScope rcpp_rngScope_gen;
-        rcpp_result_gen = PROTECT(_lazyarray_subsetBM_try(pBigMatSEXP, listOrEnvSEXP, dimSEXP, dtypeSEXP, reshapeSEXP, dropSEXP));
-    }
-    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
-    if (rcpp_isInterrupt_gen) {
-        UNPROTECT(1);
-        Rf_onintr();
-    }
-    bool rcpp_isLongjump_gen = Rcpp::internal::isLongjumpSentinel(rcpp_result_gen);
-    if (rcpp_isLongjump_gen) {
-        Rcpp::internal::resumeJump(rcpp_result_gen);
-    }
-    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
-    if (rcpp_isError_gen) {
-        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
-        UNPROTECT(1);
-        Rf_error(CHAR(rcpp_msgSEXP_gen));
-    }
-    UNPROTECT(1);
-    return rcpp_result_gen;
-}
 // setLazyBlockSize
 R_xlen_t setLazyBlockSize(R_xlen_t size);
 static SEXP _lazyarray_setLazyBlockSize_try(SEXP sizeSEXP) {
@@ -166,76 +127,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// loc2idx
-Rcpp::IntegerVector loc2idx(Rcpp::List& locations, Rcpp::IntegerVector& parent_dim);
-static SEXP _lazyarray_loc2idx_try(SEXP locationsSEXP, SEXP parent_dimSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< Rcpp::List& >::type locations(locationsSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector& >::type parent_dim(parent_dimSEXP);
-    rcpp_result_gen = Rcpp::wrap(loc2idx(locations, parent_dim));
-    return rcpp_result_gen;
-END_RCPP_RETURN_ERROR
-}
-RcppExport SEXP _lazyarray_loc2idx(SEXP locationsSEXP, SEXP parent_dimSEXP) {
-    SEXP rcpp_result_gen;
-    {
-        Rcpp::RNGScope rcpp_rngScope_gen;
-        rcpp_result_gen = PROTECT(_lazyarray_loc2idx_try(locationsSEXP, parent_dimSEXP));
-    }
-    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
-    if (rcpp_isInterrupt_gen) {
-        UNPROTECT(1);
-        Rf_onintr();
-    }
-    bool rcpp_isLongjump_gen = Rcpp::internal::isLongjumpSentinel(rcpp_result_gen);
-    if (rcpp_isLongjump_gen) {
-        Rcpp::internal::resumeJump(rcpp_result_gen);
-    }
-    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
-    if (rcpp_isError_gen) {
-        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
-        UNPROTECT(1);
-        Rf_error(CHAR(rcpp_msgSEXP_gen));
-    }
-    UNPROTECT(1);
-    return rcpp_result_gen;
-}
-// loc2idx2
-Rcpp::NumericVector loc2idx2(Rcpp::List& locations, Rcpp::NumericVector& parent_dim);
-static SEXP _lazyarray_loc2idx2_try(SEXP locationsSEXP, SEXP parent_dimSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< Rcpp::List& >::type locations(locationsSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type parent_dim(parent_dimSEXP);
-    rcpp_result_gen = Rcpp::wrap(loc2idx2(locations, parent_dim));
-    return rcpp_result_gen;
-END_RCPP_RETURN_ERROR
-}
-RcppExport SEXP _lazyarray_loc2idx2(SEXP locationsSEXP, SEXP parent_dimSEXP) {
-    SEXP rcpp_result_gen;
-    {
-        Rcpp::RNGScope rcpp_rngScope_gen;
-        rcpp_result_gen = PROTECT(_lazyarray_loc2idx2_try(locationsSEXP, parent_dimSEXP));
-    }
-    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
-    if (rcpp_isInterrupt_gen) {
-        UNPROTECT(1);
-        Rf_onintr();
-    }
-    bool rcpp_isLongjump_gen = Rcpp::internal::isLongjumpSentinel(rcpp_result_gen);
-    if (rcpp_isLongjump_gen) {
-        Rcpp::internal::resumeJump(rcpp_result_gen);
-    }
-    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
-    if (rcpp_isError_gen) {
-        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
-        UNPROTECT(1);
-        Rf_error(CHAR(rcpp_msgSEXP_gen));
-    }
-    UNPROTECT(1);
-    return rcpp_result_gen;
-}
 // loc2idx3
 std::vector<int64_t> loc2idx3(SEXP locations, std::vector<int64_t>& parent_dim);
 static SEXP _lazyarray_loc2idx3_try(SEXP locationsSEXP, SEXP parent_dimSEXP) {
@@ -271,94 +162,23 @@ RcppExport SEXP _lazyarray_loc2idx3(SEXP locationsSEXP, SEXP parent_dimSEXP) {
     UNPROTECT(1);
     return rcpp_result_gen;
 }
-// subsetIdx
-SEXP subsetIdx(Rcpp::Environment expr_env, Rcpp::NumericVector dim, bool pos_subscript);
-static SEXP _lazyarray_subsetIdx_try(SEXP expr_envSEXP, SEXP dimSEXP, SEXP pos_subscriptSEXP) {
+// parseSlices
+Rcpp::List parseSlices(SEXP listOrEnv, Rcpp::NumericVector dim, bool pos_subscript);
+static SEXP _lazyarray_parseSlices_try(SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP pos_subscriptSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< Rcpp::Environment >::type expr_env(expr_envSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type listOrEnv(listOrEnvSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type dim(dimSEXP);
     Rcpp::traits::input_parameter< bool >::type pos_subscript(pos_subscriptSEXP);
-    rcpp_result_gen = Rcpp::wrap(subsetIdx(expr_env, dim, pos_subscript));
+    rcpp_result_gen = Rcpp::wrap(parseSlices(listOrEnv, dim, pos_subscript));
     return rcpp_result_gen;
 END_RCPP_RETURN_ERROR
 }
-RcppExport SEXP _lazyarray_subsetIdx(SEXP expr_envSEXP, SEXP dimSEXP, SEXP pos_subscriptSEXP) {
+RcppExport SEXP _lazyarray_parseSlices(SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP pos_subscriptSEXP) {
     SEXP rcpp_result_gen;
     {
         Rcpp::RNGScope rcpp_rngScope_gen;
-        rcpp_result_gen = PROTECT(_lazyarray_subsetIdx_try(expr_envSEXP, dimSEXP, pos_subscriptSEXP));
-    }
-    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
-    if (rcpp_isInterrupt_gen) {
-        UNPROTECT(1);
-        Rf_onintr();
-    }
-    bool rcpp_isLongjump_gen = Rcpp::internal::isLongjumpSentinel(rcpp_result_gen);
-    if (rcpp_isLongjump_gen) {
-        Rcpp::internal::resumeJump(rcpp_result_gen);
-    }
-    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
-    if (rcpp_isError_gen) {
-        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
-        UNPROTECT(1);
-        Rf_error(CHAR(rcpp_msgSEXP_gen));
-    }
-    UNPROTECT(1);
-    return rcpp_result_gen;
-}
-// subsetIdx2
-SEXP subsetIdx2(const Rcpp::List sliceIdx, Rcpp::NumericVector dim, bool pos_subscript);
-static SEXP _lazyarray_subsetIdx2_try(SEXP sliceIdxSEXP, SEXP dimSEXP, SEXP pos_subscriptSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< const Rcpp::List >::type sliceIdx(sliceIdxSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type dim(dimSEXP);
-    Rcpp::traits::input_parameter< bool >::type pos_subscript(pos_subscriptSEXP);
-    rcpp_result_gen = Rcpp::wrap(subsetIdx2(sliceIdx, dim, pos_subscript));
-    return rcpp_result_gen;
-END_RCPP_RETURN_ERROR
-}
-RcppExport SEXP _lazyarray_subsetIdx2(SEXP sliceIdxSEXP, SEXP dimSEXP, SEXP pos_subscriptSEXP) {
-    SEXP rcpp_result_gen;
-    {
-        Rcpp::RNGScope rcpp_rngScope_gen;
-        rcpp_result_gen = PROTECT(_lazyarray_subsetIdx2_try(sliceIdxSEXP, dimSEXP, pos_subscriptSEXP));
-    }
-    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
-    if (rcpp_isInterrupt_gen) {
-        UNPROTECT(1);
-        Rf_onintr();
-    }
-    bool rcpp_isLongjump_gen = Rcpp::internal::isLongjumpSentinel(rcpp_result_gen);
-    if (rcpp_isLongjump_gen) {
-        Rcpp::internal::resumeJump(rcpp_result_gen);
-    }
-    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
-    if (rcpp_isError_gen) {
-        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
-        UNPROTECT(1);
-        Rf_error(CHAR(rcpp_msgSEXP_gen));
-    }
-    UNPROTECT(1);
-    return rcpp_result_gen;
-}
-// scheduleIndexing
-List scheduleIndexing(SEXP locations, SEXP dimension);
-static SEXP _lazyarray_scheduleIndexing_try(SEXP locationsSEXP, SEXP dimensionSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< SEXP >::type locations(locationsSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type dimension(dimensionSEXP);
-    rcpp_result_gen = Rcpp::wrap(scheduleIndexing(locations, dimension));
-    return rcpp_result_gen;
-END_RCPP_RETURN_ERROR
-}
-RcppExport SEXP _lazyarray_scheduleIndexing(SEXP locationsSEXP, SEXP dimensionSEXP) {
-    SEXP rcpp_result_gen;
-    {
-        Rcpp::RNGScope rcpp_rngScope_gen;
-        rcpp_result_gen = PROTECT(_lazyarray_scheduleIndexing_try(locationsSEXP, dimensionSEXP));
+        rcpp_result_gen = PROTECT(_lazyarray_parseSlices_try(listOrEnvSEXP, dimSEXP, pos_subscriptSEXP));
     }
     Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
     if (rcpp_isInterrupt_gen) {
@@ -379,12 +199,12 @@ RcppExport SEXP _lazyarray_scheduleIndexing(SEXP locationsSEXP, SEXP dimensionSE
     return rcpp_result_gen;
 }
 // parseAndScheduleBlocks
-List parseAndScheduleBlocks(SEXP sliceIdx, NumericVector dim);
+Rcpp::List parseAndScheduleBlocks(SEXP sliceIdx, Rcpp::NumericVector dim);
 static SEXP _lazyarray_parseAndScheduleBlocks_try(SEXP sliceIdxSEXP, SEXP dimSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< SEXP >::type sliceIdx(sliceIdxSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type dim(dimSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type dim(dimSEXP);
     rcpp_result_gen = Rcpp::wrap(parseAndScheduleBlocks(sliceIdx, dim));
     return rcpp_result_gen;
 END_RCPP_RETURN_ERROR
@@ -636,28 +456,56 @@ RcppExport SEXP _lazyarray_hasOpenMP() {
     UNPROTECT(1);
     return rcpp_result_gen;
 }
-// asi
-NumericVector asi(SEXP v, int nt);
-RcppExport SEXP _lazyarray_asi(SEXP vSEXP, SEXP ntSEXP) {
+// timesTwo
+NumericVector timesTwo(NumericVector input);
+RcppExport SEXP _lazyarray_timesTwo(SEXP inputSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type v(vSEXP);
-    Rcpp::traits::input_parameter< int >::type nt(ntSEXP);
-    rcpp_result_gen = Rcpp::wrap(asi(v, nt));
+    Rcpp::traits::input_parameter< NumericVector >::type input(inputSEXP);
+    rcpp_result_gen = Rcpp::wrap(timesTwo(input));
     return rcpp_result_gen;
 END_RCPP
 }
-// playground
-SEXP playground(int x);
-RcppExport SEXP _lazyarray_playground(SEXP xSEXP) {
+// subsetAssignFST
+SEXP subsetAssignFST(const SEXP values, const Rcpp::StringVector& files, SEXP listOrEnv, const Rcpp::NumericVector& dim, const SEXPTYPE& dtype, int compression, bool uniformEncoding);
+static SEXP _lazyarray_subsetAssignFST_try(SEXP valuesSEXP, SEXP filesSEXP, SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP dtypeSEXP, SEXP compressionSEXP, SEXP uniformEncodingSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(playground(x));
+    Rcpp::traits::input_parameter< const SEXP >::type values(valuesSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::StringVector& >::type files(filesSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type listOrEnv(listOrEnvSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type dim(dimSEXP);
+    Rcpp::traits::input_parameter< const SEXPTYPE& >::type dtype(dtypeSEXP);
+    Rcpp::traits::input_parameter< int >::type compression(compressionSEXP);
+    Rcpp::traits::input_parameter< bool >::type uniformEncoding(uniformEncodingSEXP);
+    rcpp_result_gen = Rcpp::wrap(subsetAssignFST(values, files, listOrEnv, dim, dtype, compression, uniformEncoding));
     return rcpp_result_gen;
-END_RCPP
+END_RCPP_RETURN_ERROR
+}
+RcppExport SEXP _lazyarray_subsetAssignFST(SEXP valuesSEXP, SEXP filesSEXP, SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP dtypeSEXP, SEXP compressionSEXP, SEXP uniformEncodingSEXP) {
+    SEXP rcpp_result_gen;
+    {
+        Rcpp::RNGScope rcpp_rngScope_gen;
+        rcpp_result_gen = PROTECT(_lazyarray_subsetAssignFST_try(valuesSEXP, filesSEXP, listOrEnvSEXP, dimSEXP, dtypeSEXP, compressionSEXP, uniformEncodingSEXP));
+    }
+    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
+    if (rcpp_isInterrupt_gen) {
+        UNPROTECT(1);
+        Rf_onintr();
+    }
+    bool rcpp_isLongjump_gen = Rcpp::internal::isLongjumpSentinel(rcpp_result_gen);
+    if (rcpp_isLongjump_gen) {
+        Rcpp::internal::resumeJump(rcpp_result_gen);
+    }
+    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
+    if (rcpp_isError_gen) {
+        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
+        UNPROTECT(1);
+        Rf_error(CHAR(rcpp_msgSEXP_gen));
+    }
+    UNPROTECT(1);
+    return rcpp_result_gen;
 }
 // dropDimension
 SEXP dropDimension(SEXP x);
@@ -838,21 +686,17 @@ RcppExport SEXP _lazyarray_getSexpType(SEXP xSEXP) {
 static int _lazyarray_RcppExport_validate(const char* sig) { 
     static std::set<std::string> signatures;
     if (signatures.empty()) {
-        signatures.insert("SEXP(*subsetBM)(SEXP,SEXP,Rcpp::NumericVector,SEXPTYPE,SEXP,bool)");
         signatures.insert("R_xlen_t(*setLazyBlockSize)(R_xlen_t)");
         signatures.insert("R_xlen_t(*getLazyBlockSize)()");
-        signatures.insert("Rcpp::IntegerVector(*loc2idx)(Rcpp::List&,Rcpp::IntegerVector&)");
-        signatures.insert("Rcpp::NumericVector(*loc2idx2)(Rcpp::List&,Rcpp::NumericVector&)");
         signatures.insert("std::vector<int64_t>(*loc2idx3)(SEXP,std::vector<int64_t>&)");
-        signatures.insert("SEXP(*subsetIdx)(Rcpp::Environment,Rcpp::NumericVector,bool)");
-        signatures.insert("SEXP(*subsetIdx2)(const Rcpp::List,Rcpp::NumericVector,bool)");
-        signatures.insert("List(*scheduleIndexing)(SEXP,SEXP)");
-        signatures.insert("List(*parseAndScheduleBlocks)(SEXP,NumericVector)");
+        signatures.insert("Rcpp::List(*parseSlices)(SEXP,Rcpp::NumericVector,bool)");
+        signatures.insert("Rcpp::List(*parseAndScheduleBlocks)(SEXP,Rcpp::NumericVector)");
         signatures.insert("SEXP(*reshapeOrDrop)(SEXP,SEXP,bool)");
         signatures.insert("SEXP(*subsetFST)(Rcpp::StringVector&,SEXP,Rcpp::NumericVector&,SEXPTYPE,SEXP,bool)");
         signatures.insert("int(*getLazyThread)(bool)");
         signatures.insert("int(*setLazyThread)(int,SEXP)");
         signatures.insert("bool(*hasOpenMP)()");
+        signatures.insert("SEXP(*subsetAssignFST)(const SEXP,const Rcpp::StringVector&,SEXP,const Rcpp::NumericVector&,const SEXPTYPE&,int,bool)");
         signatures.insert("SEXP(*dropDimension)(SEXP)");
         signatures.insert("int64_t(*prod2)(SEXP,bool)");
         signatures.insert("SEXP(*parseDots)(Rcpp::Environment&,bool)");
@@ -864,21 +708,17 @@ static int _lazyarray_RcppExport_validate(const char* sig) {
 
 // registerCCallable (register entry points for exported C++ functions)
 RcppExport SEXP _lazyarray_RcppExport_registerCCallable() { 
-    R_RegisterCCallable("lazyarray", "_lazyarray_subsetBM", (DL_FUNC)_lazyarray_subsetBM_try);
     R_RegisterCCallable("lazyarray", "_lazyarray_setLazyBlockSize", (DL_FUNC)_lazyarray_setLazyBlockSize_try);
     R_RegisterCCallable("lazyarray", "_lazyarray_getLazyBlockSize", (DL_FUNC)_lazyarray_getLazyBlockSize_try);
-    R_RegisterCCallable("lazyarray", "_lazyarray_loc2idx", (DL_FUNC)_lazyarray_loc2idx_try);
-    R_RegisterCCallable("lazyarray", "_lazyarray_loc2idx2", (DL_FUNC)_lazyarray_loc2idx2_try);
     R_RegisterCCallable("lazyarray", "_lazyarray_loc2idx3", (DL_FUNC)_lazyarray_loc2idx3_try);
-    R_RegisterCCallable("lazyarray", "_lazyarray_subsetIdx", (DL_FUNC)_lazyarray_subsetIdx_try);
-    R_RegisterCCallable("lazyarray", "_lazyarray_subsetIdx2", (DL_FUNC)_lazyarray_subsetIdx2_try);
-    R_RegisterCCallable("lazyarray", "_lazyarray_scheduleIndexing", (DL_FUNC)_lazyarray_scheduleIndexing_try);
+    R_RegisterCCallable("lazyarray", "_lazyarray_parseSlices", (DL_FUNC)_lazyarray_parseSlices_try);
     R_RegisterCCallable("lazyarray", "_lazyarray_parseAndScheduleBlocks", (DL_FUNC)_lazyarray_parseAndScheduleBlocks_try);
     R_RegisterCCallable("lazyarray", "_lazyarray_reshapeOrDrop", (DL_FUNC)_lazyarray_reshapeOrDrop_try);
     R_RegisterCCallable("lazyarray", "_lazyarray_subsetFST", (DL_FUNC)_lazyarray_subsetFST_try);
     R_RegisterCCallable("lazyarray", "_lazyarray_getLazyThread", (DL_FUNC)_lazyarray_getLazyThread_try);
     R_RegisterCCallable("lazyarray", "_lazyarray_setLazyThread", (DL_FUNC)_lazyarray_setLazyThread_try);
     R_RegisterCCallable("lazyarray", "_lazyarray_hasOpenMP", (DL_FUNC)_lazyarray_hasOpenMP_try);
+    R_RegisterCCallable("lazyarray", "_lazyarray_subsetAssignFST", (DL_FUNC)_lazyarray_subsetAssignFST_try);
     R_RegisterCCallable("lazyarray", "_lazyarray_dropDimension", (DL_FUNC)_lazyarray_dropDimension_try);
     R_RegisterCCallable("lazyarray", "_lazyarray_prod2", (DL_FUNC)_lazyarray_prod2_try);
     R_RegisterCCallable("lazyarray", "_lazyarray_parseDots", (DL_FUNC)_lazyarray_parseDots_try);
@@ -891,19 +731,14 @@ RcppExport SEXP _lazyarray_RcppExport_registerCCallable() {
 RcppExport SEXP _rcpp_module_boot_LazyArrayModules();
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_lazyarray_subsetBM", (DL_FUNC) &_lazyarray_subsetBM, 6},
     {"_lazyarray_setLazyBlockSize", (DL_FUNC) &_lazyarray_setLazyBlockSize, 1},
     {"_lazyarray_getLazyBlockSize", (DL_FUNC) &_lazyarray_getLazyBlockSize, 0},
     {"_lazyarray_fstMeta", (DL_FUNC) &_lazyarray_fstMeta, 1},
     {"_lazyarray_fstRetrieve", (DL_FUNC) &_lazyarray_fstRetrieve, 4},
     {"_lazyarray_fstStore", (DL_FUNC) &_lazyarray_fstStore, 4},
     {"_lazyarray_checkFstMeta", (DL_FUNC) &_lazyarray_checkFstMeta, 3},
-    {"_lazyarray_loc2idx", (DL_FUNC) &_lazyarray_loc2idx, 2},
-    {"_lazyarray_loc2idx2", (DL_FUNC) &_lazyarray_loc2idx2, 2},
     {"_lazyarray_loc2idx3", (DL_FUNC) &_lazyarray_loc2idx3, 2},
-    {"_lazyarray_subsetIdx", (DL_FUNC) &_lazyarray_subsetIdx, 3},
-    {"_lazyarray_subsetIdx2", (DL_FUNC) &_lazyarray_subsetIdx2, 3},
-    {"_lazyarray_scheduleIndexing", (DL_FUNC) &_lazyarray_scheduleIndexing, 2},
+    {"_lazyarray_parseSlices", (DL_FUNC) &_lazyarray_parseSlices, 3},
     {"_lazyarray_parseAndScheduleBlocks", (DL_FUNC) &_lazyarray_parseAndScheduleBlocks, 2},
     {"_lazyarray_reshapeOrDrop", (DL_FUNC) &_lazyarray_reshapeOrDrop, 3},
     {"_lazyarray_cpp_create_lazyarray", (DL_FUNC) &_lazyarray_cpp_create_lazyarray, 5},
@@ -913,8 +748,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lazyarray_getLazyThread", (DL_FUNC) &_lazyarray_getLazyThread, 1},
     {"_lazyarray_setLazyThread", (DL_FUNC) &_lazyarray_setLazyThread, 2},
     {"_lazyarray_hasOpenMP", (DL_FUNC) &_lazyarray_hasOpenMP, 0},
-    {"_lazyarray_asi", (DL_FUNC) &_lazyarray_asi, 2},
-    {"_lazyarray_playground", (DL_FUNC) &_lazyarray_playground, 1},
+    {"_lazyarray_timesTwo", (DL_FUNC) &_lazyarray_timesTwo, 1},
+    {"_lazyarray_subsetAssignFST", (DL_FUNC) &_lazyarray_subsetAssignFST, 7},
     {"_lazyarray_dropDimension", (DL_FUNC) &_lazyarray_dropDimension, 1},
     {"_lazyarray_prod2", (DL_FUNC) &_lazyarray_prod2, 2},
     {"_lazyarray_parseDots", (DL_FUNC) &_lazyarray_parseDots, 2},

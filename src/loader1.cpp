@@ -1,7 +1,9 @@
+#include "loader1.h"
 // [[Rcpp::plugins("cpp11")]]
 
-#include "lazycommon.h"
-#include "loader1.h"
+
+#include "common.h"
+#include "indexConvert.h"
 #include "fstWrapper.h"
 using namespace Rcpp; 
 

@@ -51,7 +51,9 @@ public:
   virtual SEXP subset(SEXP listOrEnv, SEXP reshape = R_NilValue, bool drop = false) {
     stop("c++: LazyArrayBase::subset not implemented");
   };
-  
+  virtual SEXP subsetAssign(SEXP values, SEXP listOrEnv) {
+    stop("c++: LazyArrayBase::subsetAssign not implemented");
+  }
   
   // pre-defined members
   /**

@@ -11,9 +11,10 @@ class FstArray : public LazyArrayBase {
   // Constructors and field getter/setter
 public:
   FstArray(
-    const Rcpp::StringVector& partitionFiles, std::vector<int64_t> dimension, SEXPTYPE dataType
+    const Rcpp::StringVector& partitionFiles, std::vector<int64_t> dimension, 
+    SEXPTYPE dataType, int& compression, bool& uniformEncoding
   ): 
-  LazyArrayBase(dimension, dataType)
+  LazyArrayBase(dimension, dataType), _compression(compression), _uniformEncoding(uniformEncoding)
   {
     fstFiles = Rcpp::StringVector(partitionFiles.begin(), partitionFiles.end());
     validate();
@@ -48,6 +49,16 @@ public:
     NumericVector dim = getDim();
     return subsetFST(fstFiles, listOrEnv, dim, _dataType, reshape, drop);
   };
+  
+  SEXP subsetAssign(SEXP values, SEXP listOrEnv) override {
+    NumericVector dim = getDim();
+    subsetAssignFST(values, fstFiles, listOrEnv, dim, _dataType, _compression, _uniformEncoding);
+    return R_NilValue;
+  }
+  
+protected:
+  int  _compression;
+  bool _uniformEncoding;
   
 };
 

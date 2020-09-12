@@ -3,31 +3,37 @@
 #ifndef LAZYARRAY_INDEX_H
 #define LAZYARRAY_INDEX_H
 
-#include "common.h"
+#include "Rcpp.h"
 
 // [[Rcpp::interfaces(r, cpp)]]
 
-// [[Rcpp::export]]
+// Though efficient, but no longer used as it errors when indexing >= 2^31 length
 Rcpp::IntegerVector loc2idx(Rcpp::List& locations, Rcpp::IntegerVector& parent_dim);
 
-// [[Rcpp::export]]
+// Same behavior as loc2idx3, but uses NumericVector, which converts int64_t back to double
+// no need to do so
 Rcpp::NumericVector loc2idx2(Rcpp::List& locations, Rcpp::NumericVector& parent_dim);
 
 // [[Rcpp::export]]
 std::vector<int64_t> loc2idx3(SEXP locations, std::vector<int64_t>& parent_dim);
 
-// [[Rcpp::export]]
+// subsetIdx and subsetIdx2 should not be used directly as parseSlices combines them all
 SEXP subsetIdx(Rcpp::Environment expr_env, Rcpp::NumericVector dim, bool pos_subscript = false);
 
-// [[Rcpp::export]]
 SEXP subsetIdx2(const Rcpp::List sliceIdx, Rcpp::NumericVector dim, bool pos_subscript = false);
 
-// [[Rcpp::export]]
-List scheduleIndexing(SEXP locations, SEXP dimension);
+// should not be called directly, use parseAndScheduleBlocks instead
+Rcpp::List scheduleIndexing(SEXP locations, SEXP dimension);
 
-
+// parseSlices = subsetIdx or subsetIdx2
+// WARNING: Always use pos_subscript if you want to use subset or subsetAssign functions in lazyarray
+// pos_subscript=false subset is not implemented
 // [[Rcpp::export]]
-List parseAndScheduleBlocks(SEXP sliceIdx, NumericVector dim);
+Rcpp::List parseSlices(SEXP listOrEnv, Rcpp::NumericVector dim, bool pos_subscript = true);
+
+// parseAndScheduleBlocks = parseSlices + scheduleIndexing
+// [[Rcpp::export]]
+Rcpp::List parseAndScheduleBlocks(SEXP sliceIdx, Rcpp::NumericVector dim);
 
 // [[Rcpp::export]]
 SEXP reshapeOrDrop(SEXP x, SEXP reshape = R_NilValue, bool drop = false);

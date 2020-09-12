@@ -3,7 +3,7 @@
 #ifndef LAZYARRAY_FST_H
 #define LAZYARRAY_FST_H
 
-#include <Rcpp.h>
+#include "lazycommon.h"
 
 // [[Rcpp::export]]
 SEXP fstMeta(Rcpp::String fileName);

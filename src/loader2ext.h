@@ -3,7 +3,7 @@
 #ifndef LAZYARRAY_LOADER2_MULTIPART_DOUBLE_H
 #define LAZYARRAY_LOADER2_MULTIPART_DOUBLE_H
 
-#include "lazycommon.h"
+#include "Rcpp.h"
 
 SEXP subsetFST_double(Rcpp::StringVector& files, Rcpp::NumericVector& dim, const Rcpp::List& subparsed);
 

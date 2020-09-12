@@ -25,28 +25,12 @@ checkFstMeta <- function(file, expect_nrows, cnames) {
     .Call(`_lazyarray_checkFstMeta`, file, expect_nrows, cnames)
 }
 
-loc2idx <- function(locations, parent_dim) {
-    .Call(`_lazyarray_loc2idx`, locations, parent_dim)
-}
-
-loc2idx2 <- function(locations, parent_dim) {
-    .Call(`_lazyarray_loc2idx2`, locations, parent_dim)
-}
-
 loc2idx3 <- function(locations, parent_dim) {
     .Call(`_lazyarray_loc2idx3`, locations, parent_dim)
 }
 
-subsetIdx <- function(expr_env, dim, pos_subscript = FALSE) {
-    .Call(`_lazyarray_subsetIdx`, expr_env, dim, pos_subscript)
-}
-
-subsetIdx2 <- function(sliceIdx, dim, pos_subscript = FALSE) {
-    .Call(`_lazyarray_subsetIdx2`, sliceIdx, dim, pos_subscript)
-}
-
-scheduleIndexing <- function(locations, dimension) {
-    .Call(`_lazyarray_scheduleIndexing`, locations, dimension)
+parseSlices <- function(listOrEnv, dim, pos_subscript = TRUE) {
+    .Call(`_lazyarray_parseSlices`, listOrEnv, dim, pos_subscript)
 }
 
 parseAndScheduleBlocks <- function(sliceIdx, dim) {
@@ -85,12 +69,12 @@ hasOpenMP <- function() {
     .Call(`_lazyarray_hasOpenMP`)
 }
 
-asi <- function(v, nt) {
-    .Call(`_lazyarray_asi`, v, nt)
+timesTwo <- function(input) {
+    .Call(`_lazyarray_timesTwo`, input)
 }
 
-playground <- function(x) {
-    .Call(`_lazyarray_playground`, x)
+subsetAssignFST <- function(values, files, listOrEnv, dim, dtype, compression = 50L, uniformEncoding = TRUE) {
+    .Call(`_lazyarray_subsetAssignFST`, values, files, listOrEnv, dim, dtype, compression, uniformEncoding)
 }
 
 dropDimension <- function(x) {

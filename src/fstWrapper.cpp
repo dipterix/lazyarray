@@ -1,9 +1,9 @@
+#include "fstWrapper.h"
+
 // [[Rcpp::plugins("cpp11")]]
 
-#include <Rcpp.h>
 #include <fstcore.h>
 #include "utils.h"
-#include "fstWrapper.h"
 
 using namespace Rcpp;
 

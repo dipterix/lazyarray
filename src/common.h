@@ -24,9 +24,20 @@ using namespace Rcpp;
 #ifdef NA_INTEGER64
 #undef NA_INTEGER64
 #endif // NA_INTEGER64
-
-
 #define NA_INTEGER64 LLONG_MIN
+
+// Lazyarray subset_mode - No index
+#ifndef LASUBMOD_NOIDX
+#define LASUBMOD_NOIDX 2
+#endif
+
+#ifndef LASUBMOD_SINGLE
+#define LASUBMOD_SINGLE 1
+#endif
+
+#ifndef LASUBMOD_MULTI
+#define LASUBMOD_MULTI 0
+#endif
 
 const bool LAZYARRAY_DEBUG = true;
 
@@ -55,7 +66,7 @@ const bool LAZYARRAY_DEBUG = true;
 // Used to partition to sub-blocks
 static R_xlen_t BLOCKSIZE = 16384;
 // If sub-block size is too large, don't calculate indices (memory inefficient)
-// ~ 500 MB index set
+// ~ 250 MB index set
 static R_xlen_t BLOCKLARGE = 31250000;
 
 const static int64_t INTEGER64_ONE = 1;

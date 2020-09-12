@@ -6,7 +6,8 @@
 #include "loader2.h"
 #include "fstWrapper.h"
 
-#include "lazycommon.h"
+#include "common.h"
+#include "indexConvert.h"
 
 using namespace Rcpp; 
 
