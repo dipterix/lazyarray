@@ -36,45 +36,45 @@ public:
     return dim;
   }
   
-  SEXP subset(SEXP listOrEnv, SEXP reshape = R_NilValue, bool drop = false) override {
-    validate();
-    
-    List sliceIdx = extractSlices(listOrEnv, 2);
-    bool resultNeedTranspose = false;
-    if(_transposed){
-      resultNeedTranspose = true;
-      if( sliceIdx.size() == 2 ){
-        SEXP tmp = sliceIdx[0];
-        sliceIdx[0] = sliceIdx[1];
-        sliceIdx[1] = tmp;
-      } else if( sliceIdx.size() == 1 && sliceIdx[0] != R_MissingArg ){
-        // x[i] -> calculate row & col for i, switch back and calculate new i
-        resultNeedTranspose = false;
-        std::vector<int64_t> idx = sliceIdx[0];
-        int64_t tmp;
-        int64_t nrow = _dimension[1]; // column is row now
-        int64_t ncol = _dimension[0];
-        for(std::vector<int64_t>::iterator ptr_idx = idx.begin(); ptr_idx != idx.end(); ptr_idx++ ){
-          if(*ptr_idx != NA_REAL && *ptr_idx != LLONG_MIN){
-            tmp = ((*ptr_idx) - 1) % nrow;
-            *ptr_idx = ((*ptr_idx) - 1 - tmp) / nrow + tmp * ncol + 1;
-          }
-        }
-      }
-    }
-    NumericVector dim = int64t2NumericVector(_dimension);
-    const List subparsed = parseAndScheduleBlocks(sliceIdx, dim);
-    Rcpp::checkUserInterrupt();
-    
-    Rcpp::StringVector fstFiles = get_partition_path();
-    
-    SEXP res = subsetFSTBare(fstFiles, subparsed, dim, _dataType);
-    if( resultNeedTranspose ){
-      Environment base = Environment::base_env();
-      res = as<Function>(base["t.default"])(res);
-    }
-    return res;
-  };
+  // SEXP subset(SEXP listOrEnv, SEXP reshape = R_NilValue, bool drop = false) override {
+  //   validate();
+  //   
+  //   List sliceIdx = extractSlices(listOrEnv, 2);
+  //   bool resultNeedTranspose = false;
+  //   if(_transposed){
+  //     resultNeedTranspose = true;
+  //     if( sliceIdx.size() == 2 ){
+  //       SEXP tmp = sliceIdx[0];
+  //       sliceIdx[0] = sliceIdx[1];
+  //       sliceIdx[1] = tmp;
+  //     } else if( sliceIdx.size() == 1 && sliceIdx[0] != R_MissingArg ){
+  //       // x[i] -> calculate row & col for i, switch back and calculate new i
+  //       resultNeedTranspose = false;
+  //       std::vector<int64_t> idx = sliceIdx[0];
+  //       int64_t tmp;
+  //       int64_t nrow = _dimension[1]; // column is row now
+  //       int64_t ncol = _dimension[0];
+  //       for(std::vector<int64_t>::iterator ptr_idx = idx.begin(); ptr_idx != idx.end(); ptr_idx++ ){
+  //         if(*ptr_idx != NA_REAL && *ptr_idx != LLONG_MIN){
+  //           tmp = ((*ptr_idx) - 1) % nrow;
+  //           *ptr_idx = ((*ptr_idx) - 1 - tmp) / nrow + tmp * ncol + 1;
+  //         }
+  //       }
+  //     }
+  //   }
+  //   NumericVector dim = int64t2NumericVector(_dimension);
+  //   const List subparsed = parseAndScheduleBlocks(sliceIdx, dim);
+  //   Rcpp::checkUserInterrupt();
+  //   
+  //   Rcpp::StringVector fstFiles = get_partition_path();
+  //   
+  //   SEXP res = subsetFSTBare(fstFiles, subparsed, dim, _dataType);
+  //   if( resultNeedTranspose ){
+  //     Environment base = Environment::base_env();
+  //     res = as<Function>(base["t.default"])(res);
+  //   }
+  //   return res;
+  // };
   
   // SEXP subsetAssign(SEXP values, SEXP listOrEnv) override {
   //   validate();

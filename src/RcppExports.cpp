@@ -351,23 +351,23 @@ BEGIN_RCPP
 END_RCPP
 }
 // subsetFSTBare
-SEXP subsetFSTBare(Rcpp::StringVector& files, const Rcpp::List& subparsed, const Rcpp::NumericVector& dim, const SEXPTYPE& dtype);
-static SEXP _lazyarray_subsetFSTBare_try(SEXP filesSEXP, SEXP subparsedSEXP, SEXP dimSEXP, SEXP dtypeSEXP) {
+SEXP subsetFSTBare(const std::string& rootPath, const Rcpp::List& subparsed, const Rcpp::NumericVector& dim, const SEXPTYPE& dtype);
+static SEXP _lazyarray_subsetFSTBare_try(SEXP rootPathSEXP, SEXP subparsedSEXP, SEXP dimSEXP, SEXP dtypeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< Rcpp::StringVector& >::type files(filesSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type rootPath(rootPathSEXP);
     Rcpp::traits::input_parameter< const Rcpp::List& >::type subparsed(subparsedSEXP);
     Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type dim(dimSEXP);
     Rcpp::traits::input_parameter< const SEXPTYPE& >::type dtype(dtypeSEXP);
-    rcpp_result_gen = Rcpp::wrap(subsetFSTBare(files, subparsed, dim, dtype));
+    rcpp_result_gen = Rcpp::wrap(subsetFSTBare(rootPath, subparsed, dim, dtype));
     return rcpp_result_gen;
 END_RCPP_RETURN_ERROR
 }
-RcppExport SEXP _lazyarray_subsetFSTBare(SEXP filesSEXP, SEXP subparsedSEXP, SEXP dimSEXP, SEXP dtypeSEXP) {
+RcppExport SEXP _lazyarray_subsetFSTBare(SEXP rootPathSEXP, SEXP subparsedSEXP, SEXP dimSEXP, SEXP dtypeSEXP) {
     SEXP rcpp_result_gen;
     {
         Rcpp::RNGScope rcpp_rngScope_gen;
-        rcpp_result_gen = PROTECT(_lazyarray_subsetFSTBare_try(filesSEXP, subparsedSEXP, dimSEXP, dtypeSEXP));
+        rcpp_result_gen = PROTECT(_lazyarray_subsetFSTBare_try(rootPathSEXP, subparsedSEXP, dimSEXP, dtypeSEXP));
     }
     Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
     if (rcpp_isInterrupt_gen) {
@@ -388,25 +388,25 @@ RcppExport SEXP _lazyarray_subsetFSTBare(SEXP filesSEXP, SEXP subparsedSEXP, SEX
     return rcpp_result_gen;
 }
 // subsetFST
-SEXP subsetFST(Rcpp::StringVector& files, SEXP listOrEnv, const Rcpp::NumericVector& dim, SEXPTYPE dtype, SEXP reshape, bool drop);
-static SEXP _lazyarray_subsetFST_try(SEXP filesSEXP, SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP dtypeSEXP, SEXP reshapeSEXP, SEXP dropSEXP) {
+SEXP subsetFST(const std::string& rootPath, SEXP listOrEnv, const Rcpp::NumericVector& dim, SEXPTYPE dtype, SEXP reshape, bool drop);
+static SEXP _lazyarray_subsetFST_try(SEXP rootPathSEXP, SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP dtypeSEXP, SEXP reshapeSEXP, SEXP dropSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< Rcpp::StringVector& >::type files(filesSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type rootPath(rootPathSEXP);
     Rcpp::traits::input_parameter< SEXP >::type listOrEnv(listOrEnvSEXP);
     Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type dim(dimSEXP);
     Rcpp::traits::input_parameter< SEXPTYPE >::type dtype(dtypeSEXP);
     Rcpp::traits::input_parameter< SEXP >::type reshape(reshapeSEXP);
     Rcpp::traits::input_parameter< bool >::type drop(dropSEXP);
-    rcpp_result_gen = Rcpp::wrap(subsetFST(files, listOrEnv, dim, dtype, reshape, drop));
+    rcpp_result_gen = Rcpp::wrap(subsetFST(rootPath, listOrEnv, dim, dtype, reshape, drop));
     return rcpp_result_gen;
 END_RCPP_RETURN_ERROR
 }
-RcppExport SEXP _lazyarray_subsetFST(SEXP filesSEXP, SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP dtypeSEXP, SEXP reshapeSEXP, SEXP dropSEXP) {
+RcppExport SEXP _lazyarray_subsetFST(SEXP rootPathSEXP, SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP dtypeSEXP, SEXP reshapeSEXP, SEXP dropSEXP) {
     SEXP rcpp_result_gen;
     {
         Rcpp::RNGScope rcpp_rngScope_gen;
-        rcpp_result_gen = PROTECT(_lazyarray_subsetFST_try(filesSEXP, listOrEnvSEXP, dimSEXP, dtypeSEXP, reshapeSEXP, dropSEXP));
+        rcpp_result_gen = PROTECT(_lazyarray_subsetFST_try(rootPathSEXP, listOrEnvSEXP, dimSEXP, dtypeSEXP, reshapeSEXP, dropSEXP));
     }
     Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
     if (rcpp_isInterrupt_gen) {
@@ -833,8 +833,8 @@ static int _lazyarray_RcppExport_validate(const char* sig) {
         signatures.insert("Rcpp::List(*parseSlices)(SEXP,Rcpp::NumericVector,bool)");
         signatures.insert("Rcpp::List(*parseAndScheduleBlocks)(SEXP,Rcpp::NumericVector)");
         signatures.insert("SEXP(*reshapeOrDrop)(SEXP,SEXP,bool)");
-        signatures.insert("SEXP(*subsetFSTBare)(Rcpp::StringVector&,const Rcpp::List&,const Rcpp::NumericVector&,const SEXPTYPE&)");
-        signatures.insert("SEXP(*subsetFST)(Rcpp::StringVector&,SEXP,const Rcpp::NumericVector&,SEXPTYPE,SEXP,bool)");
+        signatures.insert("SEXP(*subsetFSTBare)(const std::string&,const Rcpp::List&,const Rcpp::NumericVector&,const SEXPTYPE&)");
+        signatures.insert("SEXP(*subsetFST)(const std::string&,SEXP,const Rcpp::NumericVector&,SEXPTYPE,SEXP,bool)");
         signatures.insert("int(*getLazyThread)(bool)");
         signatures.insert("int(*setLazyThread)(int,SEXP)");
         signatures.insert("bool(*hasOpenMP)()");
@@ -880,11 +880,11 @@ RcppExport SEXP FstArray__new(SEXP, SEXP, SEXP, SEXP, SEXP);
 RcppExport SEXP FstMatrix__new(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 RcppExport SEXP LazyArrayBase__dataType(SEXP);
 RcppExport SEXP LazyArrayBase__getDim(SEXP);
-RcppExport SEXP LazyArrayBase__new(SEXP, SEXP);
 RcppExport SEXP LazyArrayBase__nparts(SEXP);
 RcppExport SEXP LazyArrayBase__partLen(SEXP);
 RcppExport SEXP LazyArrayBase__readOnly(SEXP, SEXP);
 RcppExport SEXP LazyArrayBase__subset(SEXP, SEXP, SEXP, SEXP);
+RcppExport SEXP LazyArrayBase__subsetAssign(SEXP, SEXP, SEXP);
 RcppExport SEXP LazyArrayBase__validate(SEXP, SEXP);
 
 static const R_CallMethodDef CallEntries[] = {
@@ -917,16 +917,16 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lazyarray_tik", (DL_FUNC) &_lazyarray_tik, 0},
     {"_lazyarray_tok", (DL_FUNC) &_lazyarray_tok, 2},
     {"_lazyarray_RcppExport_registerCCallable", (DL_FUNC) &_lazyarray_RcppExport_registerCCallable, 0},
-    {"FstArray__new",           (DL_FUNC) &FstArray__new,           5},
-    {"FstMatrix__new",          (DL_FUNC) &FstMatrix__new,          6},
-    {"LazyArrayBase__dataType", (DL_FUNC) &LazyArrayBase__dataType, 1},
-    {"LazyArrayBase__getDim",   (DL_FUNC) &LazyArrayBase__getDim,   1},
-    {"LazyArrayBase__new",      (DL_FUNC) &LazyArrayBase__new,      2},
-    {"LazyArrayBase__nparts",   (DL_FUNC) &LazyArrayBase__nparts,   1},
-    {"LazyArrayBase__partLen",  (DL_FUNC) &LazyArrayBase__partLen,  1},
-    {"LazyArrayBase__readOnly", (DL_FUNC) &LazyArrayBase__readOnly, 2},
-    {"LazyArrayBase__subset",   (DL_FUNC) &LazyArrayBase__subset,   4},
-    {"LazyArrayBase__validate", (DL_FUNC) &LazyArrayBase__validate, 2},
+    {"FstArray__new",               (DL_FUNC) &FstArray__new,               5},
+    {"FstMatrix__new",              (DL_FUNC) &FstMatrix__new,              6},
+    {"LazyArrayBase__dataType",     (DL_FUNC) &LazyArrayBase__dataType,     1},
+    {"LazyArrayBase__getDim",       (DL_FUNC) &LazyArrayBase__getDim,       1},
+    {"LazyArrayBase__nparts",       (DL_FUNC) &LazyArrayBase__nparts,       1},
+    {"LazyArrayBase__partLen",      (DL_FUNC) &LazyArrayBase__partLen,      1},
+    {"LazyArrayBase__readOnly",     (DL_FUNC) &LazyArrayBase__readOnly,     2},
+    {"LazyArrayBase__subset",       (DL_FUNC) &LazyArrayBase__subset,       4},
+    {"LazyArrayBase__subsetAssign", (DL_FUNC) &LazyArrayBase__subsetAssign, 3},
+    {"LazyArrayBase__validate",     (DL_FUNC) &LazyArrayBase__validate,     2},
     {NULL, NULL, 0}
 };
 

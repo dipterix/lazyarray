@@ -1,12 +1,13 @@
 #include "loader2ext.h"
 
 #include "common.h"
+#include "utils.h"
 #include "indexConvert.h"
 #include "fstWrapper.h"
 #include "openMPInterface.h"
 using namespace Rcpp;
 
-SEXP subsetFST_double(StringVector& files, const NumericVector& dim, const List& subparsed){
+SEXP subsetFST_double(const std::string& rootPath, const NumericVector& dim, const List& subparsed){
   Rcpp::Timer _rcpp_timer;
   
   const int subset_mode = subparsed["subset_mode"];
@@ -26,17 +27,20 @@ SEXP subsetFST_double(StringVector& files, const NumericVector& dim, const List&
   
   int64_t chunk_start, chunk_end;
   int reader_start, reader_end;
+  int64_t nfiles = *(dim.end() - 1);
+  std::string partition_path;
   
   if(subset_mode == 2){
     // case: subset_mode == 2, x[]
     
-    _rcpp_timer.step("mode 2");
+    tok("S subsetFST_double - mode 2");
     
     ptr_res = REAL(res);
     
-    for(StringVector::iterator ptr_files = files.begin(); ptr_files != files.end(); ptr_files++ ){
-      checkUserInterrupt();
-      if( !checkFstMeta(*ptr_files, expect_nrows, cnames) ){
+    for(int64_t file_ii = 1; file_ii <= nfiles; file_ii++ ){
+      partition_path = rootPath + std::to_string(file_ii) + ".fst";
+      R_CheckUserInterrupt();
+      if( !checkFstMeta(partition_path, expect_nrows, cnames) ){
         // this file is invalid, fill with na
         ptr_alt = ptr_res + block_size;
         while( ptr_alt != ptr_res ){
@@ -45,7 +49,7 @@ SEXP subsetFST_double(StringVector& files, const NumericVector& dim, const List&
         
       } else {
         // Read from fst file, abuse name "meta" a little bit
-        tmp = fstRetrieve(*ptr_files, wrap(cnames), wrap(1), R_NilValue);
+        tmp = fstRetrieve(partition_path, wrap(cnames), wrap(1), R_NilValue);
         tmp = tmp["resTable"];
         SEXP buffer = tmp["V1"];
         
@@ -70,9 +74,11 @@ SEXP subsetFST_double(StringVector& files, const NumericVector& dim, const List&
     
     
     Rf_setAttrib(res, wrap("dim"), wrap(target_dimension));
+    
+    tok("E subsetFST_double - mode 2");
   } else if(subset_mode == 1){
     
-    _rcpp_timer.step("mode 1");
+    tok("S subsetFST_double - mode 1");
     
     // case: subset_mode == 1, x[i], and i can't be R missing value
     NumericVector indices = as<NumericVector>(location_indices[0]);
@@ -109,10 +115,9 @@ SEXP subsetFST_double(StringVector& files, const NumericVector& dim, const List&
       }
       ptr_res = REAL(res);
       
-      for(StringVector::iterator ptr_file = files.begin(); ptr_file != files.end(); 
-      ptr_file++, chunk_start += expect_nrows, chunk_end += expect_nrows ) {
-        
-        checkUserInterrupt();
+      for(int64_t file_ii = 1; file_ii <= nfiles; file_ii++, chunk_start += expect_nrows, chunk_end += expect_nrows  ){
+        partition_path = rootPath + std::to_string(file_ii) + ".fst";
+        R_CheckUserInterrupt();
         
         
         sel = !(is_na(indices) | indices <= chunk_start | indices > chunk_end);
@@ -129,12 +134,12 @@ SEXP subsetFST_double(StringVector& files, const NumericVector& dim, const List&
         // Rcout << std::to_string(reader_start) << "\n";
         
         // read to buffer
-        if( !checkFstMeta(*ptr_file, expect_nrows, cnames) ){
+        if( !checkFstMeta(partition_path, expect_nrows, cnames) ){
           // this file is invalid, fill with na, but they have been set to NAs
           continue;
         }
         // Read from fst file, abuse name "meta" a little bit
-        tmp = fstRetrieve(*ptr_file, wrap(cnames), wrap(reader_start), wrap(reader_end));
+        tmp = fstRetrieve(partition_path, wrap(cnames), wrap(reader_start), wrap(reader_end));
         tmp = tmp["resTable"];
         const NumericVector& buffer_vec(tmp["V1"]);
         
@@ -171,9 +176,10 @@ SEXP subsetFST_double(StringVector& files, const NumericVector& dim, const List&
       
     }
     
+    tok("E subsetFST_double - mode 1");
   } else if (subset_mode == 0) {
+    tok("S subsetFST_double - mode 0");
     // case: subset_mode == 0, x[i,j,k,l,...], and ijk might be R missing value
-    _rcpp_timer.step("mode 0");
     // get partition dim
     R_xlen_t ndims = dim.size();
     NumericVector part_dim = NumericVector(dim.begin(), dim.end());
@@ -300,7 +306,7 @@ SEXP subsetFST_double(StringVector& files, const NumericVector& dim, const List&
     
     ptr_res = REAL(res);
     for(R_xlen_t li = 0; li < last_indices.size(); li++){
-      checkUserInterrupt();
+      R_CheckUserInterrupt();
       
       int64_t lidx = last_indices[li];
       
@@ -314,10 +320,10 @@ SEXP subsetFST_double(StringVector& files, const NumericVector& dim, const List&
         continue;
       }
       // Check file valid?
-      String file = files[lidx - 1];
+      partition_path = rootPath + std::to_string(lidx) + ".fst";
       
       // check if the file is valid
-      if(!checkFstMeta(file, expect_nrows, cnames)){
+      if(!checkFstMeta(partition_path, expect_nrows, cnames)){
         
         // print(wrap(file));
         // file is missing or broken, 
@@ -354,7 +360,7 @@ SEXP subsetFST_double(StringVector& files, const NumericVector& dim, const List&
         // int64_t subblock_min = (min subblock_idx), subblock_max = max subblock_idx;
         reader_start = (int)(chunk_start + subblock_min);
         reader_end = (int)(chunk_start + subblock_max);
-        tmp = fstRetrieve(file, wrap(cnames), wrap(reader_start), wrap(reader_end));
+        tmp = fstRetrieve(partition_path, wrap(cnames), wrap(reader_start), wrap(reader_end));
         tmp = tmp["resTable"];
         
         SEXP buffer = tmp["V1"];
@@ -521,7 +527,7 @@ SEXP subsetFST_double(StringVector& files, const NumericVector& dim, const List&
   
 }
 
-SEXP subsetFST_integer(StringVector& files, const NumericVector& dim, const List& subparsed){
+SEXP subsetFST_integer(const std::string& rootPath, const NumericVector& dim, const List& subparsed){
   
   const int subset_mode = subparsed["subset_mode"];
   const NumericVector target_dimension = subparsed["target_dimension"];
@@ -541,17 +547,19 @@ SEXP subsetFST_integer(StringVector& files, const NumericVector& dim, const List
   
   int64_t chunk_start, chunk_end;
   int reader_start, reader_end;
+  int64_t nfiles = *(dim.end() - 1);
+  std::string partition_path;
   
   if(subset_mode == 2){
     // case: subset_mode == 2, x[]
     
     ptr_res = INTEGER(res);
     
-    for(StringVector::iterator ptr_files = files.begin(); ptr_files != files.end(); ptr_files++ ){
+    for(int64_t file_ii = 1; file_ii <= nfiles; file_ii++ ){
+      partition_path = rootPath + std::to_string(file_ii) + ".fst";
+      R_CheckUserInterrupt();
       
-      checkUserInterrupt();
-      
-      if( !checkFstMeta(*ptr_files, expect_nrows, cnames) ){
+      if( !checkFstMeta(partition_path, expect_nrows, cnames) ){
         // this file is invalid, fill with na
         ptr_alt = ptr_res + block_size;
         while( ptr_alt != ptr_res ){
@@ -560,7 +568,7 @@ SEXP subsetFST_integer(StringVector& files, const NumericVector& dim, const List
         
       } else {
         // Read from fst file, abuse name "meta" a little bit
-        tmp = fstRetrieve(*ptr_files, wrap(cnames), wrap(1), R_NilValue);
+        tmp = fstRetrieve(partition_path, wrap(cnames), wrap(1), R_NilValue);
         tmp = tmp["resTable"];
         SEXP buffer = tmp["V1"];
         
@@ -619,9 +627,9 @@ SEXP subsetFST_integer(StringVector& files, const NumericVector& dim, const List
       }
       ptr_res = INTEGER(res);
       
-      for(StringVector::iterator ptr_file = files.begin(); ptr_file != files.end(); 
-      ptr_file++, chunk_start += expect_nrows, chunk_end += expect_nrows ) {
-        checkUserInterrupt();
+      for(int64_t file_ii = 1; file_ii <= nfiles; file_ii++, chunk_start += expect_nrows, chunk_end += expect_nrows ){
+        partition_path = rootPath + std::to_string(file_ii) + ".fst";
+        R_CheckUserInterrupt();
         
         sel = !(is_na(indices) | indices <= chunk_start | indices > chunk_end);
         // get sub index for this chunk, note no NA is included
@@ -637,12 +645,12 @@ SEXP subsetFST_integer(StringVector& files, const NumericVector& dim, const List
         // Rcout << std::to_string(reader_start) << "\n";
         
         // read to buffer
-        if( !checkFstMeta(*ptr_file, expect_nrows, cnames) ){
+        if( !checkFstMeta(partition_path, expect_nrows, cnames) ){
           // this file is invalid, fill with na, but they have been set to NAs
           continue;
         }
         // Read from fst file, abuse name "meta" a little bit
-        tmp = fstRetrieve(*ptr_file, wrap(cnames), wrap(reader_start), wrap(reader_end));
+        tmp = fstRetrieve(partition_path, wrap(cnames), wrap(reader_start), wrap(reader_end));
         tmp = tmp["resTable"];
         const IntegerVector& buffer_vec(tmp["V1"]);
         
@@ -811,7 +819,7 @@ SEXP subsetFST_integer(StringVector& files, const NumericVector& dim, const List
     ptr_res = INTEGER(res);
     for(R_xlen_t li = 0; li < last_indices.size(); li++){
       
-      checkUserInterrupt();
+      R_CheckUserInterrupt();
       
       int64_t lidx = last_indices[li];
       
@@ -825,10 +833,10 @@ SEXP subsetFST_integer(StringVector& files, const NumericVector& dim, const List
         continue;
       }
       // Check file valid?
-      String file = files[lidx - 1];
+      partition_path = rootPath + std::to_string(lidx) + ".fst";
       
       // check if the file is valid
-      if(!checkFstMeta(file, expect_nrows, cnames)){
+      if(!checkFstMeta(partition_path, expect_nrows, cnames)){
         
         // print(wrap(file));
         // file is missing or broken, 
@@ -865,7 +873,7 @@ SEXP subsetFST_integer(StringVector& files, const NumericVector& dim, const List
         // int64_t subblock_min = (min subblock_idx), subblock_max = max subblock_idx;
         reader_start = (int)(chunk_start + subblock_min);
         reader_end = (int)(chunk_start + subblock_max);
-        tmp = fstRetrieve(file, wrap(cnames), wrap(reader_start), wrap(reader_end));
+        tmp = fstRetrieve(partition_path, wrap(cnames), wrap(reader_start), wrap(reader_end));
         tmp = tmp["resTable"];
         
         SEXP buffer = tmp["V1"];
@@ -1029,7 +1037,7 @@ ptr_res += subblock_len;
   
 }
 
-SEXP subsetFST_character(StringVector& files, const NumericVector& dim, const List& subparsed){
+SEXP subsetFST_character(const std::string& rootPath, const NumericVector& dim, const List& subparsed){
   
   const int subset_mode = subparsed["subset_mode"];
   const NumericVector target_dimension = subparsed["target_dimension"];
@@ -1049,17 +1057,20 @@ SEXP subsetFST_character(StringVector& files, const NumericVector& dim, const Li
   
   int64_t chunk_start, chunk_end;
   int reader_start, reader_end;
+  int64_t nfiles = *(dim.end() - 1);
+  std::string partition_path;
   
   if(subset_mode == 2){
     // case: subset_mode == 2, x[]
     
     ptr_res = res.begin();
     
-    for(StringVector::iterator ptr_files = files.begin(); ptr_files != files.end(); ptr_files++ ){
+    for(int64_t file_ii = 1; file_ii <= nfiles; file_ii++ ){
+      partition_path = rootPath + std::to_string(file_ii) + ".fst";
       
-      checkUserInterrupt();
+      R_CheckUserInterrupt();
       
-      if( !checkFstMeta(*ptr_files, expect_nrows, cnames) ){
+      if( !checkFstMeta(partition_path, expect_nrows, cnames) ){
         // this file is invalid, fill with na
         ptr_alt = ptr_res + block_size;
         std::fill(ptr_res, ptr_alt, NA_STRING);
@@ -1067,7 +1078,7 @@ SEXP subsetFST_character(StringVector& files, const NumericVector& dim, const Li
         
       } else {
         // Read from fst file, abuse name "meta" a little bit
-        tmp = fstRetrieve(*ptr_files, wrap(cnames), wrap(1), R_NilValue);
+        tmp = fstRetrieve(partition_path, wrap(cnames), wrap(1), R_NilValue);
         tmp = tmp["resTable"];
         StringVector buffer = tmp["V1"];
         
@@ -1111,9 +1122,9 @@ SEXP subsetFST_character(StringVector& files, const NumericVector& dim, const Li
       std::fill(res.begin(), res.end(), NA_STRING);
       ptr_res = res.begin();
       
-      for(StringVector::iterator ptr_file = files.begin(); ptr_file != files.end(); 
-      ptr_file++, chunk_start += expect_nrows, chunk_end += expect_nrows ) {
-        checkUserInterrupt();
+      for(int64_t file_ii = 1; file_ii <= nfiles; file_ii++, chunk_start += expect_nrows, chunk_end += expect_nrows ){
+        partition_path = rootPath + std::to_string(file_ii) + ".fst";
+        R_CheckUserInterrupt();
         
         sel = !(is_na(indices) | indices <= chunk_start | indices > chunk_end);
         // get sub index for this chunk, note no NA is included
@@ -1129,12 +1140,12 @@ SEXP subsetFST_character(StringVector& files, const NumericVector& dim, const Li
         // Rcout << std::to_string(reader_start) << "\n";
         
         // read to buffer
-        if( !checkFstMeta(*ptr_file, expect_nrows, cnames) ){
+        if( !checkFstMeta(partition_path, expect_nrows, cnames) ){
           // this file is invalid, fill with na, but they have been set to NAs
           continue;
         }
         // Read from fst file, abuse name "meta" a little bit
-        tmp = fstRetrieve(*ptr_file, wrap(cnames), wrap(reader_start), wrap(reader_end));
+        tmp = fstRetrieve(partition_path, wrap(cnames), wrap(reader_start), wrap(reader_end));
         tmp = tmp["resTable"];
         const StringVector& buffer_vec(tmp["V1"]);
         
@@ -1303,7 +1314,7 @@ SEXP subsetFST_character(StringVector& files, const NumericVector& dim, const Li
     ptr_res = res.begin();
     for(R_xlen_t li = 0; li < last_indices.size(); li++){
       
-      checkUserInterrupt();
+      R_CheckUserInterrupt();
       
       int64_t lidx = last_indices[li];
       
@@ -1317,10 +1328,10 @@ SEXP subsetFST_character(StringVector& files, const NumericVector& dim, const Li
         continue;
       }
       // Check file valid?
-      String file = files[lidx - 1];
+      partition_path = rootPath + std::to_string(lidx) + ".fst";
       
       // check if the file is valid
-      if(!checkFstMeta(file, expect_nrows, cnames)){
+      if(!checkFstMeta(partition_path, expect_nrows, cnames)){
         
         // print(wrap(file));
         // file is missing or broken, 
@@ -1357,7 +1368,7 @@ SEXP subsetFST_character(StringVector& files, const NumericVector& dim, const Li
         // int64_t subblock_min = (min subblock_idx), subblock_max = max subblock_idx;
         reader_start = (int)(chunk_start + subblock_min);
         reader_end = (int)(chunk_start + subblock_max);
-        tmp = fstRetrieve(file, wrap(cnames), wrap(reader_start), wrap(reader_end));
+        tmp = fstRetrieve(partition_path, wrap(cnames), wrap(reader_start), wrap(reader_end));
         tmp = tmp["resTable"];
         
         StringVector buffer = tmp["V1"];
@@ -1502,7 +1513,7 @@ SEXP subsetFST_character(StringVector& files, const NumericVector& dim, const Li
 }
 
 
-SEXP subsetFST_complex(StringVector& files, const NumericVector& dim, const List& subparsed){
+SEXP subsetFST_complex(const std::string& rootPath, const NumericVector& dim, const List& subparsed){
   
   const int subset_mode = subparsed["subset_mode"];
   const NumericVector target_dimension = subparsed["target_dimension"];
@@ -1524,17 +1535,20 @@ SEXP subsetFST_complex(StringVector& files, const NumericVector& dim, const List
   int reader_start, reader_end;
   SEXP buffer_real, buffer_imag;
   double *ptr_buffer_real, *ptr_buffer_imag;
+  int64_t nfiles = *(dim.end() - 1);
+  std::string partition_path;
   
   if(subset_mode == 2){
     // case: subset_mode == 2, x[]
     
     ptr_res = COMPLEX(res);
     
-    for(StringVector::iterator ptr_files = files.begin(); ptr_files != files.end(); ptr_files++ ){
+    for(int64_t file_ii = 1; file_ii <= nfiles; file_ii++ ){
+      partition_path = rootPath + std::to_string(file_ii) + ".fst";
       
-      checkUserInterrupt();
+      R_CheckUserInterrupt();
       
-      if( !checkFstMeta(*ptr_files, expect_nrows, cnames) ){
+      if( !checkFstMeta(partition_path, expect_nrows, cnames) ){
         // this file is invalid, fill with na
         ptr_alt = ptr_res + block_size;
         while( ptr_alt != ptr_res ){
@@ -1545,7 +1559,7 @@ SEXP subsetFST_complex(StringVector& files, const NumericVector& dim, const List
         
       } else {
         // Read from fst file, abuse name "meta" a little bit
-        tmp = fstRetrieve(*ptr_files, wrap(cnames), wrap(1), R_NilValue);
+        tmp = fstRetrieve(partition_path, wrap(cnames), wrap(1), R_NilValue);
         tmp = tmp["resTable"];
         buffer_real = tmp["V1R"];
         buffer_imag = tmp["V1I"];
@@ -1615,9 +1629,9 @@ SEXP subsetFST_complex(StringVector& files, const NumericVector& dim, const List
       }
       ptr_res = COMPLEX(res);
       
-      for(StringVector::iterator ptr_file = files.begin(); ptr_file != files.end(); 
-      ptr_file++, chunk_start += expect_nrows, chunk_end += expect_nrows ) {
-        checkUserInterrupt();
+      for(int64_t file_ii = 1; file_ii <= nfiles; file_ii++, chunk_start += expect_nrows, chunk_end += expect_nrows ){
+        partition_path = rootPath + std::to_string(file_ii) + ".fst";
+        R_CheckUserInterrupt();
         
         sel = !(is_na(indices) | indices <= chunk_start | indices > chunk_end);
         // get sub index for this chunk, note no NA is included
@@ -1633,12 +1647,12 @@ SEXP subsetFST_complex(StringVector& files, const NumericVector& dim, const List
         // Rcout << std::to_string(reader_start) << "\n";
         
         // read to buffer
-        if( !checkFstMeta(*ptr_file, expect_nrows, cnames) ){
+        if( !checkFstMeta(partition_path, expect_nrows, cnames) ){
           // this file is invalid, fill with na, but they have been set to NAs
           continue;
         }
         // Read from fst file, abuse name "meta" a little bit
-        tmp = fstRetrieve(*ptr_file, wrap(cnames), wrap(reader_start), wrap(reader_end));
+        tmp = fstRetrieve(partition_path, wrap(cnames), wrap(reader_start), wrap(reader_end));
         tmp = tmp["resTable"];
         buffer_real = tmp["V1R"];
         buffer_imag = tmp["V1I"];
@@ -1822,7 +1836,7 @@ SEXP subsetFST_complex(StringVector& files, const NumericVector& dim, const List
     ptr_res = COMPLEX(res);
     for(R_xlen_t li = 0; li < last_indices.size(); li++){
       
-      checkUserInterrupt();
+      R_CheckUserInterrupt();
       
       int64_t lidx = last_indices[li];
       
@@ -1837,10 +1851,10 @@ SEXP subsetFST_complex(StringVector& files, const NumericVector& dim, const List
         continue;
       }
       // Check file valid?
-      String file = files[lidx - 1];
+      partition_path = rootPath + std::to_string(lidx) + ".fst";
       
       // check if the file is valid
-      if(!checkFstMeta(file, expect_nrows, cnames)){
+      if(!checkFstMeta(partition_path, expect_nrows, cnames)){
         
         // print(wrap(file));
         // file is missing or broken, 
@@ -1879,18 +1893,18 @@ SEXP subsetFST_complex(StringVector& files, const NumericVector& dim, const List
         // int64_t subblock_min = (min subblock_idx), subblock_max = max subblock_idx;
         reader_start = (int)(chunk_start + subblock_min);
         reader_end = (int)(chunk_start + subblock_max);
-        tmp = fstRetrieve(file, wrap(cnames), wrap(reader_start), wrap(reader_end));
+        tmp = fstRetrieve(partition_path, wrap(cnames), wrap(reader_start), wrap(reader_end));
         tmp = tmp["resTable"];
         
         buffer_real = tmp["V1R"];
         buffer_imag = tmp["V1I"];
         int n_protected = 0;
         if(TYPEOF(buffer_real) != REALSXP){
-          buffer_real = Rf_coerceVector(buffer_real, REALSXP);
+          buffer_real = PROTECT(Rf_coerceVector(buffer_real, REALSXP));
           n_protected++;
         }
         if(TYPEOF(buffer_imag) != REALSXP){
-          buffer_imag = Rf_coerceVector(buffer_imag, REALSXP);
+          buffer_imag = PROTECT(Rf_coerceVector(buffer_imag, REALSXP));
           n_protected++;
         }
         
@@ -2050,326 +2064,5 @@ ptr_res += subblock_len;
   return res;
   
 }
-
-
-// SEXP subsetFST_doubleOld(StringVector& files, NumericVector& dim, List& subparsed){
-//   
-//   const int subset_mode = subparsed["subset_mode"];
-//   const NumericVector target_dimension = subparsed["target_dimension"];
-//   const int64_t expected_length = subparsed["expected_length"];
-//   const LogicalVector negative_subscript = subparsed["negative_subscript"];
-//   List location_indices = subparsed["location_indices"];
-//   
-//   StringVector cnames = StringVector::create("V1"); 
-//   
-//   SEXP res = PROTECT(Rf_allocVector(REALSXP, expected_length));
-//   double *ptr_res = REAL(res);
-//   double *ptr_alt = ptr_res;
-//   int64_t block_size = std::accumulate(target_dimension.begin(), target_dimension.end()-1, INTEGER64_ONE, std::multiplies<int64_t>());
-//   int64_t expect_nrows = std::accumulate(dim.begin(), dim.end()-1, INTEGER64_ONE, std::multiplies<int64_t>());
-//   List tmp;
-//   CharacterVector colNames;
-//   
-//   int64_t chunk_start, chunk_end;
-//   int reader_start, reader_end;
-//   
-//   if(subset_mode == 2){
-//     // case: subset_mode == 2, x[]
-//     
-//     ptr_res = REAL(res);
-//     
-//     for(StringVector::iterator ptr_files = files.begin(); ptr_files != files.end(); ptr_files++ ){
-// 
-//       if( !checkFstMeta(*ptr_files, expect_nrows, cnames) ){
-//         // this file is invalid, fill with na
-//         ptr_alt = ptr_res + block_size;
-//         while( ptr_alt != ptr_res ){
-//           *ptr_res++ = NA_REAL;
-//         }
-//         
-//       } else {
-//         // Read from fst file, abuse name "meta" a little bit
-//         tmp = fstRetrieve(*ptr_files, wrap(cnames), wrap(1), R_NilValue);
-//         tmp = tmp["resTable"];
-//         SEXP buffer = tmp["V1"];
-// 
-//         // check if we can memcpy
-//         if(TYPEOF(buffer) != REALSXP){
-//           buffer = Rf_coerceVector(buffer, REALSXP);
-//         }
-//         
-//         std::memcpy(ptr_res, REAL(buffer), block_size * sizeof(double));
-// 
-//         ptr_res += block_size;
-//       }
-// 
-//     }
-//     
-//     Rf_setAttrib(res, wrap("dim"), wrap(target_dimension));
-//   } else if(subset_mode == 1){
-//     // case: subset_mode == 1, x[i], and i can't be R missing value
-//     NumericVector indices = as<NumericVector>(location_indices[0]);
-//     bool is_negative = negative_subscript[0];
-//     
-//     
-//     // idx from chunk_start to expect_nrows-1
-//     chunk_start = 0;
-//     chunk_end = expect_nrows;
-//     LogicalVector sel;
-//     int64_t bump_start = 0;
-//     bool enable_bump = true;
-//     
-//     // TODO: check negative cases
-//     if(is_negative){
-//       
-//       // There is simply no point to do so, data is so large and I'll defer the implementation
-//       stop("Negative subscript has not been implemented yet.");
-//       // // No NAs in this case, just iterate through all 
-//       // // indices is in decending order, start from the end
-//       // for(StringVector::iterator ptr_file = files.begin(); ptr_file != files.end(); 
-//       //     ptr_file++, chunk_start += expect_nrows, chunk_end += expect_nrows ) {
-//       //   
-//       // }
-//       
-//     } else {
-//       
-//       // initialize with NA
-//       ptr_res = REAL(res);
-//       ptr_alt = ptr_res;
-//       ptr_res += expected_length;
-//       for(;ptr_alt != ptr_res; ptr_alt++){
-//         *ptr_alt = NA_REAL;
-//       }
-//       ptr_res = REAL(res);
-//       
-//       for(StringVector::iterator ptr_file = files.begin(); ptr_file != files.end(); 
-//       ptr_file++, chunk_start += expect_nrows, chunk_end += expect_nrows ) {
-//         
-//         sel = !(is_na(indices) | indices <= chunk_start | indices > chunk_end);
-//         // get sub index for this chunk, note no NA is included
-//         NumericVector sub_idx = indices[sel];
-//         
-//         // if this chunk is not used, just skip;
-//         if( sub_idx.size() == 0 ){ continue; }
-//         
-//         
-//         reader_start = (int)(min(sub_idx) - chunk_start);
-//         reader_end = (int)(max(sub_idx) - chunk_start);
-//         
-//         // Rcout << std::to_string(reader_start) << "\n";
-//         
-//         // read to buffer
-//         if( !checkFstMeta(*ptr_file, expect_nrows, cnames) ){
-//           // this file is invalid, fill with na, but they have been set to NAs
-//           continue;
-//         }
-//         // Read from fst file, abuse name "meta" a little bit
-//         tmp = fstRetrieve(*ptr_file, wrap(cnames), wrap(reader_start), wrap(reader_end));
-//         tmp = tmp["resTable"];
-//         const NumericVector& buffer_vec(tmp["V1"]);
-//         
-//         ptr_res = REAL(res);
-//         ptr_alt = ptr_res + expected_length;
-//         // Skip first bump_start elements as they are all set
-//         ptr_res = ptr_res + bump_start;
-//         NumericVector::iterator ptr_sub_idx = sub_idx.begin();
-//         LogicalVector::iterator ptr_sel = sel.begin() + bump_start;
-//         NumericVector::iterator ptr_indices = indices.begin()+ bump_start;
-//         enable_bump = true;
-//         
-//         while(ptr_sel != sel.end() || ptr_sub_idx != sub_idx.end() || ptr_res != ptr_alt){
-//           
-//           if(*ptr_sel){
-//             const int64_t subidx = (*ptr_sub_idx);
-//             *ptr_res = *(buffer_vec.begin() + (subidx - chunk_start - reader_start));
-//             ptr_sub_idx++;
-//             *ptr_indices = NA_REAL;
-//             if( enable_bump ){
-//               bump_start++;
-//             }
-//           } else if(*ptr_indices == NA_REAL || *ptr_indices == NA_INTEGER64){
-//             bump_start++;
-//           } else {
-//             enable_bump = false;
-//           }
-//           ptr_sel++;
-//           ptr_res++;
-//           ptr_indices++;
-//         }
-//         
-//       }
-//       
-//     }
-//     
-//     
-//   } else if (subset_mode == 0) {
-//     // case: subset_mode == 0, x[i,j,k,l,...], and ijk might be R missing value
-//     
-//     // get partition dim
-//     R_xlen_t ndims = dim.size();
-//     NumericVector part_dim = NumericVector(dim.begin(), dim.end());
-//     *(part_dim.end() - 1) = 1;
-//     
-//     // Decide buffer size. if part_dim = c(3000,7,3), then buffer_margin = 1 because part[3000,7,1] has length > BLOCKSIZE, 
-//     // which is enough to read from 
-//     int64_t part_block_size = 1;
-//     R_xlen_t buffer_margin = 0;
-//     for(buffer_margin = 0; buffer_margin < ndims - 1; buffer_margin++ ){
-//       part_block_size *= part_dim[buffer_margin];
-//       if(part_block_size > getLazyBlockSize()){
-//         break;
-//       }
-//     }
-//     int64_t nblocks = 1;
-//     
-//     SEXP lastidx = location_indices[ndims - 1];
-//     NumericVector last_indices;
-//     if(lastidx == R_MissingArg){
-//       last_indices = seq(1, *(dim.end()-1));
-//     } else {
-//       last_indices = NumericVector(lastidx);
-//     }
-//     List partition_subblocklocs = List::create();
-//     
-//     NumericVector partition_subblockdim = NumericVector(buffer_margin > 0 ? buffer_margin+1 : 2, 1);
-//     List partition_blocklocs = List::create();
-//     NumericVector partition_blockdim = NumericVector(ndims - buffer_margin >= 2 ? ndims - buffer_margin : 2, 1);
-//     
-//     for(R_xlen_t dd = 0; dd < ndims - 1; dd++){
-//       if(dd <= buffer_margin){
-//         partition_subblockdim[dd] = dim[dd];
-//         partition_subblocklocs.push_back(location_indices[dd]);
-//       } else {
-//         partition_blockdim[dd - buffer_margin - 1] = dim[dd];
-//         partition_blocklocs.push_back(location_indices[dd]);
-//       }
-//     }
-//     for(R_xlen_t mislen = partition_subblockdim.size() - partition_subblocklocs.size(); mislen > 0; mislen--){
-//       partition_subblocklocs.push_back(wrap(1));
-//     }
-//     for(R_xlen_t mislen = partition_blockdim.size() - partition_blocklocs.size(); mislen > 0; mislen--){
-//       partition_blocklocs.push_back(wrap(1));
-//     }
-//     
-//     std::vector<int64_t> subblock_idx = loc2idx3(partition_subblocklocs, partition_subblockdim);
-//     int64_t subblock_min = -1, subblock_max = -1;
-//     
-//     for(std::vector<int64_t>::iterator ptr_subblock_idx = subblock_idx.begin(); ptr_subblock_idx != subblock_idx.end(); ptr_subblock_idx++ ){
-//       if(*ptr_subblock_idx != NA_REAL && *ptr_subblock_idx != NA_INTEGER64){
-//         if(subblock_min < 0 || *ptr_subblock_idx < subblock_min){
-//           subblock_min = *ptr_subblock_idx;
-//         }
-//         if(subblock_max < *ptr_subblock_idx){
-//           subblock_max = *ptr_subblock_idx;
-//         }
-//       }
-//     }
-//     
-//     
-//     std::vector<int64_t> block_idx = loc2idx3(partition_blocklocs, partition_blockdim);
-//     nblocks = block_idx.size();
-//     
-//     // Rcout << std::to_string(buffer_margin) << "\n";
-//     // Rcout << std::to_string(part_block_size) << "\n";
-//     // Rcout << std::to_string(nblocks) << "\n";
-//     
-//     
-//     ptr_res = REAL(res);
-//     for(R_xlen_t li = 0; li < last_indices.size(); li++){
-//       int64_t lidx = last_indices[li];
-//       
-//       // Fill in NA if *ptr_last_idx is NA_REAL
-//       if(lidx == NA_INTEGER64){
-//         
-//         ptr_alt = ptr_res + block_size;
-//         for(;ptr_res != ptr_alt; ptr_res++){
-//           *ptr_res = NA_REAL;
-//         }
-//         continue;
-//       }
-//       // Check file valid?
-//       String file = files[lidx - 1];
-//       
-//       // check if the file is valid
-//       if(!checkFstMeta(file, expect_nrows, cnames)){
-//         
-//         // print(wrap(file));
-//         // file is missing or broken, 
-//         ptr_alt = ptr_res + block_size;
-//         for(;ptr_res != ptr_alt; ptr_res++){
-//           *ptr_res = NA_REAL;
-//         }
-//         continue;
-//       }
-//       
-//       // ptr_res += block_size;
-//       // recursively read in block_size of data
-//       
-//       chunk_start = 0;
-//       chunk_end = part_block_size;
-//       for(std::vector<int64_t>::iterator ptr_block = block_idx.begin(); 
-//           ptr_block != block_idx.end(); 
-//           ptr_block ++ ){
-//         
-//         // NumericVector subblock_idx = loc2idx2(partition_subblocklocs, partition_subblockdim);
-//         // NumericVector block_idx = loc2idx2(partition_blocklocs, partition_blockdim);
-//         // nblocks = block_idx.size();
-//         if(*ptr_block == NA_INTEGER64 || !(subblock_min > 0 && subblock_min <= subblock_max)){
-//           // fill NAs
-//           ptr_alt = ptr_res + subblock_idx.size();
-//           for(;ptr_res != ptr_alt; ptr_res++){
-//             *ptr_res = NA_REAL;
-//           }
-//           continue;
-//         }
-//         
-//         chunk_start = part_block_size * (*ptr_block) - part_block_size;
-//         chunk_end = chunk_start + part_block_size;
-//         // int64_t subblock_min = (min subblock_idx), subblock_max = max subblock_idx;
-//         reader_start = (int)(chunk_start + subblock_min);
-//         reader_end = (int)(chunk_start + subblock_max);
-//         tmp = fstRetrieve(file, wrap(cnames), wrap(reader_start), wrap(reader_end));
-//         tmp = tmp["resTable"];
-//         const NumericVector& buffer_vec(tmp["V1"]);
-//         
-//         for(std::vector<int64_t>::iterator ptr_subblock_idx = subblock_idx.begin(); 
-//             ptr_subblock_idx != subblock_idx.end(); ptr_subblock_idx++){
-//           
-//           if(*ptr_subblock_idx == NA_REAL || *ptr_subblock_idx == NA_INTEGER64){
-//             *ptr_res++ = NA_REAL;
-//           } else {
-//             *ptr_res++ = buffer_vec[(*ptr_subblock_idx) - subblock_min];
-//           }
-//         }
-//         
-//       }
-//       // int64_t chunk_start, chunk_end;
-//       // int reader_start, reader_end;
-//       // 
-//     }
-//     
-//     
-//     Rf_setAttrib(res, wrap("dim"), target_dimension);
-//     
-//     // 
-//     // // Get max and min for each dim
-//     // print(location_indices);
-//     // List part_idx = List(location_indices.begin(), location_indices.end() - 1);
-//     // IntegerVector part_dim = IntegerVector(dim.begin(), dim.end());
-//     // List  loc2idx(location_indices, dim){
-//     
-//   } else {
-//     stop("Unknown subset method");
-//   }
-//   
-//   
-//   
-//   UNPROTECT(1);
-//   
-//   
-//   
-//   return res;
-//   
-// }
 
 

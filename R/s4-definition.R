@@ -1,32 +1,56 @@
-#' @exportClass LazyArrayBase
-setClass("LazyArrayBase", slots = c(pointer = "externalptr", method_list = "list", binding_list = "list"))
-
-#' @exportClass FstArray
-setClass("FstArray", contains = "LazyArrayBase")
-
-#' @exportClass FstMatrix
-setClass("FstMatrix", contains = "FstArray")
-
+ensure_path <- function(x){
+  if(!dir.exists(x)){
+    dir_create(x)
+  }
+  x
+}
 
 make_methods_base <- function(x){
-  if(!is.list(x@method_list)){
-    x@method_list <- list()
+  x@method_list$validate <- function(stopIfError = TRUE){
+    x@method_list$with_instance(function(pointer){
+      .Call("LazyArrayBase__validate", pointer, stopIfError)
+    })
   }
-  if(!is.list(x@binding_list)){
-    x@binding_list <- list()
+  x@method_list$subset <- function(..., reshape = NULL, drop = TRUE){ 
+    env <- environment()
+    x@method_list$with_instance(function(pointer){
+      .Call("LazyArrayBase__subset", pointer, env, reshape, isTRUE(drop))
+    })
+  }
+  x@method_list$subsetAssign <- function(..., value){ 
+    env <- environment()
+    x@method_list$with_instance(function(pointer){
+      .Call("LazyArrayBase__subsetAssign", pointer, value, env)
+    })
   }
   
-  x@method_list$validate <- function(stopIfError = TRUE){ .Call("LazyArrayBase__validate", x@pointer, stopIfError) }
-  x@method_list$subset <- function(..., reshape = NULL, drop = TRUE){ .Call("LazyArrayBase__subset", x@pointer, environment(), reshape, isTRUE(drop)) }
   
-  x@binding_list$nparts <- function(){ .Call("LazyArrayBase__nparts", x@pointer) }
+  x@binding_list$nparts <- function(){
+    x@method_list$with_instance(function(pointer){
+      .Call("LazyArrayBase__nparts", pointer)
+    })
+  }
   x@binding_list$read_only <- function(v){
     if(missing(v)) v <- NULL
-    function(){ .Call("LazyArrayBase__readOnly", x@pointer, v) }
+    x@method_list$with_instance(function(pointer){
+      .Call("LazyArrayBase__readOnly", pointer, v)
+    })
   }
-  x@binding_list$dim <- function(){ .Call("LazyArrayBase__getDim", x@pointer) }
-  x@binding_list$length_per_part <- function(){ .Call("LazyArrayBase__partLen", x@pointer) }
-  x@binding_list$data_type <- function(){ .Call("LazyArrayBase__dataType", x@pointer) }
+  x@binding_list$dim <- function(){
+    x@method_list$with_instance(function(pointer){
+      .Call("LazyArrayBase__getDim", pointer)
+    })
+  }
+  x@binding_list$length_per_part <- function(){
+    x@method_list$with_instance(function(pointer){
+      .Call("LazyArrayBase__partLen", pointer) 
+    })
+  }
+  x@binding_list$data_type <- function(){
+    x@method_list$with_instance(function(pointer){
+      .Call("LazyArrayBase__dataType", pointer) 
+    })
+  }
   invisible(x)
 }
 
@@ -34,10 +58,7 @@ make_methods_lazymatrix <- function(x){
   invisible(x)
 }
 
-
-
 check_data_type <- function(dataType){
-  print('lol')
   if(is.numeric(dataType)){
     dataType <- as.integer(dataType)
   } else if(is.character(dataType)){
@@ -49,14 +70,23 @@ check_data_type <- function(dataType){
   dataType
 }
 
+
+#' @exportClass LazyArrayBase
+setClass("LazyArrayBase", slots = c(
+  classname = "character", method_list = "list", 
+  binding_list = "list", dimension = "numeric", dataType = "integer"
+))
+
+#' @exportClass FstArray
+setClass("FstArray", contains = "LazyArrayBase", slots = c(rootPath = "character", compression = "integer", uniformEncoding = "logical"))
+
+#' @exportClass FstMatrix
+setClass("FstMatrix", contains = "FstArray", slots = c(transposed = "logical"))
+
 setMethod(
   "initialize", "LazyArrayBase",
-  function(.Object, dimension, dataType = "double") {
-    stopifnot(is.numeric(dimension))
-    dataType <- check_data_type(dataType)
-    .Object@pointer <- .Call("LazyArrayBase__new", dimension, dataType)
-    .Object <- make_methods_base(.Object)
-    .Object
+  function(.Object, ...) {
+    stop("LazyArrayBase is an abstract class. Please create from sub-classes")
   }
 )
 
@@ -65,13 +95,24 @@ setMethod(
   "initialize", "FstArray",
   function(.Object, rootPath, dimension, dataType = "double", compression = 50, uniformEncoding = TRUE) {
     stopifnot(is.numeric(dimension))
-    dataType <- check_data_type(dataType)
-    if(!dir.exists(rootPath)){
-      dir_create(rootPath)
+    .Object@classname <- "FstArray"
+    .Object@dimension <- dimension
+    .Object@dataType <- check_data_type(dataType)[[1]]
+    .Object@compression <- as.integer(compression)[[1]]
+    .Object@uniformEncoding <- isTRUE(uniformEncoding)[[1]]
+    .Object@rootPath <- as.character(rootPath)[[1]]
+    
+    if(!is.list(.Object@method_list)){
+      .Object@method_list <- list()
     }
-    compression <- as.integer(compression)
-    uniformEncoding <- isTRUE(uniformEncoding)
-    .Object@pointer <- .Call("FstArray__new", rootPath, dimension, dataType, compression, uniformEncoding)
+    if(!is.list(.Object@binding_list)){
+      .Object@binding_list <- list()
+    }
+    .Object@method_list$with_instance <- function(FUN){
+      ensure_path(.Object@rootPath)
+      pointer <- .Call("FstArray__new", .Object@rootPath, .Object@dimension, .Object@dataType, .Object@compression, .Object@uniformEncoding)
+      FUN(pointer)
+    }
     .Object <- make_methods_base(.Object)
     .Object
   }
@@ -81,14 +122,26 @@ setMethod(
   "initialize", "FstMatrix",
   function(.Object, rootPath, dimension, transposed = FALSE, dataType = "double", compression = 50, uniformEncoding = TRUE) {
     stopifnot(is.numeric(dimension))
-    dataType <- check_data_type(dataType)
-    if(!dir.exists(rootPath)){
-      dir_create(rootPath)
-    }
-    compression <- as.integer(compression)
-    uniformEncoding <- isTRUE(uniformEncoding)
+    .Object@classname <- "FstMatrix"
+    .Object@dimension = dimension
+    .Object@dataType <- check_data_type(dataType)[[1]]
+    .Object@compression <- as.integer(compression)[[1]]
+    .Object@uniformEncoding <- isTRUE(uniformEncoding)[[1]]
+    .Object@rootPath <- as.character(rootPath)[[1]]
     if( transposed ){ transposed <- TRUE } else { transposed <- FALSE }
-    .Object@pointer <- .Call("FstMatrix__new", rootPath, dimension, transposed, dataType, compression, uniformEncoding)
+    .Object@transposed <- transposed;
+    
+    if(!is.list(.Object@method_list)){
+      .Object@method_list <- list()
+    }
+    if(!is.list(.Object@binding_list)){
+      .Object@binding_list <- list()
+    }
+    .Object@method_list$with_instance <- function(FUN){
+      ensure_path(.Object@rootPath)
+      FUN(.Call("FstMatrix__new", .Object@rootPath, .Object@dimension, 
+                .Object@transposed, .Object@dataType, .Object@compression, .Object@uniformEncoding))
+    }
     .Object <- make_methods_base(.Object)
     .Object <- make_methods_lazymatrix(.Object)
     .Object

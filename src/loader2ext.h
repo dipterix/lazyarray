@@ -5,12 +5,12 @@
 
 #include "Rcpp.h"
 
-SEXP subsetFST_double(Rcpp::StringVector& files, const Rcpp::NumericVector& dim, const Rcpp::List& subparsed);
+SEXP subsetFST_double(const std::string& rootPath, const Rcpp::NumericVector& dim, const Rcpp::List& subparsed);
 
-SEXP subsetFST_integer(Rcpp::StringVector& files, const Rcpp::NumericVector& dim, const Rcpp::List& subparsed);
+SEXP subsetFST_integer(const std::string& rootPath, const Rcpp::NumericVector& dim, const Rcpp::List& subparsed);
 
-SEXP subsetFST_character(Rcpp::StringVector& files, const Rcpp::NumericVector& dim, const Rcpp::List& subparsed);
+SEXP subsetFST_character(const std::string& rootPath, const Rcpp::NumericVector& dim, const Rcpp::List& subparsed);
 
-SEXP subsetFST_complex(Rcpp::StringVector& files, const Rcpp::NumericVector& dim, const Rcpp::List& subparsed);
+SEXP subsetFST_complex(const std::string& rootPath, const Rcpp::NumericVector& dim, const Rcpp::List& subparsed);
 
 #endif // LAZYARRAY_LOADER2_MULTIPART_DOUBLE_H

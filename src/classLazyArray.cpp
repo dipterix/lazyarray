@@ -96,12 +96,32 @@ RcppExport SEXP LazyArrayBase__subset(SEXP xp, SEXP listOrEnv, SEXP reshape = R_
   if(!Rf_isNull(drop)){
     isDrop = as<bool>(drop);
   }
-  return ptr->subset(listOrEnv, reshape, isDrop);
+  SEXP res;
+  try {
+    res = ptr->subset(listOrEnv, reshape, isDrop);
+  } catch ( const Rcpp::exception& e ) {
+    res = captureException(e);
+  } catch ( const std::exception& e ){
+    res = captureException(e);
+  } catch (...){
+    res = makeException("c++: Unknown error");
+  }
+  return res;
 }
 
 RcppExport SEXP LazyArrayBase__subsetAssign(SEXP xp, SEXP values, SEXP listOrEnv) {
   Rcpp::XPtr<LazyArrayBase> ptr(xp);
-  return ptr->subsetAssign(values, listOrEnv);
+  SEXP res;
+  try {
+    res = ptr->subsetAssign(values, listOrEnv);
+  } catch ( const Rcpp::exception& e ) {
+    res = captureException(e);
+  } catch ( const std::exception& e ){
+    res = captureException(e);
+  } catch (...){
+    res = makeException("c++: Unknown error");
+  }
+  return res;
 }
 
 

@@ -9,22 +9,22 @@
 
 using namespace Rcpp;
 
-SEXP subsetFSTBare(StringVector& files, const List& subparsed, const NumericVector& dim, const SEXPTYPE& dtype) {
+SEXP subsetFSTBare(const std::string& rootPath, const List& subparsed, const NumericVector& dim, const SEXPTYPE& dtype) {
   tok("S subsetFSTBare");
   SEXP res = R_NilValue;
   switch(dtype){
   case REALSXP: 
-    res = subsetFST_double(files, dim, subparsed);
+    res = subsetFST_double(rootPath, dim, subparsed);
     break;
   case INTSXP:
-    res = subsetFST_integer(files, dim, subparsed);
+    res = subsetFST_integer(rootPath, dim, subparsed);
     break;
   case STRSXP:
   case CHARSXP:
-    res = subsetFST_character(files, dim, subparsed);
+    res = subsetFST_character(rootPath, dim, subparsed);
     break;
   case CPLXSXP:
-    res = subsetFST_complex(files, dim, subparsed);
+    res = subsetFST_complex(rootPath, dim, subparsed);
     break;
   default:
     stop("Unknown data type: only numeric, integer, character, and complex arrays are supported - provided SEXPTYPE: " + std::to_string(dtype));
@@ -33,22 +33,17 @@ SEXP subsetFSTBare(StringVector& files, const List& subparsed, const NumericVect
   return res;
 }
 
-SEXP subsetFST(StringVector& files, SEXP listOrEnv, const NumericVector& dim, SEXPTYPE dtype, SEXP reshape, bool drop){
+SEXP subsetFST(const std::string& rootPath, SEXP listOrEnv, const NumericVector& dim, SEXPTYPE dtype, SEXP reshape, bool drop){
   if(dim.size() < 2){
     stop("Dimension size must >= 2");
   }
-  
-  R_xlen_t npart = *(dim.end() - 1);
-  
-  if( npart != files.size() ){
-    stop("Partition size does not match with file counts.");
-  }
+  const std::string rootPath_alt = as_dirpath(rootPath);
   
   const List subparsed = parseAndScheduleBlocks(listOrEnv, dim);
   
-  checkUserInterrupt();
+  R_CheckUserInterrupt();
   
-  SEXP res = subsetFSTBare(files, subparsed, dim, dtype);
+  SEXP res = subsetFSTBare(rootPath_alt, subparsed, dim, dtype);
   
   reshapeOrDrop(res, reshape, drop); 
   return res;

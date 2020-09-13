@@ -45,7 +45,7 @@ public:
   inline SEXP subset(SEXP listOrEnv, SEXP reshape = R_NilValue, bool drop = false) override {
     tok("S subset");
     Rcpp::NumericVector dim = int64t2NumericVector(_dimension);
-    SEXP res = subsetFST(fstFiles, listOrEnv, dim, _dataType, reshape, drop);
+    SEXP res = subsetFST(_rootPath, listOrEnv, dim, _dataType, reshape, drop);;
     tok("E subset");
     return res;
   };

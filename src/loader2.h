@@ -8,10 +8,10 @@
 // [[Rcpp::interfaces(r,cpp)]]
 
 // [[Rcpp::export]]
-SEXP subsetFSTBare(Rcpp::StringVector& files, const Rcpp::List& subparsed, const Rcpp::NumericVector& dim, const SEXPTYPE& dtype);
+SEXP subsetFSTBare(const std::string& rootPath, const Rcpp::List& subparsed, const Rcpp::NumericVector& dim, const SEXPTYPE& dtype);
 
 // [[Rcpp::export]]
-SEXP subsetFST(Rcpp::StringVector& files, SEXP listOrEnv, const Rcpp::NumericVector& dim, 
+SEXP subsetFST(const std::string& rootPath, SEXP listOrEnv, const Rcpp::NumericVector& dim, 
                 SEXPTYPE dtype, SEXP reshape = R_NilValue, bool drop = false);
 
 

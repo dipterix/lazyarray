@@ -33,4 +33,9 @@ SEXP tik();
 // [[Rcpp::export]]
 SEXP tok(std::string msg, bool stop = false);
 
+std::string as_dirpath(std::string x);
+
+SEXP captureException( const std::exception& e );
+SEXP makeException( std::string msg );
+
 #endif // DIP_LAZYARRAY_UTILS_H

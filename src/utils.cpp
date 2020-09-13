@@ -1,6 +1,7 @@
 #include "utils.h"
 
 #include <chrono>
+#include <string>
 #include "common.h"
 using namespace Rcpp; 
 
@@ -8,6 +9,20 @@ static std::chrono::time_point<std::chrono::high_resolution_clock> _timer;
 static std::vector<double> _times = std::vector<double>(0);
 static std::vector<std::string> _timer_msg = std::vector<std::string>(0);
 static bool _timer_enabled = false;
+
+
+std::string as_dirpath(std::string x){
+  std::string re = "./";
+  if(x.size() > 0){
+    std::string ending = "/";
+    if(std::equal(ending.rbegin(), ending.rend(), x.rbegin())){
+      re = x;
+    } else {
+      re = x + ending;
+    }
+  }
+  return re;
+}
 
 SEXP tik(){
   if(!_timer_enabled){
@@ -238,7 +253,19 @@ SEXPTYPE getSexpType(SEXP x){
   return TYPEOF(x);
 }
 
+SEXP captureException( const std::exception& e ){
+  std::ostringstream msg;
+  msg << "c++: Captured error: " << e.what();
+  StringVector re = {msg.str()};
+  re.attr("class") = "lazyarray-error";
+  return wrap(re);
+}
 
+SEXP makeException( std::string msg ){
+  StringVector re = {msg};
+  re.attr("class") = "lazyarray-error";
+  return wrap(re);
+}
 
 /*** R
 f <- function(...){

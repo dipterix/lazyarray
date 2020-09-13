@@ -57,12 +57,12 @@ lazyLoadOld <- function(files, partition_locations, partition_dim, ndim, value_t
     .Call(`_lazyarray_lazyLoadOld`, files, partition_locations, partition_dim, ndim, value_type)
 }
 
-subsetFSTBare <- function(files, subparsed, dim, dtype) {
-    .Call(`_lazyarray_subsetFSTBare`, files, subparsed, dim, dtype)
+subsetFSTBare <- function(rootPath, subparsed, dim, dtype) {
+    .Call(`_lazyarray_subsetFSTBare`, rootPath, subparsed, dim, dtype)
 }
 
-subsetFST <- function(files, listOrEnv, dim, dtype, reshape = NULL, drop = FALSE) {
-    .Call(`_lazyarray_subsetFST`, files, listOrEnv, dim, dtype, reshape, drop)
+subsetFST <- function(rootPath, listOrEnv, dim, dtype, reshape = NULL, drop = FALSE) {
+    .Call(`_lazyarray_subsetFST`, rootPath, listOrEnv, dim, dtype, reshape, drop)
 }
 
 getLazyThread <- function(max = FALSE) {
