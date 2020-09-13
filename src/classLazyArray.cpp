@@ -9,32 +9,63 @@ using namespace lazyarray;
  ***************************************************************/
 
 RcppExport SEXP LazyArrayBase__new(SEXP dimension, SEXP dataType) {
-  std::vector<int64_t> v2 = as<std::vector<int64_t>>(dimension);
-  SEXPTYPE v3 = as<SEXPTYPE>(dataType);
-  Rcpp::XPtr<LazyArrayBase> ptr( new LazyArrayBase(v2,v3), true );
-  return ptr;
+  SEXP res = R_NilValue;
+  try {
+    std::vector<int64_t> v2 = as<std::vector<int64_t>>(dimension);
+    SEXPTYPE v3 = as<SEXPTYPE>(dataType);
+    Rcpp::XPtr<LazyArrayBase> ptr( new LazyArrayBase(v2,v3), true );
+    res = wrap(ptr);
+  } catch ( const Rcpp::exception& e ) {
+    res = captureException(e);
+  } catch ( const std::exception& e ){
+    res = captureException(e);
+  } catch (...){
+    res = makeException("c++: Unknown error");
+  }
+  return res;
+  
 }
 
 RcppExport SEXP FstArray__new(SEXP rootPath, SEXP dimension, SEXP dataType, SEXP compression, SEXP uniformEncoding) {
-
-  std::string v1 = as<std::string>(rootPath);
-  std::vector<int64_t> v2 = as<std::vector<int64_t>>(dimension);
-  SEXPTYPE v3 = as<SEXPTYPE>(dataType);
-  int v4 = as<int>(compression);
-  bool v5 = as<bool>(uniformEncoding);
-  Rcpp::XPtr<FstArray> ptr( new FstArray(v1,v2,v3,v4,v5), true );
-  return ptr;
+  SEXP res = R_NilValue;
+  try {
+    std::string v1 = as<std::string>(rootPath);
+    std::vector<int64_t> v2 = as<std::vector<int64_t>>(dimension);
+    SEXPTYPE v3 = as<SEXPTYPE>(dataType);
+    int v4 = as<int>(compression);
+    bool v5 = as<bool>(uniformEncoding);
+    Rcpp::XPtr<FstArray> ptr( new FstArray(v1,v2,v3,v4,v5), true );
+    res = wrap(ptr);
+  } catch ( const Rcpp::exception& e ) {
+    res = captureException(e);
+  } catch ( const std::exception& e ){
+    res = captureException(e);
+  } catch (...){
+    res = makeException("c++: Unknown error");
+  }
+  return res;
+  
 }
 
 RcppExport SEXP FstMatrix__new(SEXP rootPath, SEXP dimension, SEXP transposed, SEXP dataType, SEXP compression, SEXP uniformEncoding) {
-  std::string v1 = as<std::string>(rootPath);
-  std::vector<int64_t> v2 = as<std::vector<int64_t>>(dimension);
-  SEXPTYPE v3 = as<SEXPTYPE>(dataType);
-  int v4 = as<int>(compression);
-  bool v5 = as<bool>(uniformEncoding);
-  bool v6 = as<bool>(transposed);
-  Rcpp::XPtr<FstMatrix> ptr( new FstMatrix(v1,v2,v6,v3,v4,v5), true );
-  return ptr;
+  SEXP res = R_NilValue;
+  try {
+    std::string v1 = as<std::string>(rootPath);
+    std::vector<int64_t> v2 = as<std::vector<int64_t>>(dimension);
+    SEXPTYPE v3 = as<SEXPTYPE>(dataType);
+    int v4 = as<int>(compression);
+    bool v5 = as<bool>(uniformEncoding);
+    bool v6 = as<bool>(transposed);
+    Rcpp::XPtr<FstMatrix> ptr( new FstMatrix(v1,v2,v6,v3,v4,v5), true );
+    res = wrap(ptr);
+  } catch ( const Rcpp::exception& e ) {
+    res = captureException(e);
+  } catch ( const std::exception& e ){
+    res = captureException(e);
+  } catch (...){
+    res = makeException("c++: Unknown error");
+  }
+  return res;
 }
 
 
@@ -43,61 +74,129 @@ RcppExport SEXP FstMatrix__new(SEXP rootPath, SEXP dimension, SEXP transposed, S
  ***************************************************************/
 
 RcppExport SEXP LazyArrayBase__nparts(SEXP xp) {
-  Rcpp::XPtr<LazyArrayBase> ptr(xp);
-  return wrap(ptr->nparts());
+  SEXP res = R_NilValue;
+  try {
+    Rcpp::XPtr<LazyArrayBase> ptr(xp);
+    res = wrap(ptr->nparts());
+  } catch ( const Rcpp::exception& e ) {
+    res = captureException(e);
+  } catch ( const std::exception& e ){
+    res = captureException(e);
+  } catch (...){
+    res = makeException("c++: Unknown error");
+  }
+  return res;
 }
 
 RcppExport SEXP LazyArrayBase__dataType(SEXP xp) {
-  Rcpp::XPtr<LazyArrayBase> ptr(xp);
-  SEXPTYPE dtype = ptr->dataType();
-  switch(dtype){
-  case REALSXP: return wrap("double");
-  case INTSXP: return wrap("integer");
-  case CPLXSXP: return wrap("complex");
-  case STRSXP: return wrap("character");
-  default: return wrap("unknown");
+  SEXP res = R_NilValue;
+  try {
+    Rcpp::XPtr<LazyArrayBase> ptr(xp);
+    SEXPTYPE dtype = ptr->dataType();
+    switch(dtype){
+    case REALSXP: 
+      res = wrap("double");
+      break;
+    case INTSXP: 
+      res = wrap("integer");
+      break;
+    case CPLXSXP:
+      res = wrap("complex");
+      break;
+    case STRSXP: 
+      res = wrap("character");
+      break;
+    default: 
+      res = makeException("Unknown data type");
+    }
+  } catch ( const Rcpp::exception& e ) {
+    res = captureException(e);
+  } catch ( const std::exception& e ){
+    res = captureException(e);
+  } catch (...){
+    res = makeException("c++: Unknown error");
   }
+  return res;
 }
 
 RcppExport SEXP LazyArrayBase__partLen(SEXP xp) {
-  Rcpp::XPtr<LazyArrayBase> ptr(xp);
-  return wrap(ptr->partLen());
+  SEXP res;
+  try {
+    Rcpp::XPtr<LazyArrayBase> ptr(xp);
+    res = wrap(ptr->partLen());
+  } catch ( const Rcpp::exception& e ) {
+    res = captureException(e);
+  } catch ( const std::exception& e ){
+    res = captureException(e);
+  } catch (...){
+    res = makeException("c++: Unknown error");
+  }
+  return res;
 }
 
 RcppExport SEXP LazyArrayBase__getDim(SEXP xp) {
-  Rcpp::XPtr<LazyArrayBase> ptr(xp);
-  return wrap(ptr->getDim());
+  SEXP res;
+  try {
+    Rcpp::XPtr<LazyArrayBase> ptr(xp);
+    res = wrap(ptr->getDim());
+  } catch ( const Rcpp::exception& e ) {
+    res = captureException(e);
+  } catch ( const std::exception& e ){
+    res = captureException(e);
+  } catch (...){
+    res = makeException("c++: Unknown error");
+  }
+  return res;
 }
 
 RcppExport SEXP LazyArrayBase__readOnly(SEXP xp, SEXP setReadOnly = R_NilValue) {
-  Rcpp::XPtr<LazyArrayBase> ptr(xp);
-  
-  if(!Rf_isNull(setReadOnly)){
-    // set 
-    bool v = as<bool>(setReadOnly);
-    ptr->setReadOnly(v);
+  SEXP res;
+  try {
+    Rcpp::XPtr<LazyArrayBase> ptr(xp);
+    if(!Rf_isNull(setReadOnly)){
+      // set 
+      bool v = as<bool>(setReadOnly);
+      ptr->setReadOnly(v);
+    }
+    res = wrap(ptr->getReadOnly());
+  } catch ( const Rcpp::exception& e ) {
+    res = captureException(e);
+  } catch ( const std::exception& e ){
+    res = captureException(e);
+  } catch (...){
+    res = makeException("c++: Unknown error");
   }
-  return wrap(ptr->getReadOnly());
+  return res;
 }
 
 RcppExport SEXP LazyArrayBase__validate(SEXP xp, SEXP stopIfError = R_NilValue) {
-  Rcpp::XPtr<LazyArrayBase> ptr(xp);
-  if(!Rf_isNull(stopIfError)){
-    return wrap(ptr->validate());
-  } else {
-    bool v = as<bool>(stopIfError);
-    return wrap(ptr->validate(v));
+  SEXP res;
+  try {
+    Rcpp::XPtr<LazyArrayBase> ptr(xp);
+    if(!Rf_isNull(stopIfError)){
+      res = wrap(ptr->validate());
+    } else {
+      bool v = as<bool>(stopIfError);
+      res = wrap(ptr->validate(v));
+    }
+  } catch ( const Rcpp::exception& e ) {
+    res = captureException(e);
+  } catch ( const std::exception& e ){
+    res = captureException(e);
+  } catch (...){
+    res = makeException("c++: Unknown error");
   }
+  return res;
 }
 
 RcppExport SEXP LazyArrayBase__subset(SEXP xp, SEXP listOrEnv, SEXP reshape = R_NilValue, SEXP drop = R_NilValue) {
-  Rcpp::XPtr<LazyArrayBase> ptr(xp);
-  bool isDrop = false;
-  if(!Rf_isNull(drop)){
-    isDrop = as<bool>(drop);
-  }
   SEXP res;
   try {
+    Rcpp::XPtr<LazyArrayBase> ptr(xp);
+    bool isDrop = false;
+    if(!Rf_isNull(drop)){
+      isDrop = as<bool>(drop);
+    }
     res = ptr->subset(listOrEnv, reshape, isDrop);
   } catch ( const Rcpp::exception& e ) {
     res = captureException(e);
@@ -110,9 +209,9 @@ RcppExport SEXP LazyArrayBase__subset(SEXP xp, SEXP listOrEnv, SEXP reshape = R_
 }
 
 RcppExport SEXP LazyArrayBase__subsetAssign(SEXP xp, SEXP values, SEXP listOrEnv) {
-  Rcpp::XPtr<LazyArrayBase> ptr(xp);
   SEXP res;
   try {
+    Rcpp::XPtr<LazyArrayBase> ptr(xp);
     res = ptr->subsetAssign(values, listOrEnv);
   } catch ( const Rcpp::exception& e ) {
     res = captureException(e);

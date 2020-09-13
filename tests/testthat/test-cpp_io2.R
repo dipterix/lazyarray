@@ -14,7 +14,7 @@ on.exit({
 x = array(1:prod(dim), dim)
 a = as.lazyarray(x, path = f)
 loader_f <- function(..., samp, reshape, drop){
-  lazyarray:::subsetFST(a$get_partition_fpath(), environment(), dim, getSexpType(samp), reshape, drop)
+  lazyarray:::subsetFST(dirname(a$storage_path), environment(), dim, getSexpType(samp), reshape, drop)
 }
 
 lazy_test_unit <- function(samp_data, x_alt){
@@ -237,7 +237,7 @@ test_that("Loader2 with matrix", {
   x <- matrix(1:16,4)
   a <- as.lazyarray(x)
   loader_f <- function(i, ...){
-    lazyarray:::subsetFST(a$get_partition_fpath(), environment(), dim(x), getSexpType(1L), NULL, FALSE)
+    lazyarray:::subsetFST(dirname(a$storage_path), environment(), dim(x), getSexpType(1L), NULL, FALSE)
   }
   
   expect_equivalent(loader_f(), x)

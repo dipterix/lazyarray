@@ -5,20 +5,21 @@ ensure_path <- function(x){
   x
 }
 
-make_methods_base <- function(x){
+#' @export
+register_lazyarray <- function(x){
   x@method_list$validate <- function(stopIfError = TRUE){
     x@method_list$with_instance(function(pointer){
       .Call("LazyArrayBase__validate", pointer, stopIfError)
     })
   }
-  x@method_list$subset <- function(..., reshape = NULL, drop = TRUE){ 
-    env <- environment()
+  x@method_list$subset <- function(env, reshape = NULL, drop = TRUE){ 
+    stopifnot(is.environment(env) || is.list(env))
     x@method_list$with_instance(function(pointer){
       .Call("LazyArrayBase__subset", pointer, env, reshape, isTRUE(drop))
     })
   }
-  x@method_list$subsetAssign <- function(..., value){ 
-    env <- environment()
+  x@method_list$subsetAssign <- function(env, value){ 
+    stopifnot(is.environment(env) || is.list(env))
     x@method_list$with_instance(function(pointer){
       .Call("LazyArrayBase__subsetAssign", pointer, value, env)
     })
@@ -58,6 +59,7 @@ make_methods_lazymatrix <- function(x){
   invisible(x)
 }
 
+#' @export
 check_data_type <- function(dataType){
   if(is.numeric(dataType)){
     dataType <- as.integer(dataType)
@@ -71,16 +73,17 @@ check_data_type <- function(dataType){
 }
 
 
-#' @exportClass LazyArrayBase
+#' @title Base S4 class for 'LazyArray'
+#' @export
 setClass("LazyArrayBase", slots = c(
   classname = "character", method_list = "list", 
   binding_list = "list", dimension = "numeric", dataType = "integer"
-))
+), contains = 'oldClass')
 
-#' @exportClass FstArray
+#' @export
 setClass("FstArray", contains = "LazyArrayBase", slots = c(rootPath = "character", compression = "integer", uniformEncoding = "logical"))
 
-#' @exportClass FstMatrix
+#' @export
 setClass("FstMatrix", contains = "FstArray", slots = c(transposed = "logical"))
 
 setMethod(
@@ -113,7 +116,7 @@ setMethod(
       pointer <- .Call("FstArray__new", .Object@rootPath, .Object@dimension, .Object@dataType, .Object@compression, .Object@uniformEncoding)
       FUN(pointer)
     }
-    .Object <- make_methods_base(.Object)
+    .Object <- register_lazyarray(.Object)
     .Object
   }
 )
@@ -142,11 +145,26 @@ setMethod(
       FUN(.Call("FstMatrix__new", .Object@rootPath, .Object@dimension, 
                 .Object@transposed, .Object@dataType, .Object@compression, .Object@uniformEncoding))
     }
-    .Object <- make_methods_base(.Object)
+    .Object <- register_lazyarray(.Object)
     .Object <- make_methods_lazymatrix(.Object)
     .Object
   }
 )
 
+setOldClass(c("FstMatrix", "FstArray", "LazyArrayBase"))
+
+#' @export
+lazyarray2 <- function(dim, storage_mode = "double", ..., type = 'fstarray'){
+  UseMethod("lazyarray2", structure(type, class = type))
+}
+
+#' @export
+lazyarray2.fstarray <- function(path, dim, storage_mode = "double", ..., type){
+  x <- new("FstArray", path, dim, storage_mode, ...)
+  # new_s3class <- c(oldClass(x), "LazyArrayBase")
+  # attributes(new_s3class) <- attributes(oldClass(x))
+  # oldClass(x) <- new_s3class
+  x
+}
 
 

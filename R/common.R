@@ -2,14 +2,14 @@
 #' @description Set number of threads used by 'OpenMP' for both \code{lazyarray}
 #' and \code{fstcore} packages.
 #' @param nr_of_threads number of CPU cores to use, or \code{NULL} to 
-#' stay unchanged
+#' stay unchanged, default is \code{getOption('lazyarray.nthreads')}
 #' @param reset_after_fork whether to reset after forked process
 #' @param max whether return maximum available threads
 #' @return Number of cores currently used.
 #' @seealso \code{\link[fstcore]{threads_fstlib}}
 #' @name lazyarray-threads
 #' @export
-set_lazy_threads <- function(nr_of_threads = NULL, reset_after_fork = NULL){
+set_lazy_threads <- function(nr_of_threads = getOption('lazyarray.nthreads'), reset_after_fork = NULL){
   if(!is.null(reset_after_fork)){
     reset_after_fork <- isTRUE(reset_after_fork)
   } 

@@ -28,6 +28,7 @@ Description: Multi-threaded serialization of compressed array that
 Imports: 
     utils,
     methods,
+    parallel,
     stats,
     Rcpp (>= 1.0.5),
     R6,

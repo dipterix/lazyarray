@@ -145,7 +145,7 @@ SEXP dropDimension(SEXP x){
   default:
     stop("unknown dimension storage type");
   }
-  if(ii >= 2){
+  if(ii == ndims){} else if(ii >= 2){
     SETLENGTH(new_dim, ii);
     
     Rf_setAttrib(x, wrap("dim"), new_dim);

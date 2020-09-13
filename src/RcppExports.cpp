@@ -876,17 +876,6 @@ RcppExport SEXP _lazyarray_RcppExport_registerCCallable() {
     return R_NilValue;
 }
 
-RcppExport SEXP FstArray__new(SEXP, SEXP, SEXP, SEXP, SEXP);
-RcppExport SEXP FstMatrix__new(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
-RcppExport SEXP LazyArrayBase__dataType(SEXP);
-RcppExport SEXP LazyArrayBase__getDim(SEXP);
-RcppExport SEXP LazyArrayBase__nparts(SEXP);
-RcppExport SEXP LazyArrayBase__partLen(SEXP);
-RcppExport SEXP LazyArrayBase__readOnly(SEXP, SEXP);
-RcppExport SEXP LazyArrayBase__subset(SEXP, SEXP, SEXP, SEXP);
-RcppExport SEXP LazyArrayBase__subsetAssign(SEXP, SEXP, SEXP);
-RcppExport SEXP LazyArrayBase__validate(SEXP, SEXP);
-
 static const R_CallMethodDef CallEntries[] = {
     {"_lazyarray_setLazyBlockSize", (DL_FUNC) &_lazyarray_setLazyBlockSize, 1},
     {"_lazyarray_getLazyBlockSize", (DL_FUNC) &_lazyarray_getLazyBlockSize, 0},
@@ -917,16 +906,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lazyarray_tik", (DL_FUNC) &_lazyarray_tik, 0},
     {"_lazyarray_tok", (DL_FUNC) &_lazyarray_tok, 2},
     {"_lazyarray_RcppExport_registerCCallable", (DL_FUNC) &_lazyarray_RcppExport_registerCCallable, 0},
-    {"FstArray__new",               (DL_FUNC) &FstArray__new,               5},
-    {"FstMatrix__new",              (DL_FUNC) &FstMatrix__new,              6},
-    {"LazyArrayBase__dataType",     (DL_FUNC) &LazyArrayBase__dataType,     1},
-    {"LazyArrayBase__getDim",       (DL_FUNC) &LazyArrayBase__getDim,       1},
-    {"LazyArrayBase__nparts",       (DL_FUNC) &LazyArrayBase__nparts,       1},
-    {"LazyArrayBase__partLen",      (DL_FUNC) &LazyArrayBase__partLen,      1},
-    {"LazyArrayBase__readOnly",     (DL_FUNC) &LazyArrayBase__readOnly,     2},
-    {"LazyArrayBase__subset",       (DL_FUNC) &LazyArrayBase__subset,       4},
-    {"LazyArrayBase__subsetAssign", (DL_FUNC) &LazyArrayBase__subsetAssign, 3},
-    {"LazyArrayBase__validate",     (DL_FUNC) &LazyArrayBase__validate,     2},
     {NULL, NULL, 0}
 };
 
