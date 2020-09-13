@@ -29,6 +29,10 @@ loc2idx3 <- function(locations, parent_dim) {
     .Call(`_lazyarray_loc2idx3`, locations, parent_dim)
 }
 
+extractSlices <- function(listOrEnv, ndims) {
+    .Call(`_lazyarray_extractSlices`, listOrEnv, ndims)
+}
+
 parseSlices <- function(listOrEnv, dim, pos_subscript = TRUE) {
     .Call(`_lazyarray_parseSlices`, listOrEnv, dim, pos_subscript)
 }
@@ -51,6 +55,10 @@ lazyMapReduceByPartition <- function(fileName, colSel, start, end = NULL, custom
 
 lazyLoadOld <- function(files, partition_locations, partition_dim, ndim, value_type) {
     .Call(`_lazyarray_lazyLoadOld`, files, partition_locations, partition_dim, ndim, value_type)
+}
+
+subsetFSTBare <- function(files, subparsed, dim, dtype) {
+    .Call(`_lazyarray_subsetFSTBare`, files, subparsed, dim, dtype)
 }
 
 subsetFST <- function(files, listOrEnv, dim, dtype, reshape = NULL, drop = FALSE) {
@@ -95,6 +103,14 @@ stopIfNot <- function(isValid, message, stopIfError = TRUE) {
 
 getSexpType <- function(x) {
     .Call(`_lazyarray_getSexpType`, x)
+}
+
+tik <- function() {
+    .Call(`_lazyarray_tik`)
+}
+
+tok <- function(msg, stop = FALSE) {
+    .Call(`_lazyarray_tok`, msg, stop)
 }
 
 # Register entry points for exported C++ functions

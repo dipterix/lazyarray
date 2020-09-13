@@ -9,23 +9,9 @@
 
 using namespace Rcpp;
 
-SEXP subsetFST(StringVector& files, SEXP listOrEnv, NumericVector& dim, SEXPTYPE dtype, SEXP reshape, bool drop){
-  if(dim.size() < 2){
-    stop("Dimension size must >= 2");
-  }
-  
-  R_xlen_t npart = *(dim.end() - 1);
-  
-  if( npart != files.size() ){
-    stop("Partition size does not match with file counts.");
-  }
-  
-  const List subparsed = parseAndScheduleBlocks(listOrEnv, dim);
-  
-  checkUserInterrupt();
-  
+SEXP subsetFSTBare(StringVector& files, const List& subparsed, const NumericVector& dim, const SEXPTYPE& dtype) {
+  tok("S subsetFSTBare");
   SEXP res = R_NilValue;
-  
   switch(dtype){
   case REALSXP: 
     res = subsetFST_double(files, dim, subparsed);
@@ -43,6 +29,27 @@ SEXP subsetFST(StringVector& files, SEXP listOrEnv, NumericVector& dim, SEXPTYPE
   default:
     stop("Unknown data type: only numeric, integer, character, and complex arrays are supported - provided SEXPTYPE: " + std::to_string(dtype));
   }
+  tok("E subsetFSTBare");
+  return res;
+}
+
+SEXP subsetFST(StringVector& files, SEXP listOrEnv, const NumericVector& dim, SEXPTYPE dtype, SEXP reshape, bool drop){
+  if(dim.size() < 2){
+    stop("Dimension size must >= 2");
+  }
+  
+  R_xlen_t npart = *(dim.end() - 1);
+  
+  if( npart != files.size() ){
+    stop("Partition size does not match with file counts.");
+  }
+  
+  const List subparsed = parseAndScheduleBlocks(listOrEnv, dim);
+  
+  checkUserInterrupt();
+  
+  SEXP res = subsetFSTBare(files, subparsed, dim, dtype);
+  
   reshapeOrDrop(res, reshape, drop); 
   return res;
 }

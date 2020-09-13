@@ -4,6 +4,7 @@
 #include "interfaces/entry.h"
 #include "interfaces/LazyArrayBase.h"
 #include "interfaces/FstArray.h"
+#include "interfaces/FstMatrix.h"
 //include "interfaces/BMArray.h"
 
 // namespace lazyarray {

@@ -25,6 +25,9 @@ SEXP subsetIdx2(const Rcpp::List sliceIdx, Rcpp::NumericVector dim, bool pos_sub
 // should not be called directly, use parseAndScheduleBlocks instead
 Rcpp::List scheduleIndexing(SEXP locations, SEXP dimension);
 
+// [[Rcpp::export]]
+Rcpp::List extractSlices(SEXP listOrEnv, const R_xlen_t& ndims);
+
 // parseSlices = subsetIdx or subsetIdx2
 // WARNING: Always use pos_subscript if you want to use subset or subsetAssign functions in lazyarray
 // pos_subscript=false subset is not implemented

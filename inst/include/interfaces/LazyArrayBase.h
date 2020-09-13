@@ -29,7 +29,7 @@ public:
     // validate();
   }
   
-  virtual ~LazyArrayBase(){}
+  virtual ~LazyArrayBase(){ destroy(); }
   
   // dimension of array
   
@@ -38,12 +38,13 @@ public:
   int64_t nparts() const { return _nparts; }
   int64_t partLen() const { return _partLen; }
   int dataType() const { return static_cast<int>(_dataType); }
-  bool readOnly() const { return _readOnly; }
-  NumericVector getDim() const { return int64t2NumericVector(_dimension); }
+  bool getReadOnly() const { return _readOnly; }
+  virtual NumericVector getDim() { return int64t2NumericVector(_dimension); }
   
   // setter
-  void readOnly(const bool isReadOnly){
+  bool setReadOnly(const bool isReadOnly){
     _readOnly = isReadOnly;
+    return _readOnly;
   }
   
   // abstract methods
@@ -61,7 +62,7 @@ public:
    * @param stopIfError if true, stop or raise exceptions when errors are detected
    * @return true or false whether the array passes the validation test
    */
-  virtual bool validate(bool stopIfError = true) {
+  bool validate(bool stopIfError = true) {
     bool isValid = true;
     isValid = isValid && stopIfNot(_dimension.size() >= 2, "LazyArray must have dimension size >= 2", stopIfError);
     isValid = isValid && stopIfNot(*(_dimension.end() - 1) == _nparts, "LazyArray dimensions inconsistent with number of partitions", stopIfError);
@@ -95,7 +96,7 @@ public:
    *                  blocks to read from array. 
    */
   inline Rcpp::List scheduleBlocks(SEXP sliceIdx) {
-    NumericVector dim = getDim();
+    NumericVector dim = int64t2NumericVector(_dimension);
     return parseAndScheduleBlocks(sliceIdx, dim);
   };
   
@@ -116,6 +117,10 @@ protected:
   int64_t              _totalLen;
   SEXPTYPE             _dataType;
   bool                 _readOnly;
+  
+protected:
+  virtual void destroy(){}
+  
 };
 
 }

@@ -10,6 +10,7 @@ template <typename T, typename I>
 bool contains(T vec, SEXP el);
 
 SEXP getListElement(SEXP list, const char *str); 
+SEXP getListElement2(SEXP list, const char *str, const SEXP ifNull); 
 
 // [[Rcpp::export]]
 SEXP dropDimension(SEXP x);
@@ -26,5 +27,10 @@ bool stopIfNot(const bool isValid, const std::string& message, bool stopIfError 
 // [[Rcpp::export]]
 SEXPTYPE getSexpType(SEXP x);
 
+// [[Rcpp::export]]
+SEXP tik();
+
+// [[Rcpp::export]]
+SEXP tok(std::string msg, bool stop = false);
 
 #endif // DIP_LAZYARRAY_UTILS_H

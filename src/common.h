@@ -80,6 +80,4 @@ R_xlen_t setLazyBlockSize(R_xlen_t size);
 R_xlen_t getLazyBlockSize();
 
 
-
-
 #endif // DIP_LAZYARRAY_COMMON_H

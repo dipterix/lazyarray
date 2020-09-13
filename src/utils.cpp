@@ -1,7 +1,42 @@
 #include "utils.h"
 
+#include <chrono>
 #include "common.h"
 using namespace Rcpp; 
+
+static std::chrono::time_point<std::chrono::high_resolution_clock> _timer;
+static std::vector<double> _times = std::vector<double>(0);
+static std::vector<std::string> _timer_msg = std::vector<std::string>(0);
+static bool _timer_enabled = false;
+
+SEXP tik(){
+  if(!_timer_enabled){
+    _timer = std::chrono::high_resolution_clock::now();
+    _times.clear();
+    _timer_msg.clear();
+    _timer_enabled = true;
+    return wrap(true);
+  }
+  return wrap(false);
+}
+
+SEXP tok(std::string msg, bool stop){
+  if(!_timer_enabled){ return R_NilValue; }
+  std::chrono::time_point<std::chrono::high_resolution_clock> now = std::chrono::high_resolution_clock::now();
+  uint64_t delta = std::chrono::duration_cast<std::chrono::nanoseconds>(now - _timer).count();
+  _times.push_back((double)(delta) / 1000000.0);
+  _timer_msg.push_back(msg);
+  if(!stop){
+    return wrap(delta);
+  } else {
+    Rcpp::List re = Rcpp::List::create(
+      _["messages"] = wrap(_timer_msg),
+      _["time"] = wrap(_times)
+    );
+    _timer_enabled = false;
+    return wrap(re);
+  }
+}
 
 
 template <typename T, typename I>
@@ -15,7 +50,29 @@ bool contains(T vec, SEXP el){
 }
 
 SEXP getListElement(SEXP list, const char *str){
-  SEXP elmt = R_NilValue, names = Rf_getAttrib(list, R_NamesSymbol);
+  if( Rf_isNull(list) ){
+    return R_NilValue;
+  }
+  SEXP elmt = R_NilValue;
+  SEXP names = Rf_getAttrib(list, R_NamesSymbol);
+  
+  const String str_copy(str);
+  
+  for (R_len_t i = 0; i < Rf_length(list); i++){
+    if(str_copy == String(CHAR(STRING_ELT(names, i)))) {
+      elmt = VECTOR_ELT(list, i);
+      break;
+    }
+  }
+  return elmt;
+}
+
+SEXP getListElement2(SEXP list, const char *str, const SEXP ifNull){
+  if( Rf_isNull(list) ){
+    return ifNull;
+  }
+  SEXP elmt = ifNull;
+  SEXP names = Rf_getAttrib(list, R_NamesSymbol);
   
   const String str_copy(str);
   
@@ -180,6 +237,8 @@ bool stopIfNot(const bool isValid, const std::string& message, bool stopIfError)
 SEXPTYPE getSexpType(SEXP x){
   return TYPEOF(x);
 }
+
+
 
 /*** R
 f <- function(...){

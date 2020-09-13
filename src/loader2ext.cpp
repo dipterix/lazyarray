@@ -6,7 +6,7 @@
 #include "openMPInterface.h"
 using namespace Rcpp;
 
-SEXP subsetFST_double(StringVector& files, NumericVector& dim, const List& subparsed){
+SEXP subsetFST_double(StringVector& files, const NumericVector& dim, const List& subparsed){
   Rcpp::Timer _rcpp_timer;
   
   const int subset_mode = subparsed["subset_mode"];
@@ -521,7 +521,7 @@ SEXP subsetFST_double(StringVector& files, NumericVector& dim, const List& subpa
   
 }
 
-SEXP subsetFST_integer(StringVector& files, NumericVector& dim, const List& subparsed){
+SEXP subsetFST_integer(StringVector& files, const NumericVector& dim, const List& subparsed){
   
   const int subset_mode = subparsed["subset_mode"];
   const NumericVector target_dimension = subparsed["target_dimension"];
@@ -1029,7 +1029,7 @@ ptr_res += subblock_len;
   
 }
 
-SEXP subsetFST_character(StringVector& files, NumericVector& dim, const List& subparsed){
+SEXP subsetFST_character(StringVector& files, const NumericVector& dim, const List& subparsed){
   
   const int subset_mode = subparsed["subset_mode"];
   const NumericVector target_dimension = subparsed["target_dimension"];
@@ -1502,7 +1502,7 @@ SEXP subsetFST_character(StringVector& files, NumericVector& dim, const List& su
 }
 
 
-SEXP subsetFST_complex(StringVector& files, NumericVector& dim, const List& subparsed){
+SEXP subsetFST_complex(StringVector& files, const NumericVector& dim, const List& subparsed){
   
   const int subset_mode = subparsed["subset_mode"];
   const NumericVector target_dimension = subparsed["target_dimension"];
