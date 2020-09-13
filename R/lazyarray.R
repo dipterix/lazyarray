@@ -190,102 +190,33 @@ lazyarray <- function(
   # join_tensors(ts, temporary = FALSE)
   
   # Otherwise meta_name does not exist
-  if(multipart){
-    if(length(file_names) != dim[[length(dim)]]){
-      stop('path exists, but cannot find meta file. Please specify file_names\n',
-           '  See ', sQuote('?lazyarray'), ' for more details')
-    }
-    path <- normalizePath(path)
-    fs <- file.path(path, sprintf('%s%s.fst', prefix, file_names))
-    fe <- file.exists(fs)
-    
-    if(any(fe)){
-      fs <- fs[fe]
-      ds <- sapply(fs, function(f){
-        # f=ts[[1]]$swap_file
-        tryCatch({
-          meta <- fstMeta(normalizePath(f))
-          if(inherits(meta, 'fst_error')){ stop(meta) }
-          meta
-        }, error = function(e){
-          stop('Cannot open array file(s). \n  ', f)
-        })
-        c(meta$nrOfCols, meta$nrOfRows)
-      }, USE.NAMES = FALSE)
-      
-      ds <- unique(t(ds))
-      if(length(ds) != 2){
-        stop('All existing files must be homogeneous')
-      }
-      
-      mp_dim <- dim[-length(dim)]
-      len1 <- prod(mp_dim)
-      len2 <- ds[[1]] * ds[[2]]
-      
-      if(storage_format == 'complex'){
-        len1 <- len1 * 2
-      }
-      
-      
-      if(len1 != len2){
-        stop('Dimension provided does not match with existing files')
-      }
-      
-      if(multipart_mode == 1){
-        last_d <- ds[[1]]
-        if(storage_format != 'complex'){ last_d <- last_d * 2 }
-        if(last_d != 2){
-          stop('Multipart mode=1, partition dimension should be ', 
-               paste(mp_dim, collapse = 'x'), 
-               'x1, but invalid dimension found.')
-        }
-        part_dimension <- c(mp_dim, 1)
-      } else {
-        part_dimension <- mp_dim
-      }
-    } else {
-      # no file exists, new data?
-      if( multipart_mode == 1 ){
-        part_dimension <- dim
-        part_dimension[length(dim)] <- 1
-      } else if(multipart_mode == 2){
-        part_dimension <- dim[-length(dim)]
-      }
-    }
-  } else {
-    if(length(file_names) == 0){
-      file_names <- ''
-    }
-    if(length(file_names) != 1){
-      stop('path exists, but cannot find meta file. Please specify file_names\n',
-           '  See ', sQuote('?lazyarray'), ' for more details')
-    }
-    path <- normalizePath(path)
-    f <- file.path(path, sprintf('%s%s.fst', prefix, file_names))
-    
-    meta <- tryCatch({
-      meta <- fstMeta(f)
-      if(inherits(meta, 'fst_error')){
-        stop(meta)
-      }
-      meta
-    }, error = function(e){
-      stop('Cannot open array file(s). \n  ', f)
+  nparts <- dim[[length(dim)]]
+  path <- normalizePath(path)
+  fs <- file.path(path, sprintf('%s.fst', seq_len(nparts)))
+  fe <- file.exists(fs)
+  
+  if(any(fe)){
+    fs <- fs[fe]
+    ds <- lapply2(fs, function(f){
+      # f=ts[[1]]$swap_file
+      tryCatch({
+        meta <- fstMeta(normalizePath(f))
+        if(inherits(meta, 'fst_error')){ stop(meta) }
+        meta
+      }, error = function(e){
+        stop('Cannot open array file(s). \n  ', f)
+      })
+      c(meta$nrOfCols, meta$nrOfRows)
     })
     
-    last_dim <- meta$nrOfCols
-    prev_dim <- meta$nrOfRows
     
-    if(last_dim != dim[length(dim)] || (last_dim * prev_dim != prod(dim))){
-      stop(sprintf(
-        'Array dimension not match, expected last dimension to be %d and total length %d, but last dim(%d) and length(%d) is given',
-        last_dim, prev_dim * last_dim, dim[[length(dim)]], prod(dim)
-      ))
+    ds <- unique(ds)
+    if(length(ds) != 1){
+      stop('All existing files must be homogeneous')
     }
-    
-    part_dimension <- dim
   }
-  
+  part_dimension <- dim
+  part_dimension[length(dim)] <- 1
   
   
   # make a meta file
@@ -295,12 +226,9 @@ lazyarray <- function(
     storage_format = storage_format,
     dim = dim,
     dimnames = dimnames,
-    partitioned = multipart,
-    prefix = prefix,
     part_dimension = part_dimension,
     postfix = '.fst',
-    compress_level = compress_level,
-    file_names = file_names
+    compress_level = compress_level
   )
   
   meta_path <- file.path(path, meta_name)

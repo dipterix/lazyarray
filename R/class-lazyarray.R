@@ -15,7 +15,6 @@ ClassLazyArray <- R6::R6Class(
     lazyarray_version = 0,
     file_format = 'fst',
     storage_format = character(0),
-    partitioned = FALSE,
     postfix = '.fst',
     read_only = TRUE,
     compress_level = 50,
@@ -40,7 +39,6 @@ ClassLazyArray <- R6::R6Class(
         storage_format = private$storage_format,
         dim = private$.dim,
         dimnames = private$.dimnames,
-        partitioned = private$partitioned,
         part_dimension = private$part_dimension,
         postfix = private$postfix,
         compress_level = private$compress_level
@@ -55,7 +53,6 @@ ClassLazyArray <- R6::R6Class(
     print = function(...){
       cat("<LazyArray> (", private$storage_format, ')\n', sep = '')
       cat('Dimension:\t', paste(sprintf('%d ', private$.dim), collapse = 'x '), '\n')
-      cat('Partitioned:\t', private$partitioned , '\n')
       cat('File format:\t', sprintf('[part]%s', private$postfix), '\n')
       invisible(self)
     },
@@ -85,10 +82,10 @@ ClassLazyArray <- R6::R6Class(
       }
       
       # check format: fst? hdf5?
-      if(length(meta$file_format) != 1){
-        stop("File format not found.")
+      if(length(meta$file_format) == 1){
+        private$file_format <- meta$file_format
       }
-      private$file_format <- meta$file_format
+      
       
       # check data format
       if(length(meta$storage_format) != 1 ||
@@ -111,7 +108,6 @@ ClassLazyArray <- R6::R6Class(
       private$.dimnames <- meta$dimnames
       
       # check whether the file is partitioned
-      private$partitioned <- TRUE
       private$part_dimension <- meta$part_dimension
       
       n_part <- meta$dim[[length(meta$dim)]]
@@ -209,14 +205,10 @@ ClassLazyArray <- R6::R6Class(
       if(prod(dim) == 0){
         stop("zero length array is not supported.")
       }
-      if(private$partitioned){
-        # dim is allowed to vary along the last dimension, like c(1,2,4,3) -> c(1,2,4,5)
-        if(!all(dif[-length(dif)] == 0)){
-          stop('For multi-part arrays, you can only increase/decrease the last dimension, like from c(12,3,1) to c(12,3,X)')
-        } 
-      } else if(!all(dif == 0)){
-        stop("For single data file arrays, you cannot change dimension once initialized")
-      }
+      # dim is allowed to vary along the last dimension, like c(1,2,4,3) -> c(1,2,4,5)
+      if(!all(dif[-length(dif)] == 0)){
+        stop('For multi-part arrays, you can only increase/decrease the last dimension, like from c(12,3,1) to c(12,3,X)')
+      } 
       # check dimension vs dim
       mis_dimnames <- missing(dimnames)
       if(mis_dimnames){
@@ -252,16 +244,12 @@ ClassLazyArray <- R6::R6Class(
     
     #' @description Whether partitioned based on the last dimension
     is_multi_part = function(){
-      private$partitioned
+      TRUE
     },
     
     #' @description Returns dimension of each partition
     partition_dim = function(){
-      if(private$partitioned){
-        private$part_dimension
-      }else{
-        private$.dim
-      }
+      private$part_dimension
     },
     
     #' @description Internally used to calculate min, max, range, and sum 
@@ -455,57 +443,48 @@ ClassLazyArray <- R6::R6Class(
         dim(value) <- val_dim
       }
       
-      if(private$partitioned){
-        part_dimension <- private$part_dimension
-        partition_locations <-  lapply(part_dimension, seq_len)
-        
-        part_idx <- idx
-        part_idx[[ndim]] <- 1
-        args <- c(list(x = quote(x)), part_idx, list(value = quote(value)))
-        
-        
-        # We save for each file
-        ii <- 1
-        last_idx <- idx[[ndim]]
-        
-        partial_len <- prod(val_dim[-ndim])
-        lapply(seq_len(val_dim[[ndim]]), function(ii){
-          value <- value[partial_len * (ii-1) + seq_len(partial_len)]
+      
+      part_dimension <- private$part_dimension
+      partition_locations <-  lapply(part_dimension, seq_len)
+      
+      part_idx <- idx
+      part_idx[[ndim]] <- 1
+      args <- c(list(x = quote(x)), part_idx, list(value = quote(value)))
+      
+      
+      # We save for each file
+      ii <- 1
+      last_idx <- idx[[ndim]]
+      
+      partial_len <- prod(val_dim[-ndim])
+      lapply(seq_len(val_dim[[ndim]]), function(ii){
+        value <- value[partial_len * (ii-1) + seq_len(partial_len)]
         # })
         # apply(value, ndim, function(value){
-          # get partition file
-          part <- last_idx[[ii]]
-          if(part > self$dim[ndim]){
-            return(FALSE)
-          }
-          fname <- self$get_partition_fpath(part, full_path = TRUE)
-          
-          if(prod(vapply(part_idx, length, 1L)) == prod(self$partition_dim())){
-            x <- array(value, dim = self$partition_dim())
-          } else {
-            x <- lazyLoadOld(fname, partition_locations, part_dimension, self$ndim, private$sample_data())
-            # x <- do.call('[<-', args)
-            # make a call instead of do.call
-            call <- as.call(c(list(quote(`[<-`)), args))
-            x <- eval(call)
-          }
-          
-          cpp_create_lazyarray(x, part_dimension, fname, compression = private$compress_level, uniformEncoding = TRUE)
-          
-          self$`@generate_parition_summary`(part, x = x)
-          
-          ii <<- ii+1
-          return(TRUE)
-        })
+        # get partition file
+        part <- last_idx[[ii]]
+        if(part > self$dim[ndim]){
+          return(FALSE)
+        }
+        fname <- self$get_partition_fpath(part, full_path = TRUE)
         
-      } else {
-        fname <- self$get_partition_fpath(full_path = TRUE)
-        partition_locations <- lapply(self$dim, seq_len)
-        args <- c(list(x = quote(x)), idx, list(value = quote(value)))
-        x <- lazyLoadOld(fname, partition_locations, self$dim, self$ndim, private$sample_data())
-        x <- do.call('[<-', args)
-        cpp_create_lazyarray(x, self$dim, fname, compression = private$compress_level, uniformEncoding = TRUE)
-      }
+        if(prod(vapply(part_idx, length, 1L)) == prod(self$partition_dim())){
+          x <- array(value, dim = self$partition_dim())
+        } else {
+          x <- lazyLoadOld(fname, partition_locations, part_dimension, self$ndim, private$sample_data())
+          # x <- do.call('[<-', args)
+          # make a call instead of do.call
+          call <- as.call(c(list(quote(`[<-`)), args))
+          x <- eval(call)
+        }
+        
+        cpp_create_lazyarray(x, part_dimension, fname, compression = private$compress_level, uniformEncoding = TRUE)
+        
+        self$`@generate_parition_summary`(part, x = x)
+        
+        ii <<- ii+1
+        return(TRUE)
+      })
       invisible(self)
     },
     
@@ -661,13 +640,7 @@ ClassLazyArray <- R6::R6Class(
       # check which files need to be loaded
       files <- self$get_partition_fpath(idx[[self$ndim]], full_path = TRUE)
       
-      if(private$partitioned){
-        if(length(self$partition_dim()) == self$ndim){
-          idx[[self$ndim]] <- 1
-        }else{
-          idx[[self$ndim]] <- NULL
-        }
-      }
+      idx[[self$ndim]] <- 1
       re <- lazyLoadOld(files, partition_locations = idx, 
                          partition_dim = self$partition_dim(), 
                          ndim = self$ndim, value_type = private$sample_data())

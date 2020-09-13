@@ -21,6 +21,7 @@
 #' @param enabled whether multiple-process strategy is enabled
 #' @param strategy strategies to apply, see \code{\link[future]{plan}} for
 #' some of the details. For \code{"callr"} plan, please install package
+#' @param workers number of 'CPU' cores to use. 
 #' \code{future.callr}.
 #' @param ... Further passed to \code{\link[future]{plan}}
 #' 

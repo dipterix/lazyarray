@@ -60,7 +60,7 @@ create_lazyarray <- function(
     storage_format = storage_format,
     dim = dim,
     dimnames = dimnames,
-    partitioned = multipart,
+    # partitioned = multipart,
     # prefix = prefix,
     part_dimension = part_dimension,
     postfix = '.fst',
@@ -100,9 +100,6 @@ create_lazyarray <- function(
 #' dimnames(x) <- list(dim1 = as.character(1:3),
 #'                     dim2 = letters[1:4], 
 #'                     dim3 = LETTERS[1:6])
-#' x[ , , 'B', drop = FALSE]
-#' 
-#' # Non-standard subset methods
 #' names(dimnames(x))
 #' subset(x, dim1 ~ dim1 == '2', dim2 ~ dim2 %in% c('a', 'c'), drop = TRUE)
 #' 

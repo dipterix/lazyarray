@@ -33,9 +33,6 @@ dim(x) <- c(3,4,6)
 dimnames(x) <- list(dim1 = as.character(1:3),
                     dim2 = letters[1:4], 
                     dim3 = LETTERS[1:6])
-x[ , , 'B', drop = FALSE]
-
-# Non-standard subset methods
 names(dimnames(x))
 subset(x, dim1 ~ dim1 == '2', dim2 ~ dim2 \%in\% c('a', 'c'), drop = TRUE)
 
