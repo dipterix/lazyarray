@@ -29,7 +29,7 @@ x <- rnorm(3e6); dim(x) <- c(10, 100, 100, 30)
 
 # Save array to a path
 path <- tempfile()
-arr <- create_lazyarray(path, 'double', dim(x), multipart = TRUE)
+arr <- create_lazyarray(path, 'double', dim(x))
 arr[] <- x
 ```
 

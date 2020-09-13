@@ -19,9 +19,7 @@ lazymatrix <- function(
     # not exists, create a new one
     arr <- create_lazyarray(
       path = path, storage_format = storage_format, dim = dim,
-      dimnames = dimnames,  compress_level = compress_level, prefix = prefix,
-      multipart = multipart, multipart_mode = multipart_mode, 
-      file_names = file_names, meta_name = meta_name)
+      dimnames = dimnames,  compress_level = compress_level, meta_name = meta_name)
     return(as.lazymatrix(arr, read_only = read_only))
   }
   

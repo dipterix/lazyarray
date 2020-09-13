@@ -7,14 +7,10 @@
 #' @seealso \code{\link{create_lazyarray}}, \code{\link{load_lazyarray}}
 #' @param x R vector, matrix, array or \code{LazyArray}, \code{LazyMatrix}
 #' @param path path to a local drive where array data is stored
-#' @param file_names partition names without prefix nor extension; see details
 #' @param storage_format data type, choices are \code{"double"}, 
 #' \code{"integer"}, \code{"character"}, and \code{"complex"}; see details
 #' @param dim integer vector, dimension of array, see \code{\link{dim}}
 #' @param dimnames list of vectors, names of each dimension, see \code{\link{dimnames}}
-#' @param multipart whether to split array into multiple partitions, default is true
-#' @param prefix character prefix of array partition
-#' @param multipart_mode 1, or 2, mode of partition, see \code{\link{create_lazyarray}}
 #' @param compress_level 0 to 100, level of compression. 0 means
 #' no compression, 100 means maximum compression. For persistent data,
 #' it's recommended to set 100. Default is 50.
@@ -41,8 +37,8 @@
 #' other packages such as \code{'fst'}, the partition files must be homogeneous,
 #' meaning the stored data length, dimension, and storage type must be the same.
 #' Because \code{'fstcore'} package stores data in data frame internally, 
-#' the column name must be 'V1', 'V2', etc. for non-complex elements or 
-#' 'V1R', 'V1I', ... for complex numbers (real and imaginary data are stored
+#' the column name must be 'V1' for non-complex elements or 
+#' 'V1R', 'V1I' for complex numbers (real and imaginary data are stored
 #' in different columns).
 #' 
 #' @examples 
@@ -147,10 +143,7 @@
 #' @export
 lazyarray <- function(
   path, storage_format, dim, dimnames = NULL, 
-  multipart = TRUE, prefix = "",
-  multipart_mode = 1, compress_level = 50L,
-  file_names = list('', seq_len(dim[[length(dim)]]))[[multipart + 1]],
-  meta_name = 'lazyarray.meta', 
+  compress_level = 50L, meta_name = 'lazyarray.meta', 
   read_only = FALSE, quiet = FALSE, ...
 ){
   if(file.exists(path) && !dir.exists(path)){
@@ -161,9 +154,8 @@ lazyarray <- function(
     # not exists, create a new one
     arr <- create_lazyarray(
       path = path, storage_format = storage_format, dim = dim,
-      dimnames = dimnames,  compress_level = compress_level, prefix = prefix,
-      multipart = multipart, multipart_mode = multipart_mode, 
-      file_names = file_names, meta_name = meta_name)
+      dimnames = dimnames,  compress_level = compress_level, 
+      meta_name = meta_name)
     if(read_only){
       arr <- load_lazyarray(path = path, read_only = TRUE, 
                             meta_name = meta_name)

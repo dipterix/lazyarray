@@ -22,7 +22,7 @@ Load Lazy Array from Given Path
 \examples{
 
 path <- tempfile()
-create_lazyarray(path, 'double', dim = c(3,4,5), multipart = TRUE)
+create_lazyarray(path, 'double', dim = c(3,4,5))
 
 x <- load_lazyarray(path, read_only = FALSE)
 x[2,3:4, 2:1] <- 1:4
@@ -49,8 +49,7 @@ x$remove_data()
 
 # Speed test
 path <- tempfile()
-x <- create_lazyarray(path, 'complex', dim = c(100,200,300,20), 
-                      multipart = TRUE, multipart_mode = 1)
+x <- create_lazyarray(path, 'complex', dim = c(100,200,300,20))
 
 # automatically call x$remove_data() upon garbage collection
 x$flag_auto_clean(TRUE)

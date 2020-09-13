@@ -12,12 +12,10 @@ ClassLazyArray <- R6::R6Class(
     .dim = integer(0),
     .dimnames = NULL,
     .meta_name = 'lazyarray.meta',
-    .file_names = NULL,
     lazyarray_version = 0,
     file_format = 'fst',
     storage_format = character(0),
     partitioned = FALSE,
-    prefix = "",
     postfix = '.fst',
     read_only = TRUE,
     compress_level = 50,
@@ -43,11 +41,9 @@ ClassLazyArray <- R6::R6Class(
         dim = private$.dim,
         dimnames = private$.dimnames,
         partitioned = private$partitioned,
-        prefix = private$prefix,
         part_dimension = private$part_dimension,
         postfix = private$postfix,
-        compress_level = private$compress_level,
-        file_names = private$.file_names
+        compress_level = private$compress_level
       )
       save_yaml(meta, private$.path)
     }
@@ -60,7 +56,7 @@ ClassLazyArray <- R6::R6Class(
       cat("<LazyArray> (", private$storage_format, ')\n', sep = '')
       cat('Dimension:\t', paste(sprintf('%d ', private$.dim), collapse = 'x '), '\n')
       cat('Partitioned:\t', private$partitioned , '\n')
-      cat('File format:\t', sprintf('%s[part]%s', private$prefix, private$postfix), '\n')
+      cat('File format:\t', sprintf('[part]%s', private$postfix), '\n')
       invisible(self)
     },
     
@@ -115,48 +111,10 @@ ClassLazyArray <- R6::R6Class(
       private$.dimnames <- meta$dimnames
       
       # check whether the file is partitioned
-      if(isTRUE(meta$partitioned)){
-        private$partitioned <- TRUE
-        private$part_dimension <- meta$part_dimension
-      }
+      private$partitioned <- TRUE
+      private$part_dimension <- meta$part_dimension
       
       n_part <- meta$dim[[length(meta$dim)]]
-      if(length(meta$file_names) == 0){
-        # compatible with old format
-        if(private$partitioned){
-          private$.file_names <- seq_len(n_part)
-        }else{
-          private$.file_names <- ''
-        }
-      } else {
-        if(!private$partitioned){
-          if(length(meta$file_names) == 0 ){
-            private$.file_names <- ''
-          } else if( length(meta$file_names) != 1 || !is.character(meta$file_names) ){
-            stop('file_names invalid, either NULL or character(1) when multipart=FALSE')
-          } else {
-            private$.file_names <- meta$file_names
-          }
-        } else {
-          if(length(meta$file_names) == 0 ){
-            private$.file_names <- seq_len(n_part)
-          } else if( length(meta$file_names) != n_part ){
-            stop('file_names length invalid, either NULL or length of ',
-                 n_part, ' when multipart=TRUE')
-          } else {
-            if(any(duplicated(meta$file_names))){
-              stop('file_names has duplicated values')
-            }
-            private$.file_names <- meta$file_names
-          }
-        }
-      }
-      
-      
-      if(length(meta$prefix) != 1){
-        stop('Invalid prefix')
-      }
-      private$prefix <- meta$prefix
       
       if(!length(meta$postfix) || !is.character(meta$postfix)){
         stop("Cannot find file postfix")
@@ -447,14 +405,15 @@ ClassLazyArray <- R6::R6Class(
     #' @param summary_file whether to return summary file
     #' @return Character file name or full path
     get_partition_fpath = function(part, full_path = TRUE, summary_file = FALSE){
-      if(private$partitioned){
-        nm <- private$.file_names[part]
-        res <- sprintf('%s%s%s', private$prefix, nm, private$postfix)
+      if(missing(part)){
+        part <- seq_len(self$npart)
       } else {
-        # ignore part
-        nm <- private$.file_names[[1]]
-        res <- sprintf('%s%s%s', private$prefix, nm, private$postfix)
+        part <- as.integer(part)
+        if(base::anyNA(part) || any(part <= 0)){
+          stop("partition number must be all positive")
+        }
       }
+      res <- sprintf('%s%s', part, private$postfix)
       if(full_path){
         res <- file.path(private$.dir, res)
       }
@@ -556,7 +515,7 @@ ClassLazyArray <- R6::R6Class(
     `@generate_parition_summary` = function(part, x){
       
       if(!self$is_multi_part()){ return() }
-      if(length(private$.file_names) < part){
+      if(self$npart < part){
         stop("Wrong partition number: ", part)
       }
       
@@ -766,7 +725,7 @@ ClassLazyArray <- R6::R6Class(
     
     #' @field npart number of partitions
     npart = function(){
-      length(private$.file_names)
+      private$.dim[[length(private$.dim)]]
     },
     
     #' @field filesize total disk space used in gigatypes

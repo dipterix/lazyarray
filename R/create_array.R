@@ -8,62 +8,27 @@
 #' \code{"integer"}, \code{"character"}, and \code{"complex"}
 #' @param dim integer vector, dimension of array, see \code{\link{dim}}
 #' @param dimnames list of vectors, names of each dimension, see \code{\link{dimnames}}
-#' @param multipart whether to split array into multiple partitions, default is true
-#' @param prefix character prefix of array partition
-#' @param multipart_mode 1, or 2, mode of partition, see details.
-#' @param file_names data file names without prefix/extensions; see details.
 #' @param compress_level 0 to 100, level of compression. 0 means
 #' no compression, 100 means maximum compression. For persistent data,
 #' it's recommended to set 100. Default is 50.
 #' @param meta_name header file name, default is \code{"lazyarray.meta"}
 #' @return A \code{ClassLazyArray} instance
 #' @details Lazy array stores array into hard drive, and load them on
-#' demand. It differs from other packages such as \code{"bigmemory"}
-#' that the internal reading uses multi-thread, which gains significant 
+#' demand. It uses multi-thread which gains significant 
 #' speed boost on solid state drives. 
 #' 
-#' One lazy array contains two parts: data file(s) and a meta file.
-#' The data files can be stored in two ways: non-partitioned and 
-#' partitioned. 
-#' 
-#' For non-partitioned data array, the dimension is 
-#' set at the creation of the array and cannot be mutable once created
-#' 
-#' For partitioned data array, there are also two partition modes, 
-#' defined by \code{`multipart_mode`}. For mode 1, each partition 
-#' has the same dimension size as the array. The last dimension is \code{1}.
-#' For example, a data with dimension \code{c(2,3,5)} 
-#' partitioned with mode 1 will have each partition dimension stored
-#' with \code{c(2,3,1)}. For mode 2, the last dimension will be dropped
-#' when storing each partitions.
-#' 
-#' \code{file_names} is used when irregular partition names should be used.
-#' If \code{multipart=FALSE}, the whole array is stored in a single file under
-#' \code{path}. The file name is \code{<prefix><file_name>.fst}. For example,
-#' by default \code{prefix=""}, and \code{file_name=""}, then \code{path/.fst}
-#' stores the array data. If \code{multipart=TRUE}, then \code{file_names}
-#' should be a character vector of length equal to array's last dimension. A
-#' \code{3x4x5} array has 5 partitions, each partition name follows 
-#' \code{<prefix><file_name>.fst} convention, and one can always use
-#' \code{arr$get_partition_fpath()} to find location of partition files.
 #' For examples, see \code{\link{lazyarray}}.
 #' 
 #' @export
 create_lazyarray <- function(
-  path, storage_format, dim, dimnames = NULL, compress_level = 50L, prefix = "",
-  multipart = TRUE, multipart_mode = 1, file_names = NULL,
+  path, storage_format, dim, dimnames = NULL, compress_level = 50L, 
   meta_name = 'lazyarray.meta'){
   
   if(dir.exists(path)){
     stop("Path already exists.")
   }
-  
-  if(!multipart){
-    warning("multipart=FALSE is deprecated. It will magically disappear in the next version.")
-  }
-  if(multipart_mode != 1){
-    warning("multipart_mode != 1 is deprecated. It will magically disappear in the next version.")
-  }
+  multipart <- TRUE
+  multipart_mode <- 1L
   
   stopifnot(compress_level <= 100 & compress_level >= 0)
   
@@ -75,29 +40,6 @@ create_lazyarray <- function(
     stop("dimnames must be a list or NULL")
   }
   
-  if( multipart ){
-    if(length(file_names) == 0){
-      file_names <- seq_len(dim[[length(dim)]])
-    } else if(length(file_names) != dim[[length(dim)]]){
-      stop(sprintf(
-        'file_names must be either NULL or length of %d when multipart=TRUE',
-        dim[[length(dim)]]
-      ))
-    }
-  } else {
-    if(!length(file_names)){
-      file_names <- ''
-    } else {
-      if(length(file_names) > 1 || !isTRUE(is.character(file_names))){
-        stop('file_names must be either NULL or character(1) when multipart=FALSE')
-      }
-    }
-  }
-  
-  if(any(duplicated(file_names))){
-    stop('file_names has duplicated values. Please rename them.')
-  }
-  
   # check if dim matches with dimnames
   if(!is.null(dimnames)){
     dnl <- sapply(dimnames, length)
@@ -106,19 +48,10 @@ create_lazyarray <- function(
     }
   }
   
-  multipart <- as.logical(multipart)
-  if(multipart && multipart_mode == 2 && length(dim) == 2){
-    warning("multipart_mode must be 1 for matrix")
-  }
-  
   stopifnot(storage_format %in% c('character', 'double', 'integer', 'complex'))
   
-  if( multipart_mode == 1 ){
-    part_dimension <- dim
-    part_dimension[length(dim)] <- 1
-  } else if(multipart_mode == 2){
-    part_dimension <- dim[-length(dim)]
-  }
+  part_dimension <- dim
+  part_dimension[length(dim)] <- 1
   
   #####
   meta <- list(
@@ -128,11 +61,11 @@ create_lazyarray <- function(
     dim = dim,
     dimnames = dimnames,
     partitioned = multipart,
-    prefix = prefix,
+    # prefix = prefix,
     part_dimension = part_dimension,
     postfix = '.fst',
-    compress_level = compress_level,
-    file_names = file_names
+    compress_level = compress_level
+    # file_names = file_names
   )
   
   dir.create(path, showWarnings = TRUE, recursive = TRUE)
@@ -156,7 +89,7 @@ create_lazyarray <- function(
 #' @examples 
 #' 
 #' path <- tempfile()
-#' create_lazyarray(path, 'double', dim = c(3,4,5), multipart = TRUE)
+#' create_lazyarray(path, 'double', dim = c(3,4,5))
 #' 
 #' x <- load_lazyarray(path, read_only = FALSE)
 #' x[2,3:4, 2:1] <- 1:4
@@ -183,8 +116,7 @@ create_lazyarray <- function(
 #' 
 #' # Speed test
 #' path <- tempfile()
-#' x <- create_lazyarray(path, 'complex', dim = c(100,200,300,20), 
-#'                       multipart = TRUE, multipart_mode = 1)
+#' x <- create_lazyarray(path, 'complex', dim = c(100,200,300,20))
 #' 
 #' # automatically call x$remove_data() upon garbage collection
 #' x$flag_auto_clean(TRUE)
