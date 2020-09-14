@@ -38,4 +38,7 @@ std::string as_dirpath(std::string x);
 SEXP captureException( const std::exception& e );
 SEXP makeException( std::string msg );
 
+// [[Rcpp::export]]
+SEXP subsetAssignVector(SEXP x, int64_t start, SEXP value);
+
 #endif // DIP_LAZYARRAY_UTILS_H

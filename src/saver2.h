@@ -8,7 +8,7 @@
 // [[Rcpp::interfaces(r, cpp)]]
 
 // [[Rcpp::export]]
-SEXP subsetAssignFST(const SEXP values, const Rcpp::StringVector& files, SEXP listOrEnv,
+SEXP subsetAssignFST(const SEXP values, const std::string& file, SEXP listOrEnv,
                      const Rcpp::NumericVector& dim, const SEXPTYPE& dtype,
                      int compression = 50, bool uniformEncoding = true);
 

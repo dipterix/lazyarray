@@ -5,7 +5,7 @@
 
 #include "Rcpp.h"
 
-void writeFstPartition_double(const Rcpp::NumericVector& values, const Rcpp::StringVector& files, 
+SEXP writeFstPartition_double(const Rcpp::NumericVector& values, const std::string& file, 
                               const Rcpp::NumericVector& dim, const Rcpp::List& subparsed,
                               int compression, bool uniformEncoding);
 

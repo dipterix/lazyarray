@@ -1,6 +1,7 @@
 #include "saver2.h"
 
 #include "common.h"
+#include "utils.h"
 #include "saver2ext.h"
 #include "indexConvert.h"
 using namespace Rcpp;
@@ -11,7 +12,7 @@ using namespace Rcpp;
 // SEXP subsetFST(Rcpp::StringVector& files, SEXP listOrEnv, Rcpp::NumericVector& dim, 
 //                SEXPTYPE dtype, SEXP reshape = R_NilValue, bool drop = false)
 
-SEXP subsetAssignFST(const SEXP values, const StringVector& files, SEXP listOrEnv,
+SEXP subsetAssignFST(const SEXP values, const std::string& file, SEXP listOrEnv,
                      const NumericVector& dim, const SEXPTYPE& dtype,
                      int compression, bool uniformEncoding){
   List subparsed = parseSlices(listOrEnv, dim);
@@ -23,11 +24,11 @@ SEXP subsetAssignFST(const SEXP values, const StringVector& files, SEXP listOrEn
   //   
   //   
   // }
-  
+  std::string file_alt = as_dirpath(file);
   
   switch(dtype){
   case REALSXP:
-    writeFstPartition_double(as<NumericVector>(values), files, dim, subparsed, compression, uniformEncoding);
+    writeFstPartition_double(as<NumericVector>(values), file_alt, dim, subparsed, compression, uniformEncoding);
     break;
   default:
     stop("Unknown data type, only int(13), double(14), complex(15), string(16) are allows");

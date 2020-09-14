@@ -23,7 +23,7 @@ SEXP subsetIdx(Rcpp::Environment expr_env, Rcpp::NumericVector dim, bool pos_sub
 SEXP subsetIdx2(const Rcpp::List sliceIdx, Rcpp::NumericVector dim, bool pos_subscript = false);
 
 // should not be called directly, use parseAndScheduleBlocks instead
-Rcpp::List scheduleIndexing(SEXP locations, SEXP dimension);
+Rcpp::List scheduleIndexing(SEXP locations, SEXP dimension, bool forceSchedule = false);
 
 // [[Rcpp::export]]
 Rcpp::List extractSlices(SEXP listOrEnv, const R_xlen_t& ndims);
@@ -36,7 +36,7 @@ Rcpp::List parseSlices(SEXP listOrEnv, Rcpp::NumericVector dim, bool pos_subscri
 
 // parseAndScheduleBlocks = parseSlices + scheduleIndexing
 // [[Rcpp::export]]
-Rcpp::List parseAndScheduleBlocks(SEXP sliceIdx, Rcpp::NumericVector dim);
+Rcpp::List parseAndScheduleBlocks(SEXP sliceIdx, Rcpp::NumericVector dim, bool forceSchedule = false);
 
 // [[Rcpp::export]]
 SEXP reshapeOrDrop(SEXP x, SEXP reshape = R_NilValue, bool drop = false);

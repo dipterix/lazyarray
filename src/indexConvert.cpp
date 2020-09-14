@@ -809,7 +809,7 @@ std::vector<int64_t> loc2idx3(SEXP locations, std::vector<int64_t>& parent_dim){
   return(re);
 }
 
-List scheduleIndexing(SEXP locations, SEXP dimension){
+List scheduleIndexing(SEXP locations, SEXP dimension, bool forceSchedule){
   R_xlen_t ndims = Rf_xlength(dimension);
   
   stopIfNot(
@@ -873,7 +873,7 @@ List scheduleIndexing(SEXP locations, SEXP dimension){
   int64_t subblock_idx_max = block_length;
   int64_t subblock_idx_size = block_length;
   SEXP buffer_loc;
-  if(buffer_margin >= 2 && block_size < BLOCKLARGE){
+  if(buffer_margin >= 2 && (block_size < BLOCKLARGE || forceSchedule)){
     buffer_expanded = true;
     buffer_loc = PROTECT(Rf_allocVector(VECSXP, buffer_margin));
     for(R_xlen_t ii = 0; ii < buffer_margin; ii++){
@@ -1003,32 +1003,32 @@ List parseSlices(SEXP listOrEnv, NumericVector dim, bool pos_subscript){
     // 2. f(i, ...){ parseAndScheduleBlocks(environment(), TRUE) }
     
     // check if `i` exists and valid
-    bool has_i = false;
-    
-    try {
-      Rcpp::Environment env = listOrEnv;
-      env.find("i");
-      has_i = true;
-    } catch (...){}
-    
-    
-    if(has_i){
-      // If i exists, scenario 2
-      subparsed = as<List>(subsetIdx(listOrEnv, dim, pos_subscript));
-    } else {
+    // bool has_i = false;
+    // 
+    // try {
+    //   Rcpp::Environment env = listOrEnv;
+    //   env.find("i");
+    //   has_i = true;
+    // } catch (...){}
+    // 
+    // 
+    // if(has_i){
+    //   // If i exists, scenario 2
+    //   subparsed = as<List>(subsetIdx(listOrEnv, dim, pos_subscript));
+    // } else {
       // i is missing, scenario 1
-      SEXP dots = Rf_findVarInFrame(listOrEnv, R_DotsSymbol);
-      int64_t idx_size = 0;
-      R_xlen_t ndims = dim.size();
-      Rcpp::List sliceIdx = Rcpp::List::create();
-      for(; dots != R_NilValue & dots != R_MissingArg; dots = CDR(dots), idx_size++ ){
-        if(idx_size >= ndims){
-          stop("Incorrect subscript dimensions, required: 0, 1, ndim.");
-        }
-        sliceIdx.push_back(CAR(dots));
+    SEXP dots = Rf_findVarInFrame(listOrEnv, R_DotsSymbol);
+    int64_t idx_size = 0;
+    R_xlen_t ndims = dim.size();
+    Rcpp::List sliceIdx = Rcpp::List::create();
+    for(; dots != R_NilValue & dots != R_MissingArg; dots = CDR(dots), idx_size++ ){
+      if(idx_size >= ndims){
+        stop("Incorrect subscript dimensions, required: 0, 1, ndim.");
       }
-      subparsed = as<List>(subsetIdx2(sliceIdx, dim, pos_subscript));
+      sliceIdx.push_back(CAR(dots));
     }
+    subparsed = as<List>(subsetIdx2(sliceIdx, dim, pos_subscript));
+    // }
     break;
   }
   case VECSXP:
@@ -1041,14 +1041,14 @@ List parseSlices(SEXP listOrEnv, NumericVector dim, bool pos_subscript){
   return subparsed;
 }
 
-List parseAndScheduleBlocks(SEXP listOrEnv, NumericVector dim){
+List parseAndScheduleBlocks(SEXP listOrEnv, NumericVector dim, bool forceSchedule){
   tok("S parseAndScheduleBlocks");
   List subparsed = parseSlices(listOrEnv, dim);  // VECSXP
   
   int subset_mode = subparsed["subset_mode"];
   if(subset_mode == 0){
     SEXP location_indices = subparsed["location_indices"];
-    List schedule = scheduleIndexing(location_indices, dim);
+    List schedule = scheduleIndexing(location_indices, dim, forceSchedule);
     subparsed["schedule"] = wrap(schedule);
   } else {
     subparsed["schedule"] = R_NilValue;

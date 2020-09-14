@@ -20,7 +20,7 @@ test_that("Subset lazyarray & lazymatrix", {
   
   expect_equivalent(x[,1], b[,1])
   expect_equivalent(x[,1,drop=FALSE], b[,1,drop=FALSE])
-
+  
   x <- t(x)  
   b <- t(b)
   
@@ -33,5 +33,78 @@ test_that("Subset lazyarray & lazymatrix", {
   
   expect_equal(x[,1], b[,1])
   expect_equal(x[,1,drop=FALSE], b[,1,drop=FALSE])
+  
+})
+
+test_that("Subset filearray", {
+  a <- array(rnorm(80), c(2,4,2,5))
+  f <- tempfile()
+  x <- FileArray$new(f, dim = dim(a), storage_format = 'double', read_only = FALSE)
+  x[] <- a
+  
+  expect_equal(x[], a)
+  
+  i <- sample(5,replace = TRUE)
+  i[sample(5,2)] <- NA
+  expect_equal(x[,,,i], a[,,,i])
+  
+  expect_equal(x[,,,-i], a[,,,-i[!is.na(i)]])
+  
+  j <- sample(2,replace = TRUE)
+  i <- sample(5,replace = TRUE)
+  expect_equal(x[,j,,-i], a[,j,,-i[!is.na(i)]])
+  expect_equal(x[j,j,j,-i], a[j,j,j,-i[!is.na(i)]])
+  
+  
+  x[,,,1] <- a[,,,2]
+  a[,,,1] <- a[,,,2]
+  
+  expect_equal(x[], a)
+  
+  i <- sample(5,replace = TRUE)
+  i[sample(5,2)] <- NA
+  expect_equal(x[,,,i], a[,,,i])
+  
+  expect_equal(x[,,,-i], a[,,,-i[!is.na(i)]])
+  
+  j <- sample(2,replace = TRUE)
+  i <- sample(5,replace = TRUE)
+  expect_equal(x[,j,,-i], a[,j,,-i[!is.na(i)]])
+  expect_equal(x[j,j,j,-i], a[j,j,j,-i[!is.na(i)]])
+  
+})
+
+test_that("Subset fstarray", {
+  a <- array(rnorm(80), c(2,4,2,5))
+  f <- tempfile()
+  x <- FstArray$new(f, dim = dim(a), storage_format = 'double', read_only = FALSE)
+  x[] <- a
+  
+  expect_equal(x[], a)
+  
+  i <- sample(5,replace = TRUE)
+  i[sample(5,2)] <- NA
+  expect_equal(x[,,,i], a[,,,i])
+  
+  expect_equal(x[,,,-i], a[,,,-i[!is.na(i)]])
+  
+  j <- sample(2,replace = TRUE)
+  i <- sample(5,replace = TRUE)
+  expect_equal(x[,j,,-i], a[,j,,-i[!is.na(i)]])
+  
+  x[,,,1] <- a[,,,2]
+  a[,,,1] <- a[,,,2]
+  
+  expect_equal(x[], a)
+  
+  i <- sample(5,replace = TRUE)
+  i[sample(5,2)] <- NA
+  expect_equal(x[,,,i], a[,,,i])
+  
+  expect_equal(x[,,,-i], a[,,,-i[!is.na(i)]])
+  
+  j <- sample(2,replace = TRUE)
+  expect_equal(x[,j,,-i], a[,j,,-i[!is.na(i)]])
+  expect_equal(x[j,j,j,-i], a[j,j,j,-i[!is.na(i)]])
   
 })

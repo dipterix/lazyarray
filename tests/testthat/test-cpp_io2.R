@@ -236,7 +236,7 @@ context("Loader2 with matrix")
 test_that("Loader2 with matrix", {
   x <- matrix(1:16,4)
   a <- as.lazyarray(x)
-  loader_f <- function(i, ...){
+  loader_f <- function(...){
     lazyarray:::subsetFST(dirname(a$storage_path), environment(), dim(x), getSexpType(1L), NULL, FALSE)
   }
   

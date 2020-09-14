@@ -267,6 +267,39 @@ SEXP makeException( std::string msg ){
   return wrap(re);
 }
 
+
+SEXP subsetAssignVector(SEXP x, int64_t start, SEXP value){
+  R_xlen_t xlen = Rf_xlength(x);
+  R_xlen_t vlen = Rf_xlength(value);
+  if(xlen < start + vlen - 1){
+    Rcpp::stop("c++: cannot subset-assign: value too lengthy");
+  }
+  SEXPTYPE typex = TYPEOF(x);
+  
+  SEXP value_alt = PROTECT(value);
+  if(TYPEOF(value) != typex){
+    UNPROTECT(1);
+    value_alt = PROTECT(Rf_coerceVector(value, typex));
+  }
+  SEXP x_alt = PROTECT(x);
+  
+  switch(typex){
+  case REALSXP: {
+    std::memcpy( REAL(x_alt) + start - 1, REAL(value_alt), vlen * sizeof(double));
+    break;
+  }
+  case INTSXP: {
+    std::memcpy( INTEGER(x_alt) + start - 1, INTEGER(value_alt), vlen * sizeof(int));
+    break;
+  }
+  default:
+    Rcpp::stop("c++: un-supported data types.");
+  }
+  UNPROTECT(2);
+  
+  return R_NilValue;
+}
+
 /*** R
 f <- function(...){
   parseDots(environment(), F)

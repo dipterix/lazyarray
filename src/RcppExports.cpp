@@ -234,21 +234,22 @@ RcppExport SEXP _lazyarray_parseSlices(SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP po
     return rcpp_result_gen;
 }
 // parseAndScheduleBlocks
-Rcpp::List parseAndScheduleBlocks(SEXP sliceIdx, Rcpp::NumericVector dim);
-static SEXP _lazyarray_parseAndScheduleBlocks_try(SEXP sliceIdxSEXP, SEXP dimSEXP) {
+Rcpp::List parseAndScheduleBlocks(SEXP sliceIdx, Rcpp::NumericVector dim, bool forceSchedule);
+static SEXP _lazyarray_parseAndScheduleBlocks_try(SEXP sliceIdxSEXP, SEXP dimSEXP, SEXP forceScheduleSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< SEXP >::type sliceIdx(sliceIdxSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type dim(dimSEXP);
-    rcpp_result_gen = Rcpp::wrap(parseAndScheduleBlocks(sliceIdx, dim));
+    Rcpp::traits::input_parameter< bool >::type forceSchedule(forceScheduleSEXP);
+    rcpp_result_gen = Rcpp::wrap(parseAndScheduleBlocks(sliceIdx, dim, forceSchedule));
     return rcpp_result_gen;
 END_RCPP_RETURN_ERROR
 }
-RcppExport SEXP _lazyarray_parseAndScheduleBlocks(SEXP sliceIdxSEXP, SEXP dimSEXP) {
+RcppExport SEXP _lazyarray_parseAndScheduleBlocks(SEXP sliceIdxSEXP, SEXP dimSEXP, SEXP forceScheduleSEXP) {
     SEXP rcpp_result_gen;
     {
         Rcpp::RNGScope rcpp_rngScope_gen;
-        rcpp_result_gen = PROTECT(_lazyarray_parseAndScheduleBlocks_try(sliceIdxSEXP, dimSEXP));
+        rcpp_result_gen = PROTECT(_lazyarray_parseAndScheduleBlocks_try(sliceIdxSEXP, dimSEXP, forceScheduleSEXP));
     }
     Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
     if (rcpp_isInterrupt_gen) {
@@ -540,26 +541,26 @@ BEGIN_RCPP
 END_RCPP
 }
 // subsetAssignFST
-SEXP subsetAssignFST(const SEXP values, const Rcpp::StringVector& files, SEXP listOrEnv, const Rcpp::NumericVector& dim, const SEXPTYPE& dtype, int compression, bool uniformEncoding);
-static SEXP _lazyarray_subsetAssignFST_try(SEXP valuesSEXP, SEXP filesSEXP, SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP dtypeSEXP, SEXP compressionSEXP, SEXP uniformEncodingSEXP) {
+SEXP subsetAssignFST(const SEXP values, const std::string& file, SEXP listOrEnv, const Rcpp::NumericVector& dim, const SEXPTYPE& dtype, int compression, bool uniformEncoding);
+static SEXP _lazyarray_subsetAssignFST_try(SEXP valuesSEXP, SEXP fileSEXP, SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP dtypeSEXP, SEXP compressionSEXP, SEXP uniformEncodingSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< const SEXP >::type values(valuesSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::StringVector& >::type files(filesSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type file(fileSEXP);
     Rcpp::traits::input_parameter< SEXP >::type listOrEnv(listOrEnvSEXP);
     Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type dim(dimSEXP);
     Rcpp::traits::input_parameter< const SEXPTYPE& >::type dtype(dtypeSEXP);
     Rcpp::traits::input_parameter< int >::type compression(compressionSEXP);
     Rcpp::traits::input_parameter< bool >::type uniformEncoding(uniformEncodingSEXP);
-    rcpp_result_gen = Rcpp::wrap(subsetAssignFST(values, files, listOrEnv, dim, dtype, compression, uniformEncoding));
+    rcpp_result_gen = Rcpp::wrap(subsetAssignFST(values, file, listOrEnv, dim, dtype, compression, uniformEncoding));
     return rcpp_result_gen;
 END_RCPP_RETURN_ERROR
 }
-RcppExport SEXP _lazyarray_subsetAssignFST(SEXP valuesSEXP, SEXP filesSEXP, SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP dtypeSEXP, SEXP compressionSEXP, SEXP uniformEncodingSEXP) {
+RcppExport SEXP _lazyarray_subsetAssignFST(SEXP valuesSEXP, SEXP fileSEXP, SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP dtypeSEXP, SEXP compressionSEXP, SEXP uniformEncodingSEXP) {
     SEXP rcpp_result_gen;
     {
         Rcpp::RNGScope rcpp_rngScope_gen;
-        rcpp_result_gen = PROTECT(_lazyarray_subsetAssignFST_try(valuesSEXP, filesSEXP, listOrEnvSEXP, dimSEXP, dtypeSEXP, compressionSEXP, uniformEncodingSEXP));
+        rcpp_result_gen = PROTECT(_lazyarray_subsetAssignFST_try(valuesSEXP, fileSEXP, listOrEnvSEXP, dimSEXP, dtypeSEXP, compressionSEXP, uniformEncodingSEXP));
     }
     Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
     if (rcpp_isInterrupt_gen) {
@@ -821,6 +822,42 @@ RcppExport SEXP _lazyarray_tok(SEXP msgSEXP, SEXP stopSEXP) {
     UNPROTECT(1);
     return rcpp_result_gen;
 }
+// subsetAssignVector
+SEXP subsetAssignVector(SEXP x, int64_t start, SEXP value);
+static SEXP _lazyarray_subsetAssignVector_try(SEXP xSEXP, SEXP startSEXP, SEXP valueSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< SEXP >::type x(xSEXP);
+    Rcpp::traits::input_parameter< int64_t >::type start(startSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type value(valueSEXP);
+    rcpp_result_gen = Rcpp::wrap(subsetAssignVector(x, start, value));
+    return rcpp_result_gen;
+END_RCPP_RETURN_ERROR
+}
+RcppExport SEXP _lazyarray_subsetAssignVector(SEXP xSEXP, SEXP startSEXP, SEXP valueSEXP) {
+    SEXP rcpp_result_gen;
+    {
+        Rcpp::RNGScope rcpp_rngScope_gen;
+        rcpp_result_gen = PROTECT(_lazyarray_subsetAssignVector_try(xSEXP, startSEXP, valueSEXP));
+    }
+    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
+    if (rcpp_isInterrupt_gen) {
+        UNPROTECT(1);
+        Rf_onintr();
+    }
+    bool rcpp_isLongjump_gen = Rcpp::internal::isLongjumpSentinel(rcpp_result_gen);
+    if (rcpp_isLongjump_gen) {
+        Rcpp::internal::resumeJump(rcpp_result_gen);
+    }
+    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
+    if (rcpp_isError_gen) {
+        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
+        UNPROTECT(1);
+        Rf_error(CHAR(rcpp_msgSEXP_gen));
+    }
+    UNPROTECT(1);
+    return rcpp_result_gen;
+}
 
 // validate (ensure exported C++ functions exist before calling them)
 static int _lazyarray_RcppExport_validate(const char* sig) { 
@@ -831,14 +868,14 @@ static int _lazyarray_RcppExport_validate(const char* sig) {
         signatures.insert("std::vector<int64_t>(*loc2idx3)(SEXP,std::vector<int64_t>&)");
         signatures.insert("Rcpp::List(*extractSlices)(SEXP,const R_xlen_t&)");
         signatures.insert("Rcpp::List(*parseSlices)(SEXP,Rcpp::NumericVector,bool)");
-        signatures.insert("Rcpp::List(*parseAndScheduleBlocks)(SEXP,Rcpp::NumericVector)");
+        signatures.insert("Rcpp::List(*parseAndScheduleBlocks)(SEXP,Rcpp::NumericVector,bool)");
         signatures.insert("SEXP(*reshapeOrDrop)(SEXP,SEXP,bool)");
         signatures.insert("SEXP(*subsetFSTBare)(const std::string&,const Rcpp::List&,const Rcpp::NumericVector&,const SEXPTYPE&)");
         signatures.insert("SEXP(*subsetFST)(const std::string&,SEXP,const Rcpp::NumericVector&,SEXPTYPE,SEXP,bool)");
         signatures.insert("int(*getLazyThread)(bool)");
         signatures.insert("int(*setLazyThread)(int,SEXP)");
         signatures.insert("bool(*hasOpenMP)()");
-        signatures.insert("SEXP(*subsetAssignFST)(const SEXP,const Rcpp::StringVector&,SEXP,const Rcpp::NumericVector&,const SEXPTYPE&,int,bool)");
+        signatures.insert("SEXP(*subsetAssignFST)(const SEXP,const std::string&,SEXP,const Rcpp::NumericVector&,const SEXPTYPE&,int,bool)");
         signatures.insert("SEXP(*dropDimension)(SEXP)");
         signatures.insert("int64_t(*prod2)(SEXP,bool)");
         signatures.insert("SEXP(*parseDots)(Rcpp::Environment&,bool)");
@@ -846,6 +883,7 @@ static int _lazyarray_RcppExport_validate(const char* sig) {
         signatures.insert("SEXPTYPE(*getSexpType)(SEXP)");
         signatures.insert("SEXP(*tik)()");
         signatures.insert("SEXP(*tok)(std::string,bool)");
+        signatures.insert("SEXP(*subsetAssignVector)(SEXP,int64_t,SEXP)");
     }
     return signatures.find(sig) != signatures.end();
 }
@@ -872,6 +910,7 @@ RcppExport SEXP _lazyarray_RcppExport_registerCCallable() {
     R_RegisterCCallable("lazyarray", "_lazyarray_getSexpType", (DL_FUNC)_lazyarray_getSexpType_try);
     R_RegisterCCallable("lazyarray", "_lazyarray_tik", (DL_FUNC)_lazyarray_tik_try);
     R_RegisterCCallable("lazyarray", "_lazyarray_tok", (DL_FUNC)_lazyarray_tok_try);
+    R_RegisterCCallable("lazyarray", "_lazyarray_subsetAssignVector", (DL_FUNC)_lazyarray_subsetAssignVector_try);
     R_RegisterCCallable("lazyarray", "_lazyarray_RcppExport_validate", (DL_FUNC)_lazyarray_RcppExport_validate);
     return R_NilValue;
 }
@@ -886,7 +925,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lazyarray_loc2idx3", (DL_FUNC) &_lazyarray_loc2idx3, 2},
     {"_lazyarray_extractSlices", (DL_FUNC) &_lazyarray_extractSlices, 2},
     {"_lazyarray_parseSlices", (DL_FUNC) &_lazyarray_parseSlices, 3},
-    {"_lazyarray_parseAndScheduleBlocks", (DL_FUNC) &_lazyarray_parseAndScheduleBlocks, 2},
+    {"_lazyarray_parseAndScheduleBlocks", (DL_FUNC) &_lazyarray_parseAndScheduleBlocks, 3},
     {"_lazyarray_reshapeOrDrop", (DL_FUNC) &_lazyarray_reshapeOrDrop, 3},
     {"_lazyarray_cpp_create_lazyarray", (DL_FUNC) &_lazyarray_cpp_create_lazyarray, 5},
     {"_lazyarray_lazyMapReduceByPartition", (DL_FUNC) &_lazyarray_lazyMapReduceByPartition, 6},
@@ -905,6 +944,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lazyarray_getSexpType", (DL_FUNC) &_lazyarray_getSexpType, 1},
     {"_lazyarray_tik", (DL_FUNC) &_lazyarray_tik, 0},
     {"_lazyarray_tok", (DL_FUNC) &_lazyarray_tok, 2},
+    {"_lazyarray_subsetAssignVector", (DL_FUNC) &_lazyarray_subsetAssignVector, 3},
     {"_lazyarray_RcppExport_registerCCallable", (DL_FUNC) &_lazyarray_RcppExport_registerCCallable, 0},
     {NULL, NULL, 0}
 };

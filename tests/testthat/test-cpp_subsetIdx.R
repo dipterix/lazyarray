@@ -1,6 +1,6 @@
 test_that("parseSlices with NAs", {
   dim = c(4, 9, 2)
-  a <- function(i,...){
+  a <- function(...){
     parseSlices(environment(), dim, FALSE)
   }
   
@@ -46,7 +46,7 @@ test_that("parseSlices with NAs", {
 
 test_that("parseSlices mode: 0", {
   dim = c(4, 9, 2)
-  a <- function(i,...){
+  a <- function(...){
     parseSlices(environment(), dim, FALSE)
   }
   
@@ -128,7 +128,7 @@ test_that("parseSlices mode: 0", {
 
 test_that("parseSlices mode: 2, 1", {
   dim = c(4, 9, 2)
-  a <- function(i,...){
+  a <- function(...){
     parseSlices(environment(), dim, FALSE)
   }
   
@@ -186,7 +186,7 @@ test_that("parseSlices mode: 2, 1", {
 
 test_that("parseSlices with NAs - always positive subscript", {
   dim = c(4, 9, 2)
-  a <- function(i,...){
+  a <- function(...){
     parseSlices(environment(), dim, TRUE)
   }
   
@@ -232,7 +232,7 @@ test_that("parseSlices with NAs - always positive subscript", {
 
 test_that("parseSlices mode: 0 - always positive subscript", {
   dim = c(4, 9, 2)
-  a <- function(i,...){
+  a <- function(...){
     parseSlices(environment(), dim, TRUE)
   }
   

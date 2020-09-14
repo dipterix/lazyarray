@@ -37,8 +37,8 @@ parseSlices <- function(listOrEnv, dim, pos_subscript = TRUE) {
     .Call(`_lazyarray_parseSlices`, listOrEnv, dim, pos_subscript)
 }
 
-parseAndScheduleBlocks <- function(sliceIdx, dim) {
-    .Call(`_lazyarray_parseAndScheduleBlocks`, sliceIdx, dim)
+parseAndScheduleBlocks <- function(sliceIdx, dim, forceSchedule = FALSE) {
+    .Call(`_lazyarray_parseAndScheduleBlocks`, sliceIdx, dim, forceSchedule)
 }
 
 reshapeOrDrop <- function(x, reshape = NULL, drop = FALSE) {
@@ -81,8 +81,8 @@ timesTwo <- function(input) {
     .Call(`_lazyarray_timesTwo`, input)
 }
 
-subsetAssignFST <- function(values, files, listOrEnv, dim, dtype, compression = 50L, uniformEncoding = TRUE) {
-    .Call(`_lazyarray_subsetAssignFST`, values, files, listOrEnv, dim, dtype, compression, uniformEncoding)
+subsetAssignFST <- function(values, file, listOrEnv, dim, dtype, compression = 50L, uniformEncoding = TRUE) {
+    .Call(`_lazyarray_subsetAssignFST`, values, file, listOrEnv, dim, dtype, compression, uniformEncoding)
 }
 
 dropDimension <- function(x) {
@@ -111,6 +111,10 @@ tik <- function() {
 
 tok <- function(msg, stop = FALSE) {
     .Call(`_lazyarray_tok`, msg, stop)
+}
+
+subsetAssignVector <- function(x, start, value) {
+    .Call(`_lazyarray_subsetAssignVector`, x, start, value)
 }
 
 # Register entry points for exported C++ functions

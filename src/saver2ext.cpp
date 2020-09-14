@@ -6,7 +6,7 @@
 using namespace Rcpp;
 
 
-void writeFstPartition_double(const Rcpp::NumericVector& values, const Rcpp::StringVector& files, 
+SEXP writeFstPartition_double(const Rcpp::NumericVector& values, const std::string& file, 
                               const Rcpp::NumericVector& dim, const Rcpp::List& subparsed,
                               int compression, bool uniformEncoding){
   // scheduled
@@ -30,24 +30,37 @@ void writeFstPartition_double(const Rcpp::NumericVector& values, const Rcpp::Str
   
   const int subset_mode = subparsed["subset_mode"];
   const List location_indices = subparsed["location_indices"];
+  int64_t nfiles = *(dim.end() - 1);
   
+  std::vector<int64_t> dim_part = std::vector<int64_t>(dim.begin(), dim.end() - 1);
+  int64_t expected_nrows = std::accumulate(dim_part.begin(), dim_part.end(), INTEGER64_ONE, std::multiplies<int64_t>());
   
   // make index when subset_mode is 0
   bool make_idx = false;
-  if(subset_mode == 0){
+  if(subset_mode == 2){
+    for(int64_t ii = 0; ii < nfiles; ii++ ){
+      Rcpp::NumericVector sub_values = NumericVector(
+        values.begin() + (ii * expected_nrows),
+        values.begin() + (ii * expected_nrows + expected_nrows)
+      );
+      std::string fstfile = file + std::to_string(ii + 1) + ".fst";
+      List tbl = List::create(_["V1"] = sub_values);
+      fstStore(fstfile, wrap(tbl), wrap(compression), wrap(uniformEncoding));
+    }
+    return R_NilValue;
+  } else if(subset_mode == 1){
+    stop("Single subscript assign (x[i]<-value) has not yet implemented. Please use full subscript (x[,...,i]<-value) or no subscript (x[]<-value)");
+  } else {
     for(R_xlen_t ii=0; ii<ndims; ii++ ){
       if(location_indices[ii] != R_MissingArg){
         make_idx = true;
         break;
       }
     }
-  } else if(subset_mode == 1){
-    stop("Single subscript assign (x[i]<-value) has not yet implemented. Please use full subscript (x[,...,i]<-value) or no subscript (x[]<-value)");
   }
   
   std::vector<int64_t> row_idx(0);
-  std::vector<int64_t> dim_part = std::vector<int64_t>(dim.begin(), dim.end() - 1);
-  int64_t expected_nrows = std::accumulate(dim_part.begin(), dim_part.end(), INTEGER64_ONE, std::multiplies<int64_t>());
+  
   if( make_idx ){
     const List location_indices_part = List(location_indices.begin(), location_indices.end()-1);
     row_idx = loc2idx3(wrap(location_indices_part), dim_part);
@@ -72,14 +85,14 @@ void writeFstPartition_double(const Rcpp::NumericVector& values, const Rcpp::Str
     
     
     int64_t part = partition_loc_alt[part_ii];
-    if(part == NA_REAL || part == NA_INTEGER64 || part < 1 || part > files.size()){
+    if(part == NA_REAL || part == NA_INTEGER64 || part < 1 || part > nfiles){
       // skip
       ii_v += expected_nrows;
       ii_v = ii_v % value_len;
       ptr_v = v.begin() + ii_v;
     }
     
-    String fstfile = files[part - 1];
+    std::string fstfile = file + std::to_string(part) + ".fst";
     
     // if not make index x[] <- v or x[,,i] <- v or x[,,,] <- v
     
@@ -123,7 +136,7 @@ void writeFstPartition_double(const Rcpp::NumericVector& values, const Rcpp::Str
     
   }
   
-  
+  return R_NilValue;
 }
 
 
