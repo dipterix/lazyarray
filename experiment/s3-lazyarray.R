@@ -16,12 +16,6 @@
 }
 
 
-get_missing_value <- function(){
-  (function(...){
-    parseDots(environment(), FALSE)[[1]]
-  })(,)
-}
-
 
 #' @export
 `[.LazyMatrix` <- function(x, i, j, drop = TRUE){

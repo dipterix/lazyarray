@@ -108,11 +108,11 @@ namespace lazyarray {
         return Rcpp::as<Rcpp::List >(rcpp_result_gen);
     }
 
-    inline Rcpp::List parseSlices(SEXP listOrEnv, Rcpp::NumericVector dim, bool pos_subscript = true) {
+    inline Rcpp::List parseSlices(SEXP listOrEnv, const std::vector<int64_t>& dim, bool pos_subscript = true) {
         typedef SEXP(*Ptr_parseSlices)(SEXP,SEXP,SEXP);
         static Ptr_parseSlices p_parseSlices = NULL;
         if (p_parseSlices == NULL) {
-            validateSignature("Rcpp::List(*parseSlices)(SEXP,Rcpp::NumericVector,bool)");
+            validateSignature("Rcpp::List(*parseSlices)(SEXP,const std::vector<int64_t>&,bool)");
             p_parseSlices = (Ptr_parseSlices)R_GetCCallable("lazyarray", "_lazyarray_parseSlices");
         }
         RObject rcpp_result_gen;
@@ -276,11 +276,11 @@ namespace lazyarray {
         return Rcpp::as<bool >(rcpp_result_gen);
     }
 
-    inline SEXP subsetAssignFST(const SEXP values, const std::string& file, SEXP listOrEnv, const Rcpp::NumericVector& dim, const SEXPTYPE& dtype, int compression = 50, bool uniformEncoding = true) {
+    inline SEXP subsetAssignFST(const SEXP values, const std::string& file, SEXP listOrEnv, const std::vector<int64_t>& dim, const SEXPTYPE& dtype, int compression = 50, bool uniformEncoding = true) {
         typedef SEXP(*Ptr_subsetAssignFST)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
         static Ptr_subsetAssignFST p_subsetAssignFST = NULL;
         if (p_subsetAssignFST == NULL) {
-            validateSignature("SEXP(*subsetAssignFST)(const SEXP,const std::string&,SEXP,const Rcpp::NumericVector&,const SEXPTYPE&,int,bool)");
+            validateSignature("SEXP(*subsetAssignFST)(const SEXP,const std::string&,SEXP,const std::vector<int64_t>&,const SEXPTYPE&,int,bool)");
             p_subsetAssignFST = (Ptr_subsetAssignFST)R_GetCCallable("lazyarray", "_lazyarray_subsetAssignFST");
         }
         RObject rcpp_result_gen;

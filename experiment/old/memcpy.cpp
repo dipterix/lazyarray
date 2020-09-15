@@ -4,7 +4,6 @@
 // [[Rcpp::export]]
 Rcpp::List cpp_array_to_list_integer(IntegerVector x, IntegerVector cutoff){
   
-  Rcpp::Timer _rcpp_timer;
   _rcpp_timer.step("start cpp_array_to_list_integer");
   
   Rcpp::List re(cutoff.size() - 1);

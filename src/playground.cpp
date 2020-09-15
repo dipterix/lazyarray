@@ -1,13 +1,20 @@
 #include <Rcpp.h>
 using namespace Rcpp;
 
-// [[Rcpp::export]]
-std::string timesTwo(int64_t input) {
-  Rcout << input << "\n";
-  return std::to_string(input);
+template <SEXPTYPE RTYPE>
+SEXP timesTwo(Vector<RTYPE> x) {
+  return x;
 }
+
+// [[Rcpp::export]]
+SEXP timesTwo(SEXP input, SEXPTYPE t){
+  return timesTwo<REALSXP>(input);
+}
+
+
+
 
 /*** R
 
-timesTwo(2^54)
+timesTwo(2^54, 14L)
 */

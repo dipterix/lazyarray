@@ -300,6 +300,17 @@ SEXP subsetAssignVector(SEXP x, int64_t start, SEXP value){
   return R_NilValue;
 }
 
+// template <typename T>
+// std::vector<T> seq_len3(int64_t n){
+//   std::vector<T> re = std::vector<T>(n);
+//   T v = 1;
+//   for(auto it = re.begin(); it != re.end(); it++){
+//     *it = v++;
+//   }
+//   return re;
+// }
+
+
 /*** R
 f <- function(...){
   parseDots(environment(), F)

@@ -5,7 +5,7 @@
 #include "utils.h"
 using namespace Rcpp; 
 
-SEXP subsetIdx2(const Rcpp::List sliceIdx, Rcpp::NumericVector dim, bool pos_subscript){
+SEXP subsetIdx2(const Rcpp::List sliceIdx, const std::vector<int64_t>& dim, bool pos_subscript){
   
   List location_idx = List::create();
   R_xlen_t ndims = dim.size();
@@ -991,7 +991,7 @@ List extractSlices(SEXP listOrEnv, const R_xlen_t& ndims){
   }
 }
 
-List parseSlices(SEXP listOrEnv, NumericVector dim, bool pos_subscript){
+List parseSlices(SEXP listOrEnv, const std::vector<int64_t>& dim, bool pos_subscript){
   
   List subparsed;  // VECSXP
   
@@ -1043,7 +1043,12 @@ List parseSlices(SEXP listOrEnv, NumericVector dim, bool pos_subscript){
 
 List parseAndScheduleBlocks(SEXP listOrEnv, NumericVector dim, bool forceSchedule){
   tok("S parseAndScheduleBlocks");
-  List subparsed = parseSlices(listOrEnv, dim);  // VECSXP
+  
+  print(wrap("TODO: change dim to const std::vector<int64_t>& dim"));
+  const std::vector<int64_t> dim_alt = std::vector<int64_t>(dim.begin(), dim.end());
+    
+  
+  List subparsed = parseSlices(listOrEnv, dim_alt);  // VECSXP
   
   int subset_mode = subparsed["subset_mode"];
   if(subset_mode == 0){

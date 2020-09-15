@@ -47,8 +47,8 @@ partition_table.array <- function(x, na.rm = FALSE, ...){
 
 #' @rdname partition_table
 #' @export
-partition_table.LazyArray <- function(x, na.rm = FALSE, ...){
-  smry <- summary(x)
+partition_table.AbstractLazyArray <- function(x, na.rm = FALSE, ...){
+  smry <- summary(x, na.rm = FALSE, ...)
   re <- smry$partitions
   re$Count <- re$Length - re$NAs
   re
@@ -153,7 +153,7 @@ partition_map.array <- function(x, map_fun, reduce, partitions, ...){
 }
 
 #' @export
-partition_map.LazyArray <- function(x, map_fun, reduce, partitions, further_split = FALSE, ...){
+partition_map.AbstractLazyArray <- function(x, map_fun, reduce, partitions, further_split = FALSE, ...){
   if(missing(partitions)){
     partitions <- seq_len(x$npart)
   } else {
@@ -169,17 +169,14 @@ partition_map.LazyArray <- function(x, map_fun, reduce, partitions, further_spli
     mfun <- map_fun
   }
   
-  mapped <- x$`@partition_map`(
-    partitions,
-    map_function = mfun,
-    split = FALSE, ...
-  )
+  mapped <- lapply2(partitions, function(part){
+    mfun(x$get_partition_data(part), part)
+  })
+  
   if(!missing(reduce)){
-    
-    reduce(mapped)
-  } else {
-    return(mapped)
+    mapped <- reduce(mapped)
   }
+  mapped
   
 }
 
@@ -187,10 +184,8 @@ partition_map.LazyArray <- function(x, map_fun, reduce, partitions, further_spli
 #' Apply functions to all partitions, but small chunks each time
 #' @seealso \code{\link{partition_map}}
 #' @param x a \code{LazyArray} or R array
-#' @param map_function function to apply to each chunk
+#' @param map_fun function to apply to each chunk
 #' @param reduce similar to \code{reduce} in \code{\link{partition_map}}
-#' @param max_nchunks max number of chunks. If missing, then automatically 
-#' assigned based on array size
 #' @param chunk_size Integer chunk size. If \code{chunk_size} is too small, it 
 #' will be ignored
 #' @param ... ignored or passed to other methods
@@ -226,23 +221,25 @@ partition_map.LazyArray <- function(x, map_fun, reduce, partitions, further_spli
 #' 
 #' 
 #' @export
-chunk_map <- function(x, map_function, reduce, max_nchunks, chunk_size, ...){
+chunk_map <- function(x, map_fun, reduce, max_nchunks, chunk_size, ...){
   UseMethod('chunk_map')
 }
 
 
 #' @export
-chunk_map.LazyArray <- function(x, map_function, reduce, max_nchunks, chunk_size, ...){
+chunk_map.AbstractLazyArray <- function(x, map_fun, reduce, max_nchunks, chunk_size, ...){
   
   if(missing(max_nchunks)){
     # calculate such that each chunk size is at most 0.5GB
     max_nchunks <- auto_chunks(x)
   }
+  new_x <- as.lazymatrix(x)
+  new_x$make_readonly()
   
   if(missing(chunk_size)){
-    mapped <- x$`@chunk_map`(map_function = map_function, max_nchunks = max_nchunks, chunk_size = 1024L)
+    mapped <- x$`@chunk_map`(map_function = map_fun, max_nchunks = max_nchunks, chunk_size = 1024L)
   } else {
-    mapped <- x$`@chunk_map`(map_function = map_function, max_nchunks = max_nchunks, chunk_size = chunk_size)
+    mapped <- x$`@chunk_map`(map_function = map_fun, max_nchunks = max_nchunks, chunk_size = chunk_size)
   }
   
   if(!missing(reduce)){
@@ -251,5 +248,6 @@ chunk_map.LazyArray <- function(x, map_function, reduce, max_nchunks, chunk_size
   
   return(mapped)
 }
+
 
 

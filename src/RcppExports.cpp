@@ -198,12 +198,12 @@ RcppExport SEXP _lazyarray_extractSlices(SEXP listOrEnvSEXP, SEXP ndimsSEXP) {
     return rcpp_result_gen;
 }
 // parseSlices
-Rcpp::List parseSlices(SEXP listOrEnv, Rcpp::NumericVector dim, bool pos_subscript);
+Rcpp::List parseSlices(SEXP listOrEnv, const std::vector<int64_t>& dim, bool pos_subscript);
 static SEXP _lazyarray_parseSlices_try(SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP pos_subscriptSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< SEXP >::type listOrEnv(listOrEnvSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type dim(dimSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int64_t>& >::type dim(dimSEXP);
     Rcpp::traits::input_parameter< bool >::type pos_subscript(pos_subscriptSEXP);
     rcpp_result_gen = Rcpp::wrap(parseSlices(listOrEnv, dim, pos_subscript));
     return rcpp_result_gen;
@@ -530,25 +530,26 @@ RcppExport SEXP _lazyarray_hasOpenMP() {
     return rcpp_result_gen;
 }
 // timesTwo
-std::string timesTwo(int64_t input);
-RcppExport SEXP _lazyarray_timesTwo(SEXP inputSEXP) {
+SEXP timesTwo(SEXP input, SEXPTYPE t);
+RcppExport SEXP _lazyarray_timesTwo(SEXP inputSEXP, SEXP tSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int64_t >::type input(inputSEXP);
-    rcpp_result_gen = Rcpp::wrap(timesTwo(input));
+    Rcpp::traits::input_parameter< SEXP >::type input(inputSEXP);
+    Rcpp::traits::input_parameter< SEXPTYPE >::type t(tSEXP);
+    rcpp_result_gen = Rcpp::wrap(timesTwo(input, t));
     return rcpp_result_gen;
 END_RCPP
 }
 // subsetAssignFST
-SEXP subsetAssignFST(const SEXP values, const std::string& file, SEXP listOrEnv, const Rcpp::NumericVector& dim, const SEXPTYPE& dtype, int compression, bool uniformEncoding);
+SEXP subsetAssignFST(const SEXP values, const std::string& file, SEXP listOrEnv, const std::vector<int64_t>& dim, const SEXPTYPE& dtype, int compression, bool uniformEncoding);
 static SEXP _lazyarray_subsetAssignFST_try(SEXP valuesSEXP, SEXP fileSEXP, SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP dtypeSEXP, SEXP compressionSEXP, SEXP uniformEncodingSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< const SEXP >::type values(valuesSEXP);
     Rcpp::traits::input_parameter< const std::string& >::type file(fileSEXP);
     Rcpp::traits::input_parameter< SEXP >::type listOrEnv(listOrEnvSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type dim(dimSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int64_t>& >::type dim(dimSEXP);
     Rcpp::traits::input_parameter< const SEXPTYPE& >::type dtype(dtypeSEXP);
     Rcpp::traits::input_parameter< int >::type compression(compressionSEXP);
     Rcpp::traits::input_parameter< bool >::type uniformEncoding(uniformEncodingSEXP);
@@ -867,7 +868,7 @@ static int _lazyarray_RcppExport_validate(const char* sig) {
         signatures.insert("R_xlen_t(*getLazyBlockSize)()");
         signatures.insert("std::vector<int64_t>(*loc2idx3)(SEXP,std::vector<int64_t>&)");
         signatures.insert("Rcpp::List(*extractSlices)(SEXP,const R_xlen_t&)");
-        signatures.insert("Rcpp::List(*parseSlices)(SEXP,Rcpp::NumericVector,bool)");
+        signatures.insert("Rcpp::List(*parseSlices)(SEXP,const std::vector<int64_t>&,bool)");
         signatures.insert("Rcpp::List(*parseAndScheduleBlocks)(SEXP,Rcpp::NumericVector,bool)");
         signatures.insert("SEXP(*reshapeOrDrop)(SEXP,SEXP,bool)");
         signatures.insert("SEXP(*subsetFSTBare)(const std::string&,const Rcpp::List&,const Rcpp::NumericVector&,const SEXPTYPE&)");
@@ -875,7 +876,7 @@ static int _lazyarray_RcppExport_validate(const char* sig) {
         signatures.insert("int(*getLazyThread)(bool)");
         signatures.insert("int(*setLazyThread)(int,SEXP)");
         signatures.insert("bool(*hasOpenMP)()");
-        signatures.insert("SEXP(*subsetAssignFST)(const SEXP,const std::string&,SEXP,const Rcpp::NumericVector&,const SEXPTYPE&,int,bool)");
+        signatures.insert("SEXP(*subsetAssignFST)(const SEXP,const std::string&,SEXP,const std::vector<int64_t>&,const SEXPTYPE&,int,bool)");
         signatures.insert("SEXP(*dropDimension)(SEXP)");
         signatures.insert("int64_t(*prod2)(SEXP,bool)");
         signatures.insert("SEXP(*parseDots)(Rcpp::Environment&,bool)");
@@ -935,7 +936,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lazyarray_getLazyThread", (DL_FUNC) &_lazyarray_getLazyThread, 1},
     {"_lazyarray_setLazyThread", (DL_FUNC) &_lazyarray_setLazyThread, 2},
     {"_lazyarray_hasOpenMP", (DL_FUNC) &_lazyarray_hasOpenMP, 0},
-    {"_lazyarray_timesTwo", (DL_FUNC) &_lazyarray_timesTwo, 1},
+    {"_lazyarray_timesTwo", (DL_FUNC) &_lazyarray_timesTwo, 2},
     {"_lazyarray_subsetAssignFST", (DL_FUNC) &_lazyarray_subsetAssignFST, 7},
     {"_lazyarray_dropDimension", (DL_FUNC) &_lazyarray_dropDimension, 1},
     {"_lazyarray_prod2", (DL_FUNC) &_lazyarray_prod2, 2},

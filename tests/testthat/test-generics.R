@@ -1,4 +1,4 @@
-test_that("multiplication works", {
+test_that("summary statistics", {
   x <-
     lazyarray::lazyarray(tempfile(),
                          dim = c(100, 100),
@@ -11,10 +11,10 @@ test_that("multiplication works", {
   testthat::expect_true(is.na(min(x)))
   testthat::expect_true(is.na(max(x)))
   
-  testthat::expect_equal(min(x, na.rm=TRUE), 0)
-  testthat::expect_equal(max(x, na.rm=TRUE), 100)
-  testthat::expect_equal(range(x, na.rm=TRUE), c(0, 100))
-  testthat::expect_equal(range(x), c(NA, NA))
+  testthat::expect_equivalent(min(x, na.rm=TRUE), 0)
+  testthat::expect_equivalent(max(x, na.rm=TRUE), 100)
+  testthat::expect_equivalent(range(x, na.rm=TRUE), c(0, 100))
+  testthat::expect_equivalent(range(x), c(NA, NA))
   
   testthat::expect_equivalent(mean(x, na.rm = TRUE), 50)
   testthat::expect_equivalent(sum(x, na.rm = TRUE), 5050)

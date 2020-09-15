@@ -67,7 +67,48 @@ FstArray <- R6::R6Class(
       } else {
         array(self$sample_na, self$partition_dim())
       }
+    },
+    
+    `@chunk_map` = function(
+      map_function, max_nchunks = 50, ...
+    ){
+      
+      if(!is.function(map_function)){
+        stop("map_function must be a function")
+      }
+      if(length(formals(map_function)) < 2){
+        map_f <- function(data, chunk, idx){
+          map_function(data)
+        }
+      } else if(length(formals(map_function)) < 2){
+        map_f <- function(data, chunk, idx){
+          map_function(data, chunk)
+        }
+      } else {
+        map_f <- map_function
+      }
+      
+      nrows <- self$partition_length
+      ncols <- self$npart
+      # get chunk size
+      chunkf <- make_chunks(nrows, max_nchunks = max_nchunks, ...)
+      files <- self$get_partition_fpath()
+      partition_locations <- list(
+        numeric(0),
+        seq_len(ncols)
+      )
+      
+      sdata <- self$sample_na
+      
+      lapply2(seq_len(chunkf$nchunks), function(ii){
+        idx_range <- chunkf$get_indices(ii, as_numeric = TRUE)[[1]]
+        chunk_data <- lazyLoadOld(files = files, partition_dim = c(nrows, 1), 
+                                  partition_locations = list(seq.int(idx_range[[1]], idx_range[[2]]), 1L), 
+                                  ndim = 2L, value_type = sdata)
+        map_f(chunk_data, ii, idx_range)
+      })
     }
+    
     
     
   ),
@@ -91,6 +132,8 @@ FstArray <- R6::R6Class(
         compress_level = private$.compress_level
       )
     }
+    
+    
     
   )
 )
@@ -117,10 +160,17 @@ FstArray <- R6::R6Class(
     stop("`[<-.FstArray`: x is read-only")
   }
   
-  subsetAssignFST(values = value, file = x$storage_path, listOrEnv = environment(),
+  parts <- subsetAssignFST(values = value, file = x$storage_path, listOrEnv = environment(),
                   dim = x$dim, dtype = x$sexptype,
                   compression = as.integer(x$compress_level),uniformEncoding = TRUE)
-  
+  if(isTRUE(any(parts == -1))){
+    x$generate_summary()
+  } else {
+    parts <- parts[!is.na(parts) && parts > 0 && parts <= x$npart]
+    if(length(parts)){
+      x$generate_summary(parts)
+    }
+  }
   # # get 
   # 
   # x$generate_summary()

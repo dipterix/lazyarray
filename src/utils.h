@@ -41,4 +41,7 @@ SEXP makeException( std::string msg );
 // [[Rcpp::export]]
 SEXP subsetAssignVector(SEXP x, int64_t start, SEXP value);
 
+// template <typename T>
+// std::vector<T> seq_len3(int64_t n);
+
 #endif // DIP_LAZYARRAY_UTILS_H

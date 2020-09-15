@@ -8,7 +8,6 @@
 using namespace Rcpp;
 
 SEXP subsetFST_double(const std::string& rootPath, const NumericVector& dim, const List& subparsed){
-  Rcpp::Timer _rcpp_timer;
   
   const int subset_mode = subparsed["subset_mode"];
   const NumericVector target_dimension = subparsed["target_dimension"];
@@ -515,7 +514,6 @@ SEXP subsetFST_double(const std::string& rootPath, const NumericVector& dim, con
     stop("Unknown subset method");
   }
   
-  _rcpp_timer.step("finished");
   
   UNPROTECT(1);
   

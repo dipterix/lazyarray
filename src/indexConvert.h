@@ -20,7 +20,7 @@ std::vector<int64_t> loc2idx3(SEXP locations, std::vector<int64_t>& parent_dim);
 // subsetIdx and subsetIdx2 should not be used directly as parseSlices combines them all
 SEXP subsetIdx(Rcpp::Environment expr_env, Rcpp::NumericVector dim, bool pos_subscript = false);
 
-SEXP subsetIdx2(const Rcpp::List sliceIdx, Rcpp::NumericVector dim, bool pos_subscript = false);
+SEXP subsetIdx2(const Rcpp::List sliceIdx, const std::vector<int64_t>& dim, bool pos_subscript = false);
 
 // should not be called directly, use parseAndScheduleBlocks instead
 Rcpp::List scheduleIndexing(SEXP locations, SEXP dimension, bool forceSchedule = false);
@@ -32,7 +32,7 @@ Rcpp::List extractSlices(SEXP listOrEnv, const R_xlen_t& ndims);
 // WARNING: Always use pos_subscript if you want to use subset or subsetAssign functions in lazyarray
 // pos_subscript=false subset is not implemented
 // [[Rcpp::export]]
-Rcpp::List parseSlices(SEXP listOrEnv, Rcpp::NumericVector dim, bool pos_subscript = true);
+Rcpp::List parseSlices(SEXP listOrEnv, const std::vector<int64_t>& dim, bool pos_subscript = true);
 
 // parseAndScheduleBlocks = parseSlices + scheduleIndexing
 // [[Rcpp::export]]

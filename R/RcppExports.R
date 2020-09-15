@@ -77,8 +77,8 @@ hasOpenMP <- function() {
     .Call(`_lazyarray_hasOpenMP`)
 }
 
-timesTwo <- function(input) {
-    .Call(`_lazyarray_timesTwo`, input)
+timesTwo <- function(input, t) {
+    .Call(`_lazyarray_timesTwo`, input, t)
 }
 
 subsetAssignFST <- function(values, file, listOrEnv, dim, dtype, compression = 50L, uniformEncoding = TRUE) {

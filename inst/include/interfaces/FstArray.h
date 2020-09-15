@@ -52,8 +52,7 @@ public:
   
   inline SEXP subsetAssign(SEXP values, SEXP listOrEnv) override {
     tok("S subsetAssign");
-    Rcpp::NumericVector dim = int64t2NumericVector(_dimension);
-    subsetAssignFST(values, _rootPath, listOrEnv, dim, _dataType, _compression, _uniformEncoding);
+    subsetAssignFST(values, _rootPath, listOrEnv, _dimension, _dataType, _compression, _uniformEncoding);
     tok("E subsetAssign");
     return R_NilValue;
   }

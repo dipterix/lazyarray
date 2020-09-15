@@ -3,7 +3,7 @@
 \name{partition_table}
 \alias{partition_table}
 \alias{partition_table.array}
-\alias{partition_table.LazyArray}
+\alias{partition_table.AbstractLazyArray}
 \title{Generate partition summary statistics for array objects along the last 
 dimension}
 \usage{
@@ -11,7 +11,7 @@ partition_table(x, na.rm = FALSE, ...)
 
 \method{partition_table}{array}(x, na.rm = FALSE, ...)
 
-\method{partition_table}{LazyArray}(x, na.rm = FALSE, ...)
+\method{partition_table}{AbstractLazyArray}(x, na.rm = FALSE, ...)
 }
 \arguments{
 \item{x}{An array or \code{LazyArray}}

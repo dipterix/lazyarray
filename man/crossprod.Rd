@@ -2,16 +2,10 @@
 % Please edit documentation in R/zzz.R
 \name{crossprod}
 \alias{crossprod}
-\alias{crossprod,LazyMatrix-method}
-\alias{tcrossprod,LazyMatrix-method}
-\alias{lazy_crossprod}
+\alias{crossprod,AbstractLazyArray,AbstractLazyArray-method}
 \title{Matrix Crossproduct}
 \usage{
-\S4method{crossprod}{LazyMatrix}(x, y = NULL)
-
-\S4method{tcrossprod}{LazyMatrix}(x, y = NULL)
-
-lazy_crossprod(x, y = NULL, weights = NULL, ...)
+\S4method{crossprod}{AbstractLazyArray,AbstractLazyArray}(x, y = NULL, weights = NULL, ...)
 }
 \arguments{
 \item{x}{a \code{LazyArray} or an R matrix}

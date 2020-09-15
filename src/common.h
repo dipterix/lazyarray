@@ -3,16 +3,16 @@
 
 // Common header that's required by all (most) files
 
-#include <vector>
-#include <iostream>
-#include <iterator>
-#include <complex>
-#include <cmath>
-#include <cstring>
+//include <vector>
+//include <iostream>
+//include <iterator>
+//include <complex>
+//include <cmath>
+//include <cstring>
 // #include <string>
 
 #include <Rcpp.h>
-#include <Rcpp/Benchmark/Timer.h>
+//include <Rcpp/Benchmark/Timer.h>
 
 using namespace Rcpp;
 
@@ -21,10 +21,10 @@ using namespace Rcpp;
  * We use it differently, basically 4x or 8x or 16x this number as our block size
  * to avoid repeating too many blocks
  */ 
-#ifdef NA_INTEGER64
-#undef NA_INTEGER64
-#endif // NA_INTEGER64
+#ifndef NA_INTEGER64
+//undef NA_INTEGER64
 #define NA_INTEGER64 LLONG_MIN
+#endif // NA_INTEGER64
 
 // Lazyarray subset_mode - No index
 #ifndef LASUBMOD_NOIDX

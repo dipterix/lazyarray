@@ -147,3 +147,18 @@ lapply2 <- function(x, FUN, ...){
 }
 
 
+auto_chunks <- function(x, limit = 0.5){
+  files <- x$get_partition_fpath()
+  if(length(files)){
+    fct <- mean(file.exists(files))
+  } else {
+    fct <- 1
+  }
+  
+  max_nchunks <- x$filesize / limit
+  if( fct > 0 ){
+    max_nchunks <- max_nchunks / fct
+  }
+  max_nchunks <- max(ceiling(max_nchunks), 1L)
+  max_nchunks
+}
