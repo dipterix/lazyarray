@@ -169,7 +169,7 @@ lazy_test_unit <- function(samp_data, x_alt){
 test_that("Loader2 no sub-blocks", {
   lazy_test_unit(0.1)
   lazy_test_unit(1L)
-  lazy_test_unit("")
+  # lazy_test_unit("")
 })
 
 
@@ -179,17 +179,17 @@ test_that("Loader2 sub-blocks", {
   setLazyBlockSize(1)
   lazy_test_unit(0.1)
   lazy_test_unit(1L)
-  lazy_test_unit("")
+  # lazy_test_unit("")
   
   setLazyBlockSize(11)
   lazy_test_unit(0.1)
   lazy_test_unit(1L)
-  lazy_test_unit("")
+  # lazy_test_unit("")
   
   setLazyBlockSize(201)
   lazy_test_unit(0.1)
   lazy_test_unit(1L)
-  lazy_test_unit("")
+  # lazy_test_unit("")
   
   setLazyBlockSize(-1)
 })
@@ -203,14 +203,14 @@ test_that("Loader2 with NAs", {
   expect_equal(x[], a[])
   lazy_test_unit(0.1, x)
   lazy_test_unit(1L, x)
-  lazy_test_unit("", x)
+  # lazy_test_unit("", x)
   
   setLazyBlockSize(-1)
   x[,,2] <- NA
   expect_equal(x[], a[])
   lazy_test_unit(0.1, x)
   lazy_test_unit(1L, x)
-  lazy_test_unit("", x)
+  # lazy_test_unit("", x)
 })
 
 

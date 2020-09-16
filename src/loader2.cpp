@@ -12,6 +12,7 @@ using namespace Rcpp;
 
 template <SEXPTYPE RTYPE>
 SEXP subsetFSTtemplate(const std::string& rootPath, const std::vector<int64_t>& dim, const List& subparsed){
+  
   const int subset_mode = subparsed["subset_mode"];
   const std::vector<int64_t> target_dimension = subparsed["target_dimension"];
   const int64_t expected_length = subparsed["expected_length"];
@@ -19,7 +20,7 @@ SEXP subsetFSTtemplate(const std::string& rootPath, const std::vector<int64_t>& 
   List location_indices = subparsed["location_indices"];
   
   StringVector cnames; 
-  bool is_complex = RTYPE == CPLXSXP;
+  const bool is_complex = RTYPE == CPLXSXP;
   if(is_complex){
     cnames = StringVector::create("V1R", "V1I");
   } else {
@@ -41,13 +42,15 @@ SEXP subsetFSTtemplate(const std::string& rootPath, const std::vector<int64_t>& 
   std::string partition_path;
   
   // temporary variables
-  List tmp;
+  SEXP tmp;
   Vector<RTYPE> buffer = Vector<RTYPE>(0);
   auto ptr_buffer = buffer.begin();
   auto na_value = Vector<RTYPE>::get_na();
   
   if(subset_mode == LASUBMOD_NOIDX){
     // case: subset_mode == 2, x[]
+    
+    tok("S subsetFSTtemplate - LASUBMOD_NOIDX");
     
     ptr_res = res.begin();
     
@@ -64,18 +67,27 @@ SEXP subsetFSTtemplate(const std::string& rootPath, const std::vector<int64_t>& 
         
       } else {
         // Read from fst file, abuse name "meta" a little bit
-        tmp = fstRetrieve(partition_path, wrap(cnames), wrap(1), R_NilValue);
-        tmp = tmp["resTable"];
+        tmp = fstRetrieve(as<String>(wrap(partition_path)), Shield<SEXP>(wrap(cnames)), Shield<SEXP>(wrap(1)), R_NilValue);
+        tmp = VECTOR_ELT(tmp, 2);
         
         if(is_complex){
           // try to reuse buffer, but if not reusable, create new one
           if(buffer.size() != block_size){
             buffer = static_cast<Vector<RTYPE>>(no_init(block_size));
           }
-          setReIm(static_cast<ComplexVector>(buffer), as<NumericVector>(tmp[ "V1R" ]), true);
-          setReIm(static_cast<ComplexVector>(buffer), as<NumericVector>(tmp[ "V1I" ]), false);
+          setReIm(static_cast<ComplexVector>(buffer), as<NumericVector>(VECTOR_ELT(tmp, 0)), true);
+          setReIm(static_cast<ComplexVector>(buffer), as<NumericVector>(VECTOR_ELT(tmp, 1)), false);
         } else {
-          buffer = as<Vector<RTYPE>>(tmp["V1"]);
+          
+          SEXP tmp_var = PROTECT(VECTOR_ELT(tmp, 0));
+          if(TYPEOF(tmp_var) != RTYPE){
+            tmp_var = PROTECT(Rf_coerceVector(tmp_var, RTYPE));
+            buffer = as<Vector<RTYPE>>(tmp_var);
+            UNPROTECT(1);
+          } else {
+            buffer = as<Vector<RTYPE>>(tmp_var);
+          }
+          UNPROTECT(1);
         }
         
         // copy to ptr_res. Unfortunately, we can't use memcpy
@@ -91,15 +103,15 @@ SEXP subsetFSTtemplate(const std::string& rootPath, const std::vector<int64_t>& 
     }
     
     res.attr("dim") = wrap(target_dimension);
-  } else if(subset_mode == LASUBMOD_SINGLE){
-    // case: subset_mode == 1, x[i], and i can't be R missing value
-#ifndef RCPP_WARN_ON_COERCE
-#define RCPP_WARN_ON_COERCE
-    NumericVector indices = as<NumericVector>(location_indices[0]);
-#undef RCPP_WARN_ON_COERCE
-#endif
-    bool is_negative = negative_subscript[0];
     
+    tok("E subsetFSTtemplate - LASUBMOD_NOIDX");
+    
+  } else if(subset_mode == LASUBMOD_SINGLE){
+    
+    tok("S subsetFSTtemplate - LASUBMOD_SINGLE");
+    // case: subset_mode == 1, x[i], and i can't be R missing value
+    NumericVector indices = as<NumericVector>(location_indices[0]);
+    bool is_negative = negative_subscript[0];
     
     // idx from chunk_start to expect_nrows-1
     chunk_start = 0;
@@ -107,7 +119,6 @@ SEXP subsetFSTtemplate(const std::string& rootPath, const std::vector<int64_t>& 
     LogicalVector sel;
     int64_t bump_start = 0;
     bool enable_bump = true;
-    
     // TODO: check negative cases
     if(is_negative){
       
@@ -121,7 +132,6 @@ SEXP subsetFSTtemplate(const std::string& rootPath, const std::vector<int64_t>& 
       // }
       
     } else {
-      
       // initialize with NA
       ptr_res = res.begin();
       ptr_alt = ptr_res;
@@ -130,18 +140,26 @@ SEXP subsetFSTtemplate(const std::string& rootPath, const std::vector<int64_t>& 
         *ptr_alt = na_value;
       }
       ptr_res = res.begin();
-      
       for(int64_t file_ii = 1; file_ii <= nfiles; file_ii++, chunk_start += expect_nrows, chunk_end += expect_nrows ){
         partition_path = rootPath + std::to_string(file_ii) + ".fst";
         R_CheckUserInterrupt();
         
+        Rcout << file_ii << "\n";
+        
         sel = !(is_na(indices) | indices <= chunk_start | indices > chunk_end);
         // get sub index for this chunk, note no NA is included
+        Rcout << "yay ";
+        print(indices);
         NumericVector sub_idx = indices[sel];
+        
+        Rcout << "yay ";
         
         // if this chunk is not used, just skip;
         if( sub_idx.size() == 0 ){ continue; }
         
+        Rcout << file_ii << "\n";
+        
+        Rcout << "yay ";
         
         reader_start = (int)(min(sub_idx) - chunk_start);
         reader_end = (int)(max(sub_idx) - chunk_start);
@@ -154,18 +172,31 @@ SEXP subsetFSTtemplate(const std::string& rootPath, const std::vector<int64_t>& 
           continue;
         }
         // Read from fst file, abuse name "meta" a little bit
-        tmp = fstRetrieve(partition_path, wrap(cnames), wrap(reader_start), wrap(reader_end));
-        tmp = tmp["resTable"];
+        tmp = fstRetrieve(as<String>(wrap(partition_path)), wrap(cnames), wrap(reader_start), wrap(reader_end));
+        tmp = VECTOR_ELT(tmp, 2);
+        
+        Rcout << file_ii << "\n";
         
         if(is_complex){
           // try to reuse buffer, but if not reusable, create new one
           if(buffer.size() != reader_end - reader_start + 1){
             buffer = static_cast<Vector<RTYPE>>(no_init(reader_end - reader_start + 1));
           }
-          setReIm(static_cast<ComplexVector>(buffer), as<NumericVector>(tmp[ "V1R" ]), true);
-          setReIm(static_cast<ComplexVector>(buffer), as<NumericVector>(tmp[ "V1I" ]), false);
+          setReIm(static_cast<ComplexVector>(buffer), as<NumericVector>(VECTOR_ELT(tmp, 0)), true);
+          setReIm(static_cast<ComplexVector>(buffer), as<NumericVector>(VECTOR_ELT(tmp, 1)), false);
         } else {
-          buffer = as<Vector<RTYPE>>(tmp["V1"]);
+          Rcout << file_ii << "\n";
+          
+          SEXP tmp_var = VECTOR_ELT(tmp, 0);
+          if(TYPEOF(tmp_var) != RTYPE){
+            tmp_var = PROTECT(Rf_coerceVector(tmp_var, RTYPE));
+            buffer = as<Vector<RTYPE>>(tmp_var);
+            UNPROTECT(1);
+          } else {
+            buffer = as<Vector<RTYPE>>(tmp_var);
+          }
+          Rcout << file_ii << "\n";
+          
         }
         
         ptr_res = res.begin();
@@ -200,11 +231,11 @@ SEXP subsetFSTtemplate(const std::string& rootPath, const std::vector<int64_t>& 
       }
       
     }
-    
+    tok("E subsetFSTtemplate - LASUBMOD_SINGLE");
     
   } else if (subset_mode == LASUBMOD_MULTI) {
     // case: subset_mode == 0, x[i,j,k,l,...], and ijk might be R missing value
-    
+    tok("S subsetFSTtemplate - LASUBMOD_MULTI");
     // get parsed schedules
     // dim = [block dim, schedule dim, partition counts]
     // [5,16] => block_ndims=0, [5] x [1,1] x [16]
@@ -310,17 +341,24 @@ SEXP subsetFSTtemplate(const std::string& rootPath, const std::vector<int64_t>& 
         reader_start = (int)(chunk_start + block_schedule_start);
         reader_end = (int)(chunk_start + block_schedule_end);
         tmp = fstRetrieve(partition_path, wrap(cnames), wrap(reader_start), wrap(reader_end));
-        tmp = tmp["resTable"];
+        tmp = VECTOR_ELT(tmp, 2);
         
         if(is_complex){
           // try to reuse buffer, but if not reusable, create new one
           if(buffer.size() != reader_end - reader_start + 1){
             buffer = static_cast<Vector<RTYPE>>(no_init(reader_end - reader_start + 1));
           }
-          setReIm(static_cast<ComplexVector>(buffer), as<NumericVector>(tmp[ "V1R" ]), true);
-          setReIm(static_cast<ComplexVector>(buffer), as<NumericVector>(tmp[ "V1I" ]), false);
+          setReIm(static_cast<ComplexVector>(buffer), as<NumericVector>(VECTOR_ELT(tmp, 0)), true);
+          setReIm(static_cast<ComplexVector>(buffer), as<NumericVector>(VECTOR_ELT(tmp, 1)), false);
         } else {
-          buffer = as<Vector<RTYPE>>(tmp["V1"]);
+          SEXP tmp_var = VECTOR_ELT(tmp, 0);
+          if(TYPEOF(tmp_var) != RTYPE){
+            tmp_var = PROTECT(Rf_coerceVector(tmp_var, RTYPE));
+            buffer = as<Vector<RTYPE>>(tmp_var);
+            UNPROTECT(1);
+          } else {
+            buffer = as<Vector<RTYPE>>(tmp_var);
+          }
         }
         ptr_buffer = buffer.begin();
         
@@ -441,6 +479,8 @@ ptr_res += block_expected_length;
     
     res.attr("dim") = wrap(target_dimension);
     
+    tok("E subsetFSTtemplate - LASUBMOD_MULTI");
+    
   } else {
     stop("Unknown subset method");
   }
@@ -481,6 +521,7 @@ SEXP subsetFST(const std::string& rootPath, SEXP listOrEnv, const NumericVector&
   if(dim.size() < 2){
     stop("Dimension size must >= 2");
   }
+  tok("S subsetFST");
   const List subparsed = parseAndScheduleBlocks(listOrEnv, dim);
   
   R_CheckUserInterrupt();
@@ -488,5 +529,6 @@ SEXP subsetFST(const std::string& rootPath, SEXP listOrEnv, const NumericVector&
   SEXP res = subsetFSTBare(rootPath, subparsed, dim, dtype);
   
   reshapeOrDrop(res, reshape, drop); 
+  tok("E subsetFSTBare");
   return res;
 }

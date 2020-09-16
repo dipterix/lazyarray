@@ -324,7 +324,6 @@ void setReIm(ComplexVector x, NumericVector v, bool is_real){
       (*ptr_x++).i = *ptr_v++;
     }
   }
-  
 }
 
 /*** R

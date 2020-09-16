@@ -3,10 +3,12 @@
 
 #include "common.h"
 #include "utils.h"
+#include "classIndexSchedule.h"
 using namespace Rcpp; 
 
 SEXP subsetIdx2(const Rcpp::List sliceIdx, const std::vector<int64_t>& dim, bool pos_subscript){
-  
+  tok("S subsetIdx2");
+  int n_protected = 0;
   List location_idx = List::create();
   R_xlen_t ndims = dim.size();
   
@@ -20,12 +22,15 @@ SEXP subsetIdx2(const Rcpp::List sliceIdx, const std::vector<int64_t>& dim, bool
   
   SEXP i = R_MissingArg;
   if(sliceIdx.size() > 0){
-    i = sliceIdx[0];
+    i = PROTECT(sliceIdx[0]);
+    n_protected++;
     // el might be promise SEXP, if so, evaluate
     if ( TYPEOF(i) == PROMSXP ){
       // This is a promise, need to evaluate
-      i = Rf_eval( PREXPR(i), PRENV( i ));
+      i = PROTECT(Rf_eval( PREXPR(i), PRENV( i )));
+      n_protected++;
     }
+    
   }
   
   location_idx.push_front( R_MissingArg );
@@ -42,7 +47,6 @@ SEXP subsetIdx2(const Rcpp::List sliceIdx, const std::vector<int64_t>& dim, bool
   
   
   for(; idx_size < sliceIdx.size(); idx_size++ ){
-    
     if( idx_size > ndims ){
       stop("Incorrect dimension while subsetting an array");
     }
@@ -115,7 +119,6 @@ SEXP subsetIdx2(const Rcpp::List sliceIdx, const std::vector<int64_t>& dim, bool
     
     location_idx.push_back( sidx );
   }
-  
   if(location_idx.size() == 1){
     if(i == R_MissingArg){
       subset_mode = 2;
@@ -125,16 +128,16 @@ SEXP subsetIdx2(const Rcpp::List sliceIdx, const std::vector<int64_t>& dim, bool
   } else if (ndims != location_idx.size()){
     stop("Dimension mismatch while subseting an array");
   }
-  
   // come back for the first i
   di = dim[ 0 ];
   int64_t expected_len = -1;
+  
   if(subset_mode == 2){
     // x[] is called, target_dim is dim and neg_subscr are all false
     // no need to do anything
     
   } else if(i != R_MissingArg){
-    sidx = as<NumericVector>( i );
+    sidx = i;
     neg_sidx = sidx[ !(is_na(sidx) | sidx >= 0) ];
     
     if( neg_sidx.length() > 0 ){
@@ -147,7 +150,6 @@ SEXP subsetIdx2(const Rcpp::List sliceIdx, const std::vector<int64_t>& dim, bool
     } else {
       neg_subscr[ 0 ] = false;
     }
-    
     
     if(subset_mode == 1) {
       // if subset_mode == 1,
@@ -231,7 +233,10 @@ SEXP subsetIdx2(const Rcpp::List sliceIdx, const std::vector<int64_t>& dim, bool
   }
   
   
-  
+  if(n_protected > 0){
+    UNPROTECT(n_protected);
+  }
+  tok("E subsetIdx2");
   return List::create(
     _["subset_mode"] = subset_mode,
     _["target_dimension"] = target_dim,
@@ -998,7 +1003,7 @@ List extractSlices(SEXP listOrEnv, const R_xlen_t& ndims){
 }
 
 List parseSlices(SEXP listOrEnv, const std::vector<int64_t>& dim, bool pos_subscript){
-  
+  tok("S parseSlices");
   List subparsed;  // VECSXP
   
   switch(TYPEOF(listOrEnv)) {
@@ -1006,7 +1011,6 @@ List parseSlices(SEXP listOrEnv, const std::vector<int64_t>& dim, bool pos_subsc
     
     // function should be called with 
     // 1. f(...){ parseAndScheduleBlocks(environment(), TRUE) }, or
-    // 2. f(i, ...){ parseAndScheduleBlocks(environment(), TRUE) }
     
     // check if `i` exists and valid
     // bool has_i = false;
@@ -1043,7 +1047,7 @@ List parseSlices(SEXP listOrEnv, const std::vector<int64_t>& dim, bool pos_subsc
   default:
     Rcpp::stop("Input `listOrEnv` must be either a list of indices or an environment");
   }
-  
+  tok("E parseSlices");
   return subparsed;
 }
 
