@@ -310,6 +310,22 @@ SEXP subsetAssignVector(SEXP x, int64_t start, SEXP value){
 //   return re;
 // }
 
+void setReIm(ComplexVector x, NumericVector v, bool is_real){
+  if(x.size() != v.size()){
+    stop("Cannot copy values: length mismatch");
+  }
+  NumericVector::iterator ptr_v = v.begin();
+  if(is_real) {
+    for(ComplexVector::iterator ptr_x = x.begin(); ptr_x != x.end(); ){
+      (*ptr_x++).r = *ptr_v++;
+    }
+  } else {
+    for(ComplexVector::iterator ptr_x = x.begin(); ptr_x != x.end(); ){
+      (*ptr_x++).i = *ptr_v++;
+    }
+  }
+  
+}
 
 /*** R
 f <- function(...){

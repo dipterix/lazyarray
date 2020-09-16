@@ -529,15 +529,14 @@ RcppExport SEXP _lazyarray_hasOpenMP() {
     UNPROTECT(1);
     return rcpp_result_gen;
 }
-// timesTwo
-SEXP timesTwo(SEXP input, SEXPTYPE t);
-RcppExport SEXP _lazyarray_timesTwo(SEXP inputSEXP, SEXP tSEXP) {
+// example_rcpp
+SEXP example_rcpp(SEXP x);
+RcppExport SEXP _lazyarray_example_rcpp(SEXP xSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type input(inputSEXP);
-    Rcpp::traits::input_parameter< SEXPTYPE >::type t(tSEXP);
-    rcpp_result_gen = Rcpp::wrap(timesTwo(input, t));
+    Rcpp::traits::input_parameter< SEXP >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(example_rcpp(x));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -936,7 +935,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lazyarray_getLazyThread", (DL_FUNC) &_lazyarray_getLazyThread, 1},
     {"_lazyarray_setLazyThread", (DL_FUNC) &_lazyarray_setLazyThread, 2},
     {"_lazyarray_hasOpenMP", (DL_FUNC) &_lazyarray_hasOpenMP, 0},
-    {"_lazyarray_timesTwo", (DL_FUNC) &_lazyarray_timesTwo, 2},
+    {"_lazyarray_example_rcpp", (DL_FUNC) &_lazyarray_example_rcpp, 1},
     {"_lazyarray_subsetAssignFST", (DL_FUNC) &_lazyarray_subsetAssignFST, 7},
     {"_lazyarray_dropDimension", (DL_FUNC) &_lazyarray_dropDimension, 1},
     {"_lazyarray_prod2", (DL_FUNC) &_lazyarray_prod2, 2},

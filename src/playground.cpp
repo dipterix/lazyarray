@@ -1,20 +1,14 @@
 #include <Rcpp.h>
 using namespace Rcpp;
 
-template <SEXPTYPE RTYPE>
-SEXP timesTwo(Vector<RTYPE> x) {
-  return x;
-}
 
 // [[Rcpp::export]]
-SEXP timesTwo(SEXP input, SEXPTYPE t){
-  return timesTwo<REALSXP>(input);
+SEXP example_rcpp(SEXP x){
+  return r_cast<REALSXP>(x);
 }
-
 
 
 
 /*** R
-
-timesTwo(2^54, 14L)
+example_rcpp('1')
 */

@@ -53,9 +53,9 @@ check_schedule <- function(slice, dim){
     expect_equal(re$block_expected_length, block_expected_length)
   } else {
     # do we need accurate block_expected_length? as it's not actually used if not block indexed
-    block_expected_length <- prod(dim[seq_len(block_ndims)])
+    # block_expected_length <- prod(dim[seq_len(block_ndims)])
     block_schedule_start <- 1
-    block_schedule_end <- block_expected_length
+    block_schedule_end <- prod(dim[seq_len(block_ndims)])
     expect_equal(re$block_schedule_start, block_schedule_start)
     expect_equal(re$block_schedule_end, block_schedule_end)
     expect_equal(re$block_expected_length, block_expected_length)
@@ -90,7 +90,7 @@ context("subset scheduler-normal case")
 
 test_that("subset scheduler-normal case", {
   dim <- c(5,7,8,10)
-  slice <- list(1:5,1,2:3,4:5)
+  slice <- list(c(1,1,2),1,2:3,4:5)
   
   setLazyBlockSize(1)
   check_schedule(slice, dim)

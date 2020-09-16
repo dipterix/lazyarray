@@ -899,10 +899,16 @@ List scheduleIndexing(SEXP locations, SEXP dimension, bool forceSchedule){
     }
     
   } else {
+    subblock_idx_size = 1;
     buffer_loc = PROTECT(Rf_allocVector(VECSXP, buffer_margin));
     for(R_xlen_t ii = 0; ii < buffer_margin; ii++){
       SEXP loc_ii = VECTOR_ELT(locations, ii);
       SET_VECTOR_ELT(buffer_loc, ii, loc_ii);
+      if(loc_ii == R_MissingArg){
+        subblock_idx_size *= dim[ii];
+      } else {
+        subblock_idx_size *= Rf_xlength(loc_ii);
+      }
     }
     UNPROTECT(1);
   }
@@ -1044,7 +1050,7 @@ List parseSlices(SEXP listOrEnv, const std::vector<int64_t>& dim, bool pos_subsc
 List parseAndScheduleBlocks(SEXP listOrEnv, NumericVector dim, bool forceSchedule){
   tok("S parseAndScheduleBlocks");
   
-  print(wrap("TODO: change dim to const std::vector<int64_t>& dim"));
+  // print(wrap("TODO: change dim to const std::vector<int64_t>& dim"));
   const std::vector<int64_t> dim_alt = std::vector<int64_t>(dim.begin(), dim.end());
     
   

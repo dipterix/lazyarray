@@ -7,7 +7,7 @@ dim <- c(10,20,50)
 
 f <- normalizePath(tempfile(), mustWork = FALSE)
 on.exit({
-  setLazyBlockSize(0)
+  setLazyBlockSize(-1)
   unlink(f)
 })
 
@@ -191,13 +191,21 @@ test_that("Loader2 sub-blocks", {
   lazy_test_unit(1L)
   lazy_test_unit("")
   
-  setLazyBlockSize(0)
+  setLazyBlockSize(-1)
 })
 
 context("Loader2 with NAs")
 
 test_that("Loader2 with NAs", {
   unlink(a$get_partition_fpath(2))
+  setLazyBlockSize(1)
+  x[,,2] <- NA
+  expect_equal(x[], a[])
+  lazy_test_unit(0.1, x)
+  lazy_test_unit(1L, x)
+  lazy_test_unit("", x)
+  
+  setLazyBlockSize(-1)
   x[,,2] <- NA
   expect_equal(x[], a[])
   lazy_test_unit(0.1, x)
@@ -213,7 +221,7 @@ unlink(f, recursive = TRUE)
 a = as.lazyarray(x, path = f)
 
 test_that("Loader2 complex", {
-  setLazyBlockSize(0)
+  setLazyBlockSize(-1)
   lazy_test_unit(x[[1]])
   
   setLazyBlockSize(1)
@@ -225,7 +233,13 @@ test_that("Loader2 complex", {
   setLazyBlockSize(201)
   lazy_test_unit(x[[1]])
   
-  setLazyBlockSize(0)
+  setLazyBlockSize(1)
+  unlink(a$get_partition_fpath(2))
+  x[,,2] <- NA
+  expect_equal(x[], a[])
+  lazy_test_unit(x[[1]], x)
+  
+  setLazyBlockSize(-1)
   unlink(a$get_partition_fpath(2))
   x[,,2] <- NA
   expect_equal(x[], a[])

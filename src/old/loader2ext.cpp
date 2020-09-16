@@ -1,12 +1,10 @@
-#include "loader2.h"
-// This file is too long, split into multiple files
+#include "loader2ext.h"
 
 #include "common.h"
 #include "utils.h"
 #include "indexConvert.h"
 #include "fstWrapper.h"
 #include "openMPInterface.h"
-
 using namespace Rcpp;
 
 
@@ -28,8 +26,8 @@ SEXP subsetFSTtemplate(const std::string& rootPath, const std::vector<int64_t>& 
   
   // create results
   Vector<RTYPE> res = static_cast<Vector<RTYPE>>(no_init(expected_length));
-  auto ptr_res = res.begin();
-  auto ptr_alt = ptr_res;
+  auto *ptr_res = res.begin();
+  auto *ptr_alt = ptr_res;
   
   // for blocked runs (if needed)
   int64_t block_size = std::accumulate(target_dimension.begin(), target_dimension.end()-1, INTEGER64_ONE, std::multiplies<int64_t>());
@@ -123,13 +121,13 @@ SEXP subsetFSTtemplate(const std::string& rootPath, const std::vector<int64_t>& 
     } else {
       
       // initialize with NA
-      ptr_res = res.begin();
+      ptr_res = INTEGER(res);
       ptr_alt = ptr_res;
       ptr_res += expected_length;
       for(;ptr_alt != ptr_res; ptr_alt++){
-        *ptr_alt = na_value;
+        *ptr_alt = NA_INTEGER;
       }
-      ptr_res = res.begin();
+      ptr_res = INTEGER(res);
       
       for(int64_t file_ii = 1; file_ii <= nfiles; file_ii++, chunk_start += expect_nrows, chunk_end += expect_nrows ){
         partition_path = rootPath + std::to_string(file_ii) + ".fst";
@@ -235,7 +233,7 @@ SEXP subsetFSTtemplate(const std::string& rootPath, const std::vector<int64_t>& 
     int64_t block_length = schedule["block_length"];                  // # elements in a block (full version) = prod(block_dimension)
     int64_t block_expected_length = schedule["block_expected_length"];// # elements in a block (subset version) = length(block_schedule)
     
-    bool block_indexed = schedule["block_indexed"];                   // whether block_schedule can be trusted
+    bool block_indexed = schedule["block_indexed"];                   // whether schedule_index can be trusted
     const List block_location = schedule["block_location"];           // subset of locational indices of blocks
     
     // block_location will be used, make int64_t version
@@ -248,10 +246,9 @@ SEXP subsetFSTtemplate(const std::string& rootPath, const std::vector<int64_t>& 
           block_location_alt[ii] = std::vector<int64_t>(0);
         }
       }
-      
     }
     
-    ptr_res = res.begin();
+    ptr_res = INTEGER(res);
     for(int64_t li = 0; li < partition_index.size(); li++){
       
       R_CheckUserInterrupt();
@@ -346,9 +343,7 @@ SEXP subsetFSTtemplate(const std::string& rootPath, const std::vector<int64_t>& 
     int64_t subblock_dim_ii;
     int64_t tmp;
     // print(wrap(ii));
-    // print(wrap(buffer));
-    // print(wrap(block_prod_dim));
-    // print(wrap(target_dimension));
+    // Rcout << subblock_dim[0] << " "<< subblock_dim[1] << " "<< subblock_dim[2] << " \n";
     for(int64_t di = 0; di < block_ndims; di++ ){
       
       // block_dimension = schedule["block_dimension"]; // [block dim], full version
@@ -368,50 +363,44 @@ SEXP subsetFSTtemplate(const std::string& rootPath, const std::vector<int64_t>& 
         mod = rest % subblock_dim_ii;
         rest = (rest - mod) / subblock_dim_ii;
         
-        
+        // Rcout << mod<< " ";
         // get di^th margin element mod
         // partition_subblocklocs[di][mod]
         const std::vector<int64_t>& location_ii = block_location_alt[di];
         if(location_ii.size() == 0){
-          // index[di], location_ii is missing
-          tmp = mod + 1;
+          // index[di]
+          tmp = mod;
         } else {
           // index[di]
-          tmp = location_ii[mod];
+          // location_ii starts from 1 but we need it to starting from 0
+          tmp = *(location_ii.begin() + mod) - 1;
         }
-        // print(wrap(location_ii));
-        // Rcout << di << " " << mod << " " << tmp << " ";
-        // is tmp is < 1, that mean it's invalid may be remove the other one
-        if(tmp < 1 || tmp == NA_REAL ){
+        
+        // is tmp is < 0, that mean it's invalid may be remove the other one
+        if(tmp < 0 || tmp == NA_REAL ){
           sub_index = NA_INTEGER64;
         } else if (tmp != NA_INTEGER64){
-          // location_ii starts from 1 but we need it to starting from 0
-          sub_index += *(block_prod_dim.begin() + di) * (tmp - 1);
+          sub_index += *(block_prod_dim.begin() + di) * tmp;
         }
       }
       
       
     }
-    // Rcout << block_schedule_start << " " << sub_index<< "\n";
     
     if( sub_index == NA_INTEGER64 ) {
       *(ptr_res + ii) = na_value;
     } else {
       sub_index = sub_index + 1 - block_schedule_start;
-      *(ptr_res + ii) = *(buffer.begin() + sub_index);
+      *(ptr_res + ii) = *(ptr_buffer + sub_index);
     }
-    // Rcout << *(ptr_res + ii) << "\n";
+    
   }
 }
 
 
 // end parallel
 ptr_res += block_expected_length;
-// print(wrap(partition_path));
-// 
-// print(wrap(block_expected_length));
-// print(wrap(buffer));
-// print(wrap(res));
+
         } else {
           // don't calculate index on the fly.
           // subblock_idx
@@ -446,47 +435,5 @@ ptr_res += block_expected_length;
   }
   
   
-  return res;
-}
-
-
-SEXP subsetFSTBare(const std::string& rootPath, const List& subparsed, const NumericVector& dim, const SEXPTYPE& dtype) {
-  tok("S subsetFSTBare");
-  SEXP res = R_NilValue;
-  const std::string rootPath_alt = as_dirpath(rootPath);
-  std::vector<int64_t> dim_alt = as<std::vector<int64_t>>(wrap(dim));
-  
-  switch(dtype){
-  case REALSXP: 
-    res = subsetFSTtemplate<REALSXP>(rootPath_alt, dim_alt, subparsed);
-    break;
-  case INTSXP:
-    res = subsetFSTtemplate<INTSXP>(rootPath_alt, dim_alt, subparsed);
-    break;
-  case STRSXP:
-  case CHARSXP:
-    res = subsetFSTtemplate<STRSXP>(rootPath_alt, dim_alt, subparsed);
-    break;
-  case CPLXSXP:
-    res = subsetFSTtemplate<CPLXSXP>(rootPath_alt, dim_alt, subparsed);
-    break;
-  default:
-    stop("Unknown data type: only numeric, integer, character, and complex arrays are supported - provided SEXPTYPE: " + std::to_string(dtype));
-  }
-  tok("E subsetFSTBare");
-  return res;
-}
-
-SEXP subsetFST(const std::string& rootPath, SEXP listOrEnv, const NumericVector& dim, SEXPTYPE dtype, SEXP reshape, bool drop){
-  if(dim.size() < 2){
-    stop("Dimension size must >= 2");
-  }
-  const List subparsed = parseAndScheduleBlocks(listOrEnv, dim);
-  
-  R_CheckUserInterrupt();
-  
-  SEXP res = subsetFSTBare(rootPath, subparsed, dim, dtype);
-  
-  reshapeOrDrop(res, reshape, drop); 
   return res;
 }
