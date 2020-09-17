@@ -6,42 +6,34 @@
 class ScheduledIndex {
   
 public:
+  
+  ScheduledIndex() {
+    block_indexed = false;
+  }
+  
   ScheduledIndex(
-    const bool& block_indexed,
-    const std::vector<std::vector<int64_t>>& block_location,
-    const std::vector<int64_t>& partition_index,
-    const std::vector<int64_t>& schedule_index,
-    const std::vector<int64_t>& schedule_dimension,
-    const std::vector<int64_t>& block_dimension,
-    const std::vector<int64_t>& block_schedule,
-    const int64_t& block_schedule_start,
-    const int64_t& block_schedule_end
-  ):
-  block_indexed(block_indexed),
-  block_location(block_location),
-  partition_index(partition_index),
-  schedule_index(schedule_index),
-  schedule_dimension(schedule_dimension),
-  block_dimension(block_dimension),
-  block_schedule(block_schedule)
-  {
-    partition_counts = partition_index.size();
-    schedule_counts_per_part = schedule_index.size();
-    block_ndims = block_dimension.size();
-    
-    block_prod_dim = std::vector<int64_t>(block_ndims, 1);
-    block_expected_length = 1;
-    
-    for(R_xlen_t ii = 1; ii < block_ndims; ii++){
-      block_prod_dim[ii] = block_prod_dim[ii-1] * block_dimension[ii - 1];
-      block_expected_length *= (block_location[ii]).size();
-    }
-    block_length = block_prod_dim[block_ndims-1] * block_dimension[block_ndims-1];
-    
-    
+    const bool _block_indexed,
+    const std::vector<int64_t> _dimension,
+    const std::vector<std::pair<std::vector<int64_t>, bool>> _block_location,
+    const std::vector<int64_t>& _partition_index,
+    const std::vector<int64_t> _schedule_index,
+    const std::vector<int64_t> _schedule_dimension,
+    const std::vector<int64_t> _block_dimension,
+    const std::vector<int64_t> _block_schedule,
+    const int64_t _block_schedule_start,
+    const int64_t _block_schedule_end
+  );
+  
+  ScheduledIndex(SEXP locations, const std::vector<int64_t>& dim, bool forceSchedule = false, int64_t hint = -1);
+  
+  ~ScheduledIndex(){
+#ifdef LAZYARRAY_DEBUG
+    print(wrap("A ScheduledIndex is destroyed"));
+#endif
   }
   
   bool block_indexed;                   // whether block_schedule can be trusted
+  std::vector<int64_t> dimension;
   // partition level
   int64_t partition_counts;               // the last dimension - n files to iterate through
   std::vector<int64_t> partition_index;    // detailed indexes   - always exists
@@ -62,8 +54,10 @@ public:
   int64_t block_length;                  // # elements in a block (full version) = prod(block_dimension)
   int64_t block_expected_length;// # elements in a block (subset version) = length(block_schedule)
   
-  std::vector<std::vector<int64_t>> block_location;           // subset of locational indices of blocks
+  std::vector<std::pair<std::vector<int64_t>, bool>> block_location;           // subset of locational indices of blocks
   
+  
+  Rcpp::List asList();
 };
 
 class ParsedIndex {
@@ -72,8 +66,8 @@ public:
   ParsedIndex(
     const int& subset_mode, const std::vector<int64_t>& target_dimension,
     const std::vector<bool>& negative_subscript,
-    const std::vector<std::vector<int64_t>>& location_indices,
-    const ScheduledIndex& schedule
+    const std::vector<std::pair<std::vector<int64_t>, bool>>& location_indices,
+    ScheduledIndex* schedule
   ):
   subset_mode(subset_mode), 
   target_dimension(target_dimension),
@@ -83,18 +77,30 @@ public:
     expected_length = std::accumulate(target_dimension.begin(), target_dimension.end(), INTEGER64_ONE, std::multiplies<int64_t>());
   }
   
+  ~ParsedIndex(){
+    if(this->schedule != nullptr){
+      delete schedule;
+      this->schedule = nullptr;
+    }
+#ifdef LAZYARRAY_DEBUG
+    print(wrap("A ParsedIndex is destroyed"));
+#endif
+  }
+  
+  ParsedIndex(const SEXP listOrEnv, const std::vector<int64_t>& dim, bool pos_subscript);
+  
   
   int subset_mode;
   std::vector<int64_t> target_dimension;
   std::vector<bool> negative_subscript;
-  std::vector<std::vector<int64_t>> location_indices;
+  std::vector<std::pair<std::vector<int64_t>, bool>> location_indices;
   
   int64_t expected_length;
-  ScheduledIndex schedule;
+  ScheduledIndex *schedule;
   
-  
+  Rcpp::List asList();
   
 };
-  
-  
+
+
 #endif // DIP_LAZYARRAY_SCHEDULE_H

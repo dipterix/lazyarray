@@ -41,9 +41,22 @@ SEXP makeException( std::string msg );
 // [[Rcpp::export]]
 SEXP subsetAssignVector(SEXP x, int64_t start, SEXP value);
 
-// template <typename T>
-// std::vector<T> seq_len3(int64_t n);
+template <typename T>
+inline std::vector<T> seq_len3(int64_t n){
+  std::vector<T> re = std::vector<T>(n);
+  T v = 1;
+  for(auto it = re.begin(); it != re.end(); it++){
+    *it = v++;
+  }
+  return re;
+}
 
 void setReIm(Rcpp::ComplexVector x, Rcpp::NumericVector v, bool is_real);
+
+inline void r_gc(){
+  Rcpp::Environment env = Rcpp::Environment::base_env();
+  Rcpp::Function gc = env["gc"];
+  gc();
+}
 
 #endif // DIP_LAZYARRAY_UTILS_H

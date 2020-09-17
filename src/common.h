@@ -39,7 +39,9 @@ using namespace Rcpp;
 #define LASUBMOD_MULTI 0
 #endif
 
-const bool LAZYARRAY_DEBUG = true;
+#ifdef LAZYARRAY_DEBUG
+#undef LAZYARRAY_DEBUG
+#endif
 
 /*
  * For array with dimension [287 x 200 x 601 x 84]

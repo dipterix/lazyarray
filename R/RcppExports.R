@@ -37,8 +37,8 @@ parseSlices <- function(listOrEnv, dim, pos_subscript = TRUE) {
     .Call(`_lazyarray_parseSlices`, listOrEnv, dim, pos_subscript)
 }
 
-parseAndScheduleBlocks <- function(sliceIdx, dim, forceSchedule = FALSE) {
-    .Call(`_lazyarray_parseAndScheduleBlocks`, sliceIdx, dim, forceSchedule)
+parseAndScheduleBlocks2 <- function(sliceIdx, dim, forceSchedule = FALSE) {
+    .Call(`_lazyarray_parseAndScheduleBlocks2`, sliceIdx, dim, forceSchedule)
 }
 
 reshapeOrDrop <- function(x, reshape = NULL, drop = FALSE) {
@@ -57,12 +57,24 @@ lazyLoadOld <- function(files, partition_locations, partition_dim, ndim, value_t
     .Call(`_lazyarray_lazyLoadOld`, files, partition_locations, partition_dim, ndim, value_type)
 }
 
-subsetFSTBare <- function(rootPath, subparsed, dim, dtype) {
-    .Call(`_lazyarray_subsetFSTBare`, rootPath, subparsed, dim, dtype)
-}
-
 subsetFST <- function(rootPath, listOrEnv, dim, dtype, reshape = NULL, drop = FALSE) {
     .Call(`_lazyarray_subsetFST`, rootPath, listOrEnv, dim, dtype, reshape, drop)
+}
+
+scheduleFST <- function(listOrEnv, dim, forceSchedule = FALSE, hint = -1L) {
+    .Call(`_lazyarray_scheduleFST`, listOrEnv, dim, forceSchedule, hint)
+}
+
+executeScheduleFST <- function(rootPath, dtype, reshape, drop, partition) {
+    .Call(`_lazyarray_executeScheduleFST`, rootPath, dtype, reshape, drop, partition)
+}
+
+scheduleExistsFST <- function() {
+    .Call(`_lazyarray_scheduleExistsFST`)
+}
+
+freeScheduleFST <- function() {
+    .Call(`_lazyarray_freeScheduleFST`)
 }
 
 getLazyThread <- function(max = FALSE) {
@@ -75,10 +87,6 @@ setLazyThread <- function(n, reset_after_fork = NULL) {
 
 hasOpenMP <- function() {
     .Call(`_lazyarray_hasOpenMP`)
-}
-
-example_rcpp <- function(x) {
-    .Call(`_lazyarray_example_rcpp`, x)
 }
 
 subsetAssignFST <- function(values, file, listOrEnv, dim, dtype, compression = 50L, uniformEncoding = TRUE) {

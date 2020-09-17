@@ -39,7 +39,7 @@ FileArray <- R6::R6Class(
       } else {
         part <- as.integer(part)
         if(base::anyNA(part) || any(part <= 0)){
-          stop("partition number must be all positive")
+          stop("partition number must be all positive: ", part)
         }
       }
       res <- sprintf('%s%s', part, self$get_file_format())
@@ -117,9 +117,9 @@ FileArray <- R6::R6Class(
   drop <- isTRUE(drop)
   # get schedule
   
-  parsed <- parseAndScheduleBlocks(environment(), x$dim, TRUE)
-  # parsed <- parseAndScheduleBlocks(list(1:10,2:10,3:10,4:10), x$dim, TRUE)
-  # parsed <- parseAndScheduleBlocks(list(1,1,1,1), x$dim, TRUE)
+  parsed <- parseAndScheduleBlocks2(environment(), x$dim, TRUE)
+  # parsed <- parseAndScheduleBlocks2(list(1:10,2:10,3:10,4:10), x$dim, TRUE)
+  # parsed <- parseAndScheduleBlocks2(list(1,1,1,1), x$dim, TRUE)
   
   if(parsed$subset_mode == 1){
     stop("FstArray does not support single subscript (x[i]), try x[] or x[i,j,k,...]")
@@ -295,9 +295,9 @@ FileArray <- R6::R6Class(
     stop("`[<-.FileArray`: x is read-only")
   }
   
-  parsed <- parseAndScheduleBlocks(environment(), x$dim, TRUE)
-  # parsed <- parseAndScheduleBlocks(list(1:10,2:10,3:10,4:10), x$dim, TRUE)
-  # parsed <- parseAndScheduleBlocks(list(1,1,1,1), x$dim, TRUE)
+  parsed <- parseAndScheduleBlocks2(environment(), x$dim, TRUE)
+  # parsed <- parseAndScheduleBlocks2(list(1:10,2:10,3:10,4:10), x$dim, TRUE)
+  # parsed <- parseAndScheduleBlocks2(list(1,1,1,1), x$dim, TRUE)
   
   if(parsed$subset_mode == 1){
     stop("FstArray does not support single subscript (x[i]<-v), try x[]<-v or x[i,j,k,...]<-v")

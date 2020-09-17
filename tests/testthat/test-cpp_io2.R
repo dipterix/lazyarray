@@ -1,3 +1,4 @@
+# devtools::load_all()
 
 require(testthat)
 

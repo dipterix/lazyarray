@@ -3,6 +3,7 @@
 // [[Rcpp::plugins("cpp11")]]
 
 #include <fstcore.h>
+#include "common.h"
 #include "utils.h"
 
 using namespace Rcpp;
@@ -17,6 +18,9 @@ SEXP fstMeta(String fileName){
  * 
  */
 SEXP fstRetrieve(String fileName, SEXP colSel, SEXP start, SEXP end){
+#ifdef LAZYARRAY_DEBUG
+  print(wrap("Reading from fst..."));
+#endif
   return fstcore::fstretrieve(fileName, colSel, start, end);
 }
 

@@ -4,6 +4,7 @@
 #define LAZYARRAY_INDEX_H
 
 #include "Rcpp.h"
+#include "classIndexSchedule.h"
 
 // [[Rcpp::interfaces(r, cpp)]]
 
@@ -17,13 +18,9 @@ Rcpp::NumericVector loc2idx2(Rcpp::List& locations, Rcpp::NumericVector& parent_
 // [[Rcpp::export]]
 std::vector<int64_t> loc2idx3(SEXP locations, std::vector<int64_t>& parent_dim);
 
+
 // subsetIdx and subsetIdx2 should not be used directly as parseSlices combines them all
 SEXP subsetIdx(Rcpp::Environment expr_env, Rcpp::NumericVector dim, bool pos_subscript = false);
-
-SEXP subsetIdx2(const Rcpp::List sliceIdx, const std::vector<int64_t>& dim, bool pos_subscript = false);
-
-// should not be called directly, use parseAndScheduleBlocks instead
-Rcpp::List scheduleIndexing(SEXP locations, SEXP dimension, bool forceSchedule = false);
 
 // [[Rcpp::export]]
 Rcpp::List extractSlices(SEXP listOrEnv, const R_xlen_t& ndims);
@@ -36,7 +33,9 @@ Rcpp::List parseSlices(SEXP listOrEnv, const std::vector<int64_t>& dim, bool pos
 
 // parseAndScheduleBlocks = parseSlices + scheduleIndexing
 // [[Rcpp::export]]
-Rcpp::List parseAndScheduleBlocks(SEXP sliceIdx, Rcpp::NumericVector dim, bool forceSchedule = false);
+Rcpp::List parseAndScheduleBlocks2(SEXP sliceIdx, Rcpp::NumericVector dim, bool forceSchedule = false);
+
+ParsedIndex* parseAndScheduleBlocks(SEXP listOrEnv, const std::vector<int64_t>& dim, bool forceSchedule = false, int64_t hint = -1);
 
 // [[Rcpp::export]]
 SEXP reshapeOrDrop(SEXP x, SEXP reshape = R_NilValue, bool drop = false);

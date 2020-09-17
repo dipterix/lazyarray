@@ -4,6 +4,7 @@
 #define LAZYARRAY_SAVER2_H
 
 #include "Rcpp.h"
+#include "utils.h"
 
 // [[Rcpp::interfaces(r, cpp)]]
 

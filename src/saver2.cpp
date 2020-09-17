@@ -1,21 +1,20 @@
 #include "saver2.h"
 
 #include "common.h"
-#include "utils.h"
 #include "saver2ext.h"
 #include "indexConvert.h"
 #include "fstWrapper.h"
 using namespace Rcpp;
 
-template <typename T>
-std::vector<T> seq_len3(int64_t n){
-  std::vector<T> re = std::vector<T>(n);
-  T v = 1;
-  for(auto it = re.begin(); it != re.end(); it++){
-    *it = v++;
-  }
-  return re;
-}
+// template <typename T>
+// std::vector<T> seq_len3(int64_t n){
+//   std::vector<T> re = std::vector<T>(n);
+//   T v = 1;
+//   for(auto it = re.begin(); it != re.end(); it++){
+//     *it = v++;
+//   }
+//   return re;
+// }
 
 
 template <SEXPTYPE RTYPE>

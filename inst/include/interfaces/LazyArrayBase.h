@@ -97,7 +97,7 @@ public:
    */
   inline Rcpp::List scheduleBlocks(SEXP sliceIdx) {
     NumericVector dim = int64t2NumericVector(_dimension);
-    return parseAndScheduleBlocks(sliceIdx, dim);
+    return parseAndScheduleBlocks2(sliceIdx, dim);
   };
   
   

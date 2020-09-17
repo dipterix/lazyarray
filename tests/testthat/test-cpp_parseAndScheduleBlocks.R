@@ -1,9 +1,12 @@
 require(testthat)
 
+# devtools::load_all()
+dim <- c(5,7,8,10)
+slice <- list(c(1,1,2),1,2:3,4:5)
 
 check_schedule <- function(slice, dim){
   slice_copy <- lapply(slice, I); force(slice_copy)
-  res <- parseAndScheduleBlocks(slice_copy, dim)
+  res <- parseAndScheduleBlocks2(slice_copy, dim)
   re <- res$schedule
   block_lb <- getLazyBlockSize()
   block_ub <- 31250000
@@ -76,6 +79,7 @@ check_schedule <- function(slice, dim){
   expect_equal(re$block_ndims, block_ndims)
   expect_equal(re$block_dimension, block_dimension)
   expect_equal(re$schedule_dimension, schedule_dimension)
+  # re$partition_index[re$partition_index < -9e18] <- NA_real_
   expect_equal(as.numeric(re$partition_index), partition_index)
   expect_equal(re$partition_counts, partition_counts)
   expect_equal(re$schedule_counts_per_part, schedule_counts_per_part)
