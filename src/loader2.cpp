@@ -14,6 +14,8 @@ static ParsedIndex* pre_scheduled = nullptr;
 template <SEXPTYPE RTYPE>
 SEXP subsetFSTtemplate(const std::string& rootPath, const std::vector<int64_t>& dim, 
                        const ParsedIndex* subparsed){
+  int nThread = getLazyThread();
+  if(nThread <= 1){ nThread = 1; }
   
   int subset_mode = subparsed->subset_mode;
   const std::vector<int64_t> target_dimension = subparsed->target_dimension;
@@ -387,10 +389,6 @@ SEXP subsetFSTtemplate(const std::string& rootPath, const std::vector<int64_t>& 
         }
         ptr_buffer = buffer.begin();
 
-        // dynamically allocate arrays to persist indices
-        int nThread = getLazyThread();
-        if(nThread <= 1){ nThread = 1; }
-
         if(!block_indexed){
           // non-indexed (usually memory too big for index), index on the fly
 
@@ -490,15 +488,17 @@ ptr_res += block_expected_length;
           print(wrap("Assign index - pre-scheduled"));
 #endif // LAZYARRAY_DEBUG
           
-#pragma omp parallel num_threads(nThread)
+#pragma omp parallel num_threads(nThread) 
 {
+  int64_t shift;
 #pragma omp for schedule(static, 1) nowait
   for(int64_t ii = 0; ii < block_expected_length; ii++ ){
-    int64_t shift = *(block_schedule.begin() + ii);
+    shift = *(block_schedule.begin() + ii);
+    auto ptr_res2 = ptr_res + ii;
     if(shift < block_schedule_start || shift == NA_REAL || shift == NA_INTEGER64){
-      *(ptr_res + ii) = na_value;
+      *ptr_res2 = na_value;
     } else {
-      *(ptr_res + ii) = *(ptr_buffer + (shift - block_schedule_start));
+      *ptr_res2 = *(ptr_buffer + (shift - block_schedule_start));
     }
 
   }
@@ -566,7 +566,7 @@ SEXP subsetFST(const std::string& rootPath, SEXP listOrEnv, const std::vector<in
   delete tp;
   
   reshapeOrDrop(res, reshape, drop); 
-  tok("E subsetFSTBare");
+  tok("E subsetFST");
   return res;
 }
 

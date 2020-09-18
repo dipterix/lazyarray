@@ -146,6 +146,11 @@ FstArray <- R6::R6Class(
   if(!x$is_valid){
     stop("`[.FstArray`: x is no longer valid (data has been removed).")
   }
+  if(!is.null(reshape)){
+    reshape <- as.numeric(reshape)
+    stopifnot(all(reshape>=0))
+  }
+  drop <- isTRUE(drop)
   
   subsetFST(rootPath = x$storage_path,listOrEnv = environment(),
             dim = x$dim,dtype = x$sexptype,reshape = reshape,drop = drop)

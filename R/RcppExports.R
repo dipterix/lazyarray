@@ -77,6 +77,10 @@ freeScheduleFST <- function() {
     .Call(`_lazyarray_freeScheduleFST`)
 }
 
+subsetFM <- function(rootPath, listOrEnv, dim, dtype, reshape, drop) {
+    .Call(`_lazyarray_subsetFM`, rootPath, listOrEnv, dim, dtype, reshape, drop)
+}
+
 getLazyThread <- function(max = FALSE) {
     .Call(`_lazyarray_getLazyThread`, max)
 }
@@ -87,6 +91,10 @@ setLazyThread <- function(n, reset_after_fork = NULL) {
 
 hasOpenMP <- function() {
     .Call(`_lazyarray_hasOpenMP`)
+}
+
+cpp_readBin2 <- function(con, n, size, skip = 0L, check_length = TRUE) {
+    .Call(`_lazyarray_cpp_readBin2`, con, n, size, skip, check_length)
 }
 
 subsetAssignFST <- function(values, file, listOrEnv, dim, dtype, compression = 50L, uniformEncoding = TRUE) {

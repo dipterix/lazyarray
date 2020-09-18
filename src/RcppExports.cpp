@@ -531,6 +531,22 @@ RcppExport SEXP _lazyarray_freeScheduleFST() {
     UNPROTECT(1);
     return rcpp_result_gen;
 }
+// subsetFM
+SEXP subsetFM(const std::string& rootPath, SEXP listOrEnv, const std::vector<int64_t>& dim, SEXPTYPE dtype, SEXP reshape, bool drop);
+RcppExport SEXP _lazyarray_subsetFM(SEXP rootPathSEXP, SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP dtypeSEXP, SEXP reshapeSEXP, SEXP dropSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string& >::type rootPath(rootPathSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type listOrEnv(listOrEnvSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int64_t>& >::type dim(dimSEXP);
+    Rcpp::traits::input_parameter< SEXPTYPE >::type dtype(dtypeSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type reshape(reshapeSEXP);
+    Rcpp::traits::input_parameter< bool >::type drop(dropSEXP);
+    rcpp_result_gen = Rcpp::wrap(subsetFM(rootPath, listOrEnv, dim, dtype, reshape, drop));
+    return rcpp_result_gen;
+END_RCPP
+}
 // getLazyThread
 int getLazyThread(bool max);
 static SEXP _lazyarray_getLazyThread_try(SEXP maxSEXP) {
@@ -632,6 +648,21 @@ RcppExport SEXP _lazyarray_hasOpenMP() {
     }
     UNPROTECT(1);
     return rcpp_result_gen;
+}
+// cpp_readBin2
+SEXP cpp_readBin2(std::string con, int64_t n, int size, int64_t skip, bool check_length);
+RcppExport SEXP _lazyarray_cpp_readBin2(SEXP conSEXP, SEXP nSEXP, SEXP sizeSEXP, SEXP skipSEXP, SEXP check_lengthSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::string >::type con(conSEXP);
+    Rcpp::traits::input_parameter< int64_t >::type n(nSEXP);
+    Rcpp::traits::input_parameter< int >::type size(sizeSEXP);
+    Rcpp::traits::input_parameter< int64_t >::type skip(skipSEXP);
+    Rcpp::traits::input_parameter< bool >::type check_length(check_lengthSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_readBin2(con, n, size, skip, check_length));
+    return rcpp_result_gen;
+END_RCPP
 }
 // subsetAssignFST
 SEXP subsetAssignFST(const SEXP values, const std::string& file, SEXP listOrEnv, const std::vector<int64_t>& dim, const SEXPTYPE& dtype, int compression, bool uniformEncoding);
@@ -1034,9 +1065,11 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lazyarray_executeScheduleFST", (DL_FUNC) &_lazyarray_executeScheduleFST, 5},
     {"_lazyarray_scheduleExistsFST", (DL_FUNC) &_lazyarray_scheduleExistsFST, 0},
     {"_lazyarray_freeScheduleFST", (DL_FUNC) &_lazyarray_freeScheduleFST, 0},
+    {"_lazyarray_subsetFM", (DL_FUNC) &_lazyarray_subsetFM, 6},
     {"_lazyarray_getLazyThread", (DL_FUNC) &_lazyarray_getLazyThread, 1},
     {"_lazyarray_setLazyThread", (DL_FUNC) &_lazyarray_setLazyThread, 2},
     {"_lazyarray_hasOpenMP", (DL_FUNC) &_lazyarray_hasOpenMP, 0},
+    {"_lazyarray_cpp_readBin2", (DL_FUNC) &_lazyarray_cpp_readBin2, 5},
     {"_lazyarray_subsetAssignFST", (DL_FUNC) &_lazyarray_subsetAssignFST, 7},
     {"_lazyarray_dropDimension", (DL_FUNC) &_lazyarray_dropDimension, 1},
     {"_lazyarray_prod2", (DL_FUNC) &_lazyarray_prod2, 2},

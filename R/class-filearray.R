@@ -115,96 +115,100 @@ FileArray <- R6::R6Class(
     stopifnot(all(reshape>=0))
   }
   drop <- isTRUE(drop)
-  # get schedule
   
-  parsed <- parseAndScheduleBlocks2(environment(), x$dim, TRUE)
-  # parsed <- parseAndScheduleBlocks2(list(1:10,2:10,3:10,4:10), x$dim, TRUE)
-  # parsed <- parseAndScheduleBlocks2(list(1,1,1,1), x$dim, TRUE)
+  subsetFM(rootPath = x$storage_path,listOrEnv = environment(),
+            dim = x$dim,dtype = x$sexptype,reshape = reshape,drop = drop)
   
-  if(parsed$subset_mode == 1){
-    stop("FstArray does not support single subscript (x[i]), try x[] or x[i,j,k,...]")
-  }
-  
-  re <- array(x$sample_na, parsed$target_dimension)
-  
-  if(parsed$expected_length == 0){
-    reshapeOrDrop(re, reshape, drop)
-    return(re)
-  }
-  
-  partition_length <- prod(x$partition_dim())
-  
-  # x[]
-  if(parsed$subset_mode == 2){
-    
-    blocksize <- partition_length
-    
-    # copy all to re inplace
-    for(ii in seq_len(x$npart)){
-      if(x$has_partition(ii)){
-        sub <- x$get_partition_data(ii)
-        subsetAssignVector(re, blocksize * (ii-1) + 1, sub)
-      }
-    }
-  } else {
-    # x[i,j,k]
-    loc <- parsed$location_indices
-    if(!is.numeric(loc[[x$ndim]])){
-      # missing, all partitions
-      partitions <- seq_len(x$npart)
-    } else {
-      partitions <- loc[[x$ndim]]
-    }
-    # check if the schedule is made
-    schedule <- parsed$schedule
-    block_ndims <- schedule$block_ndims
-    
-    ptr <- 1
-    blocksize <- schedule$block_expected_length
-    
-    
-    for(file_ii in partitions){
-      # No file, NA
-      if(is.na(file_ii) || !x$has_partition(file_ii)){
-        ptr = ptr + blocksize * schedule$schedule_counts_per_part
-        next
-      }
-      
-      file <- x$get_partition_fpath(file_ii, full_path = TRUE, type = 'combined')
-      ptr_file <- filematrix::fm.open(file)
-      
-      if(schedule$block_indexed){
-        # file exists
-        for(schedule_ii in schedule$schedule_index){
-          if(!is.na(schedule_ii)){
-            row_number <- blocksize * (schedule_ii-1) + schedule$block_schedule
-            row_number[row_number < 0] <- NA
-            if(length(row_number)){
-              subsetAssignVector(re, ptr, ptr_file[row_number, 1])
-            }
-          }
-          ptr = ptr + blocksize
-        }
-      } else {
-        # ndim == 2
-        row_number <- loc[[1]]
-        buffer <- tryCatch({
-          row_number[row_number < 0] <- NA
-          ptr_file[row_number, 1]
-        }, error = function(e){
-          ptr_file[, 1]
-        })
-        subsetAssignVector(re, ptr, buffer)
-        ptr = ptr + length(buffer)
-      }
-      filematrix::close(ptr_file)
-      
-    }
-    
-  }
-  
-  reshapeOrDrop(re, reshape, drop)
-  re
+  # # get schedule
+  # 
+  # parsed <- parseAndScheduleBlocks2(environment(), x$dim, TRUE)
+  # # parsed <- parseAndScheduleBlocks2(list(1:10,2:10,3:10,4:10), x$dim, TRUE)
+  # # parsed <- parseAndScheduleBlocks2(list(1,1,1,1), x$dim, TRUE)
+  # 
+  # if(parsed$subset_mode == 1){
+  #   stop("FstArray does not support single subscript (x[i]), try x[] or x[i,j,k,...]")
+  # }
+  # 
+  # re <- array(x$sample_na, parsed$target_dimension)
+  # 
+  # if(parsed$expected_length == 0){
+  #   reshapeOrDrop(re, reshape, drop)
+  #   return(re)
+  # }
+  # 
+  # partition_length <- prod(x$partition_dim())
+  # 
+  # # x[]
+  # if(parsed$subset_mode == 2){
+  #   
+  #   blocksize <- partition_length
+  #   
+  #   # copy all to re inplace
+  #   for(ii in seq_len(x$npart)){
+  #     if(x$has_partition(ii)){
+  #       sub <- x$get_partition_data(ii)
+  #       subsetAssignVector(re, blocksize * (ii-1) + 1, sub)
+  #     }
+  #   }
+  # } else {
+  #   # x[i,j,k]
+  #   loc <- parsed$location_indices
+  #   if(!is.numeric(loc[[x$ndim]])){
+  #     # missing, all partitions
+  #     partitions <- seq_len(x$npart)
+  #   } else {
+  #     partitions <- loc[[x$ndim]]
+  #   }
+  #   # check if the schedule is made
+  #   schedule <- parsed$schedule
+  #   block_ndims <- schedule$block_ndims
+  #   
+  #   ptr <- 1
+  #   blocksize <- schedule$block_expected_length
+  #   
+  #   
+  #   for(file_ii in partitions){
+  #     # No file, NA
+  #     if(is.na(file_ii) || !x$has_partition(file_ii)){
+  #       ptr = ptr + blocksize * schedule$schedule_counts_per_part
+  #       next
+  #     }
+  #     
+  #     file <- x$get_partition_fpath(file_ii, full_path = TRUE, type = 'combined')
+  #     ptr_file <- filematrix::fm.open(file)
+  #     
+  #     if(schedule$block_indexed){
+  #       # file exists
+  #       for(schedule_ii in schedule$schedule_index){
+  #         if(!is.na(schedule_ii)){
+  #           row_number <- blocksize * (schedule_ii-1) + schedule$block_schedule
+  #           row_number[row_number < 0] <- NA
+  #           if(length(row_number)){
+  #             subsetAssignVector(re, ptr, ptr_file[row_number, 1])
+  #           }
+  #         }
+  #         ptr = ptr + blocksize
+  #       }
+  #     } else {
+  #       # ndim == 2
+  #       row_number <- loc[[1]]
+  #       buffer <- tryCatch({
+  #         row_number[row_number < 0] <- NA
+  #         ptr_file[row_number, 1]
+  #       }, error = function(e){
+  #         ptr_file[, 1]
+  #       })
+  #       subsetAssignVector(re, ptr, buffer)
+  #       ptr = ptr + length(buffer)
+  #     }
+  #     filematrix::close(ptr_file)
+  #     
+  #   }
+  #   
+  # }
+  # 
+  # reshapeOrDrop(re, reshape, drop)
+  # re
 }
 
 # `[.FileArray` <- function(x, ..., drop = TRUE, reshape = NULL){
