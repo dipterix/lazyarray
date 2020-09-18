@@ -1,4 +1,5 @@
-#include <cstdio>
+#include <iostream>
+#include <fstream>
 #include <Rcpp.h>
 #include "common.h"
 #include "utils.h"
@@ -20,57 +21,47 @@ SEXP r_readBin(std::string con, int64_t n, int size){
 // buffer: char[n] (size must be at least n)
 // n: number of elements to read
 // size: R size of element: double is 8, int is 4...
-int64_t cpp_readBin(FILE* conn, char* buffer, int64_t n, 
+int64_t cpp_readBin(std::string con, char* buffer, int64_t n, 
                     int size, int64_t skip = 0, bool check_length = true){
   // char* buffer = new char[n * size];
-  // std::ifstream input( con, std::ios::binary );
+  std::ifstream input( con, std::ios::binary );
   int64_t fsize = 0;
   int64_t n_byte = n * size;
   try{
+    
     // input.setf(std::ios::ios_base::skipws);
-    // std::filebuf* pbuf = input.rdbuf();
+    std::filebuf* pbuf = input.rdbuf();
     if(check_length){
-      // fsize = pbuf->pubseekoff (-skip * size, input.end, input.beg);
-      fseek(conn, 0, SEEK_END);
-      fsize = ::ftell(conn);
+      fsize = pbuf->pubseekoff (-skip * size, input.end, input.beg);
       if(fsize < size){
         n_byte = 0;
       } else {
         if(fsize < n_byte){
           n_byte = fsize;
         }
-        // pbuf->pubseekpos (skip * size, input.beg);
-        // pbuf->sgetn (buffer, n_byte);
-        fseek(conn, skip * size, SEEK_SET);
-        std::fread(buffer, 1, n_byte, conn);
+        pbuf->pubseekpos (skip * size, input.beg);
+        pbuf->sgetn (buffer, n_byte);
       }
     } else {
-      // pbuf->pubseekpos (skip * size, input.beg);
-      // pbuf->sgetn (buffer, n_byte);
-      fseek(conn, skip * size, SEEK_SET);
-      std::fread(buffer, 1, n_byte, conn);
+      pbuf->pubseekpos (skip * size, input.beg);
+      pbuf->sgetn (buffer, n_byte);
     }
   } catch (...) {
     n_byte = 0;
   }
-  // input.close();
+  input.close();
   return n_byte;
 }
 
 
 int64_t fileLength(const std::string& con){
+  std::ifstream input( con, std::ios::binary );
   int64_t fsize = 0;
-  // std::ifstream input( con, std::ios::binary );
-  FILE* conn = fopen( con.c_str(), "rb" );
-  
   try{
-    // std::filebuf* pbuf = input.rdbuf();
-    // fsize = pbuf->pubseekoff (0,input.end,input.beg);
-    fseek(conn, 0, SEEK_END);
-    fsize = ::ftell(conn);
+    std::filebuf* pbuf = input.rdbuf();
+    fsize = pbuf->pubseekoff (0,input.end,input.beg);
   } catch(...){}
-  // input.close();
-  fclose(conn);
+  input.close();
   return fsize;
 }
 
@@ -153,11 +144,8 @@ SEXP subsetFMtemplate(const std::string& rootPath, const std::vector<int64_t>& d
         }
 
       } else {
-        // std::ifstream input( partition_path, std::ios::binary );
-        FILE* input = fopen( partition_path.c_str(), "rb" );
-        cpp_readBin(input, (char*)(ptr_res), expect_nrows, element_size, 0, false);
-        // input.close();
-        fclose(input);
+
+        cpp_readBin(partition_path, (char*)(ptr_res), expect_nrows, element_size, 0, true);
         ptr_res += block_size;
         // ptr_buffer = buffer.begin();
         // ptr_alt = ptr_res + block_size;
@@ -409,18 +397,16 @@ SEXP subsetFMtemplate(const std::string& rootPath, const std::vector<int64_t>& d
       }
       // read elements as this will put the file to warm start
       // 
+      r_readBin(partition_path, BLOCKSIZE < buffer_xlen ? BLOCKSIZE:buffer_xlen, element_size);
 
       chunk_start = 0;
       chunk_end = block_length;
       
-      // std::ifstream input;
-      // input.open( partition_path, std::ios::binary );
-      FILE* input = fopen( partition_path.c_str(), "rb" );
       
       // start OpenMP
 #pragma omp parallel num_threads(nThread) private(chunk_end, chunk_start, reader_start, reader_end)
 {
-#pragma omp for schedule(static, 1) nowait
+#pragma omp for ordered schedule(static, 1)
   for(int64_t current_thread = 0; current_thread < nThread; current_thread++)
   { // manually specify threads without using omp function(avoid handing in forked process)
     
@@ -432,7 +418,8 @@ SEXP subsetFMtemplate(const std::string& rootPath, const std::vector<int64_t>& d
     }
     
     // current_thread is used to get buffer
-    T* buffer2 = (T*)(RAW(buffers[current_thread]));
+    SEXP buffer = buffers[current_thread];
+    T* buffer2 = (T*)(RAW(buffer));
       
     for(int64_t schedule_ii = schedule_start; schedule_ii < schedule_end; schedule_ii++)
     { // for each schedule, readin block and assign them
@@ -460,13 +447,8 @@ SEXP subsetFMtemplate(const std::string& rootPath, const std::vector<int64_t>& d
       // int64_t subblock_min = (min subblock_idx), subblock_max = max subblock_idx;
       reader_start = (chunk_start + block_schedule_start);
       reader_end = (chunk_start + block_schedule_end);
-
-#pragma omp critical
-{
-      // setvbuf (input, (char*) buffer2, _IOFBF, buffer_xlen * element_size);
-      cpp_readBin(input, (char*) buffer2, buffer_xlen, element_size, reader_start-1, false);
       
-}
+      cpp_readBin(partition_path, (char*) buffer2, buffer_xlen, element_size, reader_start-1, true);
       
       if(!block_indexed){
         // non-indexed (usually memory too big for index), index on the fly
@@ -549,14 +531,9 @@ SEXP subsetFMtemplate(const std::string& rootPath, const std::vector<int64_t>& d
       }
         
     }
-    
-    
   }
   
 } // end omp parallel num_threads(nThread)
-      
-      // input.close();
-      fclose( input );
     }
 
     UNPROTECT(buffers.size());

@@ -140,7 +140,7 @@ AbstractLazyArray <- R6::R6Class(
         private$.dim <- self$raw_meta$dim
         private$.dimnames <- self$raw_meta$dimnames
         private$.storage_format <- self$raw_meta$storage_format
-        if(private$.file_format != self$raw_meta$file_format){
+        if(isTRUE(private$.file_format != self$raw_meta$file_format)){
           stop("File format mismatch. Header: ", self$raw_meta$file_format, "; provided: ", private$.file_format)
         }
         if(xor(
