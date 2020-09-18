@@ -21,10 +21,10 @@ SEXP r_readBin(std::string con, std::string what, int n, int size, bool is_signe
 // buffer: char[n] (size must be at least n)
 // n: number of elements to read
 // size: R size of element: double is 8, int is 4...
-int64_t cpp_readBin(std::string con, char* buffer, int64_t n, 
+int64_t cpp_readBin(std::ifstream& input, char* buffer, int64_t n, 
                     int size, int64_t skip = 0, bool check_length = true){
   // char* buffer = new char[n * size];
-  std::ifstream input( con, std::ios::binary );
+  // std::ifstream input( con, std::ios::binary );
   int64_t fsize = 0;
   int64_t n_byte = n * size;
   try{
@@ -49,7 +49,7 @@ int64_t cpp_readBin(std::string con, char* buffer, int64_t n,
   } catch (...) {
     n_byte = 0;
   }
-  input.close();
+  // input.close();
   return n_byte;
 }
 
@@ -144,8 +144,9 @@ SEXP subsetFMtemplate(const std::string& rootPath, const std::vector<int64_t>& d
         }
 
       } else {
-
-        cpp_readBin(partition_path, (char*)(ptr_res), expect_nrows, element_size, 0, true);
+        std::ifstream input( partition_path, std::ios::binary );
+        cpp_readBin(input, (char*)(ptr_res), expect_nrows, element_size, 0, true);
+        input.close();
         ptr_res += block_size;
         // ptr_buffer = buffer.begin();
         // ptr_alt = ptr_res + block_size;
@@ -403,127 +404,130 @@ SEXP subsetFMtemplate(const std::string& rootPath, const std::vector<int64_t>& d
       // prepare openmp
       // buffers
       
+      std::ifstream input;
+      input.open( partition_path, std::ios::binary );
       
       // start OpenMP
-  for(std::vector<int64_t>::iterator ptr_schedule_idx = schedule_index.begin(); 
-      ptr_schedule_idx != schedule_index.end(); ptr_schedule_idx++ )
-  { // for each schedule, readin block and assign them
-      
-    // re-calculate index position for pointers (they are private now)
-    // ptr_res2 ~ (ptr_res2 + block_expected_length) are to write
-    ptr_alt = ptr_res;
-    
-    int64_t block_number = *ptr_schedule_idx;
-      
-    // print(wrap(*ptr_block));
-    
-    if(block_number == NA_INTEGER64 || !(block_schedule_start > 0 && block_schedule_start <= block_schedule_end)){
-      // fill NAs
-      ptr_alt = ptr_res + block_expected_length; // block length (subset version)
-      for(;ptr_res != ptr_alt; ptr_alt++){
-        *ptr_alt = na_value;
-      }
-      continue;
-    }
-    
-    // locate where the rows are in the fst file
-    chunk_end = block_length * block_number;
-    chunk_start = chunk_end - block_length;
-    // int64_t subblock_min = (min subblock_idx), subblock_max = max subblock_idx;
-    reader_start = (chunk_start + block_schedule_start);
-    reader_end = (chunk_start + block_schedule_end);
-    
-    cpp_readBin(partition_path, (char*) buffer2, buffer_xlen, element_size, reader_start-1, true);
-    
-    if(!block_indexed){
-      // non-indexed (usually memory too big for index), index on the fly
-      
-      
-#pragma omp parallel num_threads(nThread)
-{
-#pragma omp for schedule(static, 1)
-      for(int64_t ii = 0; ii < block_expected_length; ii++ ){
-        int64_t mod;
-        int64_t rest = ii;
-        int64_t sub_index = 0;
-        int64_t subblock_dim_ii;
-        int64_t tmp;
-        for(int64_t di = 0; di < block_ndims; di++ ){
+      for(std::vector<int64_t>::iterator ptr_schedule_idx = schedule_index.begin(); 
+          ptr_schedule_idx != schedule_index.end(); ptr_schedule_idx++ )
+      { // for each schedule, readin block and assign them
           
-          // block_dimension = schedule["block_dimension"]; // [block dim], full version
-          // std::vector<int64_t> block_prod_dim = schedule["block_prod_dim"]; // prod([1, block dim]), used to locate indices when block is too large to index
-          // std::vector<int64_t> block_schedule = schedule["block_schedule"]; // given a flattened block (full version), which indices to subset?
-          // int64_t block_schedule_start = schedule["block_schedule_start"];
-          // int64_t block_schedule_end = schedule["block_schedule_end"];      // min, max of block_schedule
-          //
-          // int64_t block_length = schedule["block_length"];                  // # elements in a block (full version) = prod(block_dimension)
-          // int64_t block_expected_length = schedule["block_expected_length"];// # elements in a block (subset version) = length(block_schedule)
-          //
-          // bool block_indexed = schedule["block_indexed"];                   // whether schedule_index can be trusted
-          // const List block_location
+        // re-calculate index position for pointers (they are private now)
+        // ptr_res2 ~ (ptr_res2 + block_expected_length) are to write
+        ptr_alt = ptr_res;
+        
+        int64_t block_number = *ptr_schedule_idx;
           
-          if(sub_index != NA_INTEGER64 && sub_index != NA_REAL){
-            subblock_dim_ii = *(target_dimension.begin() + di);
-            mod = rest % subblock_dim_ii;
-            rest = (rest - mod) / subblock_dim_ii;
-            
-            
-            // get di^th margin element mod
-            // partition_subblocklocs[di][mod]
-            
-            // check this lication is empty
-            if( std::get<1>(block_location[di]) ){
-              // index[di], location_ii is missing
-              tmp = mod + 1;
-            } else {
-              // index[di]
-              tmp = std::get<0>(block_location[di])[mod];
+        // print(wrap(*ptr_block));
+        
+        if(block_number == NA_INTEGER64 || !(block_schedule_start > 0 && block_schedule_start <= block_schedule_end)){
+          // fill NAs
+          ptr_alt = ptr_res + block_expected_length; // block length (subset version)
+          for(;ptr_res != ptr_alt; ptr_alt++){
+            *ptr_alt = na_value;
+          }
+          continue;
+        }
+        
+        // locate where the rows are in the fst file
+        chunk_end = block_length * block_number;
+        chunk_start = chunk_end - block_length;
+        // int64_t subblock_min = (min subblock_idx), subblock_max = max subblock_idx;
+        reader_start = (chunk_start + block_schedule_start);
+        reader_end = (chunk_start + block_schedule_end);
+        
+        cpp_readBin(input, (char*) buffer2, buffer_xlen, element_size, reader_start-1, true);
+        
+        if(!block_indexed){
+          // non-indexed (usually memory too big for index), index on the fly
+          
+          
+    #pragma omp parallel num_threads(nThread)
+    {
+    #pragma omp for schedule(static, 1)
+          for(int64_t ii = 0; ii < block_expected_length; ii++ ){
+            int64_t mod;
+            int64_t rest = ii;
+            int64_t sub_index = 0;
+            int64_t subblock_dim_ii;
+            int64_t tmp;
+            for(int64_t di = 0; di < block_ndims; di++ ){
+              
+              // block_dimension = schedule["block_dimension"]; // [block dim], full version
+              // std::vector<int64_t> block_prod_dim = schedule["block_prod_dim"]; // prod([1, block dim]), used to locate indices when block is too large to index
+              // std::vector<int64_t> block_schedule = schedule["block_schedule"]; // given a flattened block (full version), which indices to subset?
+              // int64_t block_schedule_start = schedule["block_schedule_start"];
+              // int64_t block_schedule_end = schedule["block_schedule_end"];      // min, max of block_schedule
+              //
+              // int64_t block_length = schedule["block_length"];                  // # elements in a block (full version) = prod(block_dimension)
+              // int64_t block_expected_length = schedule["block_expected_length"];// # elements in a block (subset version) = length(block_schedule)
+              //
+              // bool block_indexed = schedule["block_indexed"];                   // whether schedule_index can be trusted
+              // const List block_location
+              
+              if(sub_index != NA_INTEGER64 && sub_index != NA_REAL){
+                subblock_dim_ii = *(target_dimension.begin() + di);
+                mod = rest % subblock_dim_ii;
+                rest = (rest - mod) / subblock_dim_ii;
+                
+                
+                // get di^th margin element mod
+                // partition_subblocklocs[di][mod]
+                
+                // check this lication is empty
+                if( std::get<1>(block_location[di]) ){
+                  // index[di], location_ii is missing
+                  tmp = mod + 1;
+                } else {
+                  // index[di]
+                  tmp = std::get<0>(block_location[di])[mod];
+                }
+                // print(wrap(location_ii));
+                // Rcout << di << " " << mod << " " << tmp << " ";
+                // is tmp is < 1, that mean it's invalid may be remove the other one
+                if(tmp < 1 || tmp == NA_REAL ){
+                  sub_index = NA_INTEGER64;
+                } else if (tmp != NA_INTEGER64){
+                  // location_ii starts from 1 but we need it to starting from 0
+                  sub_index += *(block_prod_dim.begin() + di) * (tmp - 1);
+                }
+              }
+              
+              
             }
-            // print(wrap(location_ii));
-            // Rcout << di << " " << mod << " " << tmp << " ";
-            // is tmp is < 1, that mean it's invalid may be remove the other one
-            if(tmp < 1 || tmp == NA_REAL ){
-              sub_index = NA_INTEGER64;
-            } else if (tmp != NA_INTEGER64){
-              // location_ii starts from 1 but we need it to starting from 0
-              sub_index += *(block_prod_dim.begin() + di) * (tmp - 1);
+            // Rcout << block_schedule_start << " " << sub_index<< "\n";
+            
+            if( sub_index == NA_INTEGER64 ) {
+              *(ptr_res+ii) = na_value;
+            } else {
+              sub_index = sub_index + 1 - block_schedule_start;
+              *(ptr_res+ii) = *(buffer2 + sub_index);
+            }
+            // Rcout << *(ptr_res + ii) << "\n";
+          }
+    }
+        } else {
+          // don't calculate index on the fly.
+    #pragma omp parallel num_threads(nThread)
+    {
+    #pragma omp for schedule(static, 1)
+          for(int64_t shift_ii = 0; shift_ii < block_schedule.size(); shift_ii++)
+          {
+            int64_t shift = block_schedule[shift_ii];
+            if(shift < block_schedule_start || shift == NA_REAL || shift == NA_INTEGER64){
+              *(ptr_res+shift_ii) = na_value;
+            } else {
+              *(ptr_res+shift_ii) = *(buffer2 + (shift - block_schedule_start));
             }
           }
-          
-          
-        }
-        // Rcout << block_schedule_start << " " << sub_index<< "\n";
-        
-        if( sub_index == NA_INTEGER64 ) {
-          *(ptr_res+ii) = na_value;
-        } else {
-          sub_index = sub_index + 1 - block_schedule_start;
-          *(ptr_res+ii) = *(buffer2 + sub_index);
-        }
-        // Rcout << *(ptr_res + ii) << "\n";
-      }
-}
-    } else {
-      // don't calculate index on the fly.
-#pragma omp parallel num_threads(nThread)
-{
-#pragma omp for schedule(static, 1)
-      for(int64_t shift_ii = 0; shift_ii < block_schedule.size(); shift_ii++)
-      {
-        int64_t shift = block_schedule[shift_ii];
-        if(shift < block_schedule_start || shift == NA_REAL || shift == NA_INTEGER64){
-          *(ptr_res+shift_ii) = na_value;
-        } else {
-          *(ptr_res+shift_ii) = *(buffer2 + (shift - block_schedule_start));
-        }
-      }
-}
-      
     }
-    
-    ptr_res += block_expected_length;
-  }
-  
+          
+        }
+        
+        ptr_res += block_expected_length;
+      }
+      
+      input.close();
     }
 
     UNPROTECT(1);

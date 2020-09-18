@@ -93,8 +93,8 @@ hasOpenMP <- function() {
     .Call(`_lazyarray_hasOpenMP`)
 }
 
-cpp_readBin2 <- function(con, n, size, skip = 0L, check_length = TRUE) {
-    .Call(`_lazyarray_cpp_readBin2`, con, n, size, skip, check_length)
+r_readBin2 <- function(con, n, size, skip = 0L, check_length = TRUE) {
+    .Call(`_lazyarray_r_readBin2`, con, n, size, skip, check_length)
 }
 
 subsetAssignFST <- function(values, file, listOrEnv, dim, dtype, compression = 50L, uniformEncoding = TRUE) {

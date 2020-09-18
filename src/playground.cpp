@@ -8,46 +8,31 @@
 using namespace Rcpp;
 
 // [[Rcpp::export]]
-SEXP cpp_readBin2(std::string con, int64_t n, int size, int64_t skip = 0, bool check_length = true){
-  char* buffer = new char[n * size];
-  std::ifstream input( con, std::ios::binary );
-  int64_t fsize = 0;
-  int64_t n_byte = n * size;
-  try{
-    input.setf(std::ios::ios_base::skipws);
-    std::filebuf* pbuf = input.rdbuf();
-    if(check_length){
-      fsize = pbuf->pubseekoff (-skip * size,input.end,input.in);
-      if(fsize < size){
-        n_byte = 0;
-      } else {
-        if(fsize < n_byte){
-          n_byte = fsize;
-        }
-        pbuf->pubseekpos (skip * size,input.in);
-        pbuf->sgetn (buffer, n_byte);
-      }
-    } else {
-      pbuf->sgetn (buffer, n_byte);
-    }
-  } catch (...) {
-    n_byte = 0;
+SEXP r_readBin2(std::string con, int64_t n, int size, int64_t skip = 0, bool check_length = true){
+  Rcpp::Environment env = Rcpp::Environment::base_env();
+  Rcpp::Function readBin = env["readBin"];
+  Rcpp::Function file = env["file"];
+  Rcpp::Function close = env["close.connection"];
+  SEXP connection = file(Rcpp::Shield<SEXP>(Rcpp::wrap(con)), Rcpp::wrap("rb"));
+  if(skip > 0){
+    Rcpp::Function seek = env["seek.connection"];
+    seek(connection, wrap(skip * size));
   }
-  input.close();
-  
-  SEXP re = PROTECT(Rf_allocVector(REALSXP, n_byte / size));
-  
-  memcpy(REAL(re), buffer, n_byte);
-  
-  delete[] buffer;
-  UNPROTECT(1);
-  
+  SEXP re = readBin(connection, wrap("raw"), wrap(n * size), wrap(1), wrap(true), wrap("little"));
+  // close
+  close(connection);
   return re;
 }
 
 /*** R
 f <- normalizePath('~/Desktop/filearray_data/1.bmat')
-a <- cpp_readBin2(f, 4096L, 8L, skip = 14096L)
+a <- r_readBin2(f, 4096, 8L, skip = 14096L)
 filem <- filematrix::fm.open("~/Desktop/filearray_data/1", readonly = TRUE)
 range(filem[14096+(1:4096),1] - a)
+
+bench::mark({
+  a <- r_readBin2(f, 4096, 8L, skip = 14096L)
+}, {
+  filem[14096+(1:4096),1]
+}, check = F)
 */
