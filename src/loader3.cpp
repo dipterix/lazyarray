@@ -70,7 +70,10 @@ int64_t fileLength(const std::string& con){
     fsize = ::ftell(conn);
   } catch(...){}
   // input.close();
-  fclose(conn);
+  if( conn != NULL ){
+    fclose(conn);
+  }
+  
   return fsize;
 }
 
@@ -155,9 +158,15 @@ SEXP subsetFMtemplate(const std::string& rootPath, const std::vector<int64_t>& d
       } else {
         // std::ifstream input( partition_path, std::ios::binary );
         FILE* input = fopen( partition_path.c_str(), "rb" );
-        cpp_readBin(input, (char*)(ptr_res), expect_nrows, element_size, 0, false);
-        // input.close();
-        fclose(input);
+        try{
+          cpp_readBin(input, (char*)(ptr_res), expect_nrows, element_size, 0, false);
+        } catch(...){
+          warning("Error while reading partition file(s)");
+        }
+        if(input != NULL){
+          fclose(input);
+        }
+        
         ptr_res += block_size;
         // ptr_buffer = buffer.begin();
         // ptr_alt = ptr_res + block_size;
@@ -416,6 +425,7 @@ SEXP subsetFMtemplate(const std::string& rootPath, const std::vector<int64_t>& d
       // std::ifstream input;
       // input.open( partition_path, std::ios::binary );
       FILE* input = fopen( partition_path.c_str(), "rb" );
+      bool fileio_error = false;
       
       // start OpenMP
 #pragma omp parallel num_threads(nThread) private(chunk_end, chunk_start, reader_start, reader_end)
@@ -445,7 +455,7 @@ SEXP subsetFMtemplate(const std::string& rootPath, const std::vector<int64_t>& d
         
       // print(wrap(*ptr_block));
       
-      if(block_number == NA_INTEGER64 || !(block_schedule_start > 0 && block_schedule_start <= block_schedule_end)){
+      if(fileio_error || block_number == NA_INTEGER64 || !(block_schedule_start > 0 && block_schedule_start <= block_schedule_end)){
         // fill NAs
         auto ptr_alt2 = ptr_res2 + block_expected_length; // block length (subset version)
         for(;ptr_res2 != ptr_alt2; ptr_res2++){
@@ -463,12 +473,24 @@ SEXP subsetFMtemplate(const std::string& rootPath, const std::vector<int64_t>& d
 
 #pragma omp critical
 {
-      // setvbuf (input, (char*) buffer2, _IOFBF, buffer_xlen * element_size);
-      cpp_readBin(input, (char*) buffer2, buffer_xlen, element_size, reader_start-1, false);
+      try{
+        cpp_readBin(input, (char*) buffer2, buffer_xlen, element_size, reader_start-1, false);
+      } catch (...) {
+        fileio_error = true;
+        // warning("Error while reading partition file(s)");
+        // continue;
+      }
+      
       
 }
-      
-      if(!block_indexed){
+      if(fileio_error){
+        // fill NAs
+        auto ptr_alt2 = ptr_res2 + block_expected_length; // block length (subset version)
+        for(;ptr_res2 != ptr_alt2; ptr_res2++){
+          *ptr_res2 = na_value;
+        }
+        continue;
+      } else if(!block_indexed){
         // non-indexed (usually memory too big for index), index on the fly
         
         int64_t mod;
@@ -555,8 +577,13 @@ SEXP subsetFMtemplate(const std::string& rootPath, const std::vector<int64_t>& d
   
 } // end omp parallel num_threads(nThread)
       
-      // input.close();
-      fclose( input );
+      if(fileio_error){
+        warning("Error while reading partition file(s)");
+      }
+      if(input != NULL){
+        fclose( input );
+      }
+      
     }
 
     UNPROTECT(buffers.size());
