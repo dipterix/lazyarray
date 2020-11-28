@@ -115,7 +115,7 @@ as.lazyarray <- function(x, path, type = "fstarray", ...){
 }
 
 #' @export
-as.lazyarray.default <- function(x, path, dim, storage_format, type = "fstarray", ...){
+as.lazyarray.default <- function(x, path, type = "fstarray", dim, storage_format, ...){
   
   if(missing(path)){
     path <- tempfile()

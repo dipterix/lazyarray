@@ -15,9 +15,9 @@
 #' partition_table(x)
 #' 
 #' # LazyArray
-#' x <- lazyarray(tempfile(), 'double', c(3,3,3))
+#' x <- lazyarray(tempfile(), storage_format = 'double', dim = c(3,3,3))
 #' x[] <- 1:27
-#' partition_table(x)
+#' partition_table(x, quiet=TRUE)
 #' 
 #' @export
 partition_table <- function(x, na.rm = FALSE, ...){
@@ -103,7 +103,7 @@ partition_table.AbstractLazyArray <- function(x, na.rm = FALSE, ...){
 #' }, partitions = c(1,2,4,5))
 #' 
 #' # -------------------------- LazyArray ---------------------------
-#' x <- lazyarray(tempfile(), 'complex', c(2,3,4))
+#' x <- lazyarray(tempfile(), storage_format = 'complex', dim = c(2,3,4))
 #' x[] <- 1:24 + (24:1) * 1i
 #' 
 #' partition_map(x, function(slice, part){
@@ -227,7 +227,7 @@ chunk_map <- function(x, map_fun, reduce, max_nchunks, chunk_size, ...){
 
 
 #' @export
-chunk_map.AbstractLazyArray <- function(x, map_fun, reduce, max_nchunks, chunk_size, ...){
+chunk_map.AbstractLazyArray <- function(x, map_fun, reduce, max_nchunks, chunk_size, partitions = 'all', ...){
   
   if(missing(max_nchunks)){
     # calculate such that each chunk size is at most 0.5GB
@@ -237,10 +237,9 @@ chunk_map.AbstractLazyArray <- function(x, map_fun, reduce, max_nchunks, chunk_s
   new_x$make_readonly()
   
   if(missing(chunk_size)){
-    mapped <- x$`@chunk_map`(map_function = map_fun, max_nchunks = max_nchunks, chunk_size = 1024L)
-  } else {
-    mapped <- x$`@chunk_map`(map_function = map_fun, max_nchunks = max_nchunks, chunk_size = chunk_size)
+    chunk_size <- 1024L
   }
+  mapped <- x$`@chunk_map`(map_function = map_fun, max_nchunks = max_nchunks, chunk_size = chunk_size, partitions = partitions)
   
   if(!missing(reduce)){
     mapped <- reduce(mapped)

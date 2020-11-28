@@ -90,8 +90,7 @@ rand_string <- function(length = 50){
 #' auto_clear_lazyarray(arr_dbl)
 #' 
 #' arr_chr <- lazyarray(path, storage_format = 'character',
-#'                      dim = 2:4, meta_name = 'meta-chr.meta',
-#'                      quiet = TRUE)
+#'                      dim = 2:4, meta_name = 'meta-chr.meta')
 #' auto_clear_lazyarray(arr_chr)
 #' 
 #' # remove either one, the directory still exists
@@ -104,8 +103,7 @@ rand_string <- function(length = 50){
 #' 
 #' dir.exists(path)
 #' arr_check <- lazyarray(path, storage_format = 'character',
-#'                        dim = 2:4, meta_name = 'meta-chr',
-#'                        quiet = TRUE)
+#'                        dim = 2:4, meta_name = 'meta-chr')
 #' 
 #' # data is removed, so there should be no data (NAs)
 #' arr_check[]

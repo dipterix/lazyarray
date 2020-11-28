@@ -221,7 +221,7 @@ AbstractLazyArray <- R6::R6Class(
     
     
     `@chunk_map` = function(
-      map_function, max_nchunks = 50, ...
+      map_function, max_nchunks = 50, partitions = 'all', ...
     ){
       # use chunk_map, do not call this function directly
       
@@ -241,16 +241,24 @@ AbstractLazyArray <- R6::R6Class(
       }
       
       nrows <- self$partition_length
-      ncols <- self$npart
+      # ncols <- self$npart
       # get chunk size
       chunkf <- make_chunks(nrows, max_nchunks = max_nchunks, ...)
       
       lapply2(seq_len(chunkf$nchunks), function(ii){
         idx_range <- chunkf$get_indices(ii, as_numeric = TRUE)[[1]]
-        map_f(
-          self[seq.int(idx_range[[1]], idx_range[[2]]),,drop=FALSE],
-          ii, idx_range
-        )
+        if(isTRUE(partitions == 'all')){
+          map_f(
+            self[seq.int(idx_range[[1]], idx_range[[2]]),,drop=FALSE],
+            ii, idx_range
+          )
+        } else {
+          map_f(
+            self[seq.int(idx_range[[1]], idx_range[[2]]),partitions,drop=FALSE],
+            ii, idx_range
+          )
+        }
+        
       })
     },
     

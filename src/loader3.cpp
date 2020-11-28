@@ -584,6 +584,9 @@ SEXP subsetFMtemplate(const std::string& rootPath, const std::vector<int64_t>& d
         fclose( input );
       }
       
+      // make sure pointer is correct
+      ptr_res += block_size;
+      
     }
 
     UNPROTECT(buffers.size());

@@ -70,7 +70,7 @@ FstArray <- R6::R6Class(
     },
     
     `@chunk_map` = function(
-      map_function, max_nchunks = 50, ...
+      map_function, max_nchunks = 50, partitions = 'all', ...
     ){
       
       if(!is.function(map_function)){
@@ -89,14 +89,21 @@ FstArray <- R6::R6Class(
       }
       
       nrows <- self$partition_length
-      ncols <- self$npart
+      
       # get chunk size
       chunkf <- make_chunks(nrows, max_nchunks = max_nchunks, ...)
-      files <- self$get_partition_fpath()
-      partition_locations <- list(
-        numeric(0),
-        seq_len(ncols)
-      )
+      if(isTRUE(partitions == 'all')){
+        files <- self$get_partition_fpath()
+        # ncols <- self$npart
+      } else {
+        files <- self$get_partition_fpath(partitions)
+        # ncols <- length
+      }
+      
+      # partition_locations <- list(
+      #   numeric(0),
+      #   seq_len(ncols)
+      # )
       
       sdata <- self$sample_na
       
@@ -171,7 +178,7 @@ FstArray <- R6::R6Class(
   if(isTRUE(any(parts == -1))){
     x$generate_summary()
   } else {
-    parts <- parts[!is.na(parts) && parts > 0 && parts <= x$npart]
+    parts <- parts[!is.na(parts) & parts > 0 & parts <= x$npart]
     if(length(parts)){
       x$generate_summary(parts)
     }

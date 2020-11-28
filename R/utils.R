@@ -142,7 +142,7 @@ lapply2 <- function(x, FUN, ...){
   if( length(x) > 1 && has_dipsaus() ){
     dipsaus::lapply_async2(x, FUN, FUN.args = list(...), plan = getOption('lazyarray.parallel.strategy', FALSE))
   } else {
-    lapply(x, FUN)
+    lapply(x, FUN, ...)
   }
 }
 

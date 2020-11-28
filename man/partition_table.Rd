@@ -36,8 +36,8 @@ x <- array(1:27, c(3,3,3))
 partition_table(x)
 
 # LazyArray
-x <- lazyarray(tempfile(), 'double', c(3,3,3))
+x <- lazyarray(tempfile(), storage_format = 'double', dim = c(3,3,3))
 x[] <- 1:27
-partition_table(x)
+partition_table(x, quiet=TRUE)
 
 }

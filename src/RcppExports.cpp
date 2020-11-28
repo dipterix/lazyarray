@@ -649,21 +649,6 @@ RcppExport SEXP _lazyarray_hasOpenMP() {
     UNPROTECT(1);
     return rcpp_result_gen;
 }
-// r_readBin2
-SEXP r_readBin2(std::string con, int64_t n, int size, int64_t skip, bool check_length);
-RcppExport SEXP _lazyarray_r_readBin2(SEXP conSEXP, SEXP nSEXP, SEXP sizeSEXP, SEXP skipSEXP, SEXP check_lengthSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::string >::type con(conSEXP);
-    Rcpp::traits::input_parameter< int64_t >::type n(nSEXP);
-    Rcpp::traits::input_parameter< int >::type size(sizeSEXP);
-    Rcpp::traits::input_parameter< int64_t >::type skip(skipSEXP);
-    Rcpp::traits::input_parameter< bool >::type check_length(check_lengthSEXP);
-    rcpp_result_gen = Rcpp::wrap(r_readBin2(con, n, size, skip, check_length));
-    return rcpp_result_gen;
-END_RCPP
-}
 // subsetAssignFST
 SEXP subsetAssignFST(const SEXP values, const std::string& file, SEXP listOrEnv, const std::vector<int64_t>& dim, const SEXPTYPE& dtype, int compression, bool uniformEncoding);
 static SEXP _lazyarray_subsetAssignFST_try(SEXP valuesSEXP, SEXP fileSEXP, SEXP listOrEnvSEXP, SEXP dimSEXP, SEXP dtypeSEXP, SEXP compressionSEXP, SEXP uniformEncodingSEXP) {
@@ -1069,7 +1054,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lazyarray_getLazyThread", (DL_FUNC) &_lazyarray_getLazyThread, 1},
     {"_lazyarray_setLazyThread", (DL_FUNC) &_lazyarray_setLazyThread, 2},
     {"_lazyarray_hasOpenMP", (DL_FUNC) &_lazyarray_hasOpenMP, 0},
-    {"_lazyarray_r_readBin2", (DL_FUNC) &_lazyarray_r_readBin2, 5},
     {"_lazyarray_subsetAssignFST", (DL_FUNC) &_lazyarray_subsetAssignFST, 7},
     {"_lazyarray_dropDimension", (DL_FUNC) &_lazyarray_dropDimension, 1},
     {"_lazyarray_prod2", (DL_FUNC) &_lazyarray_prod2, 2},

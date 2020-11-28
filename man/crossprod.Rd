@@ -34,7 +34,7 @@ crossprod(lazy_x)[]
 weights <- (1:50)/50
 
 t(x) \%*\% diag(weights) \%*\% x
-lazy_crossprod(lazy_x, weights = weights)
+crossprod(lazy_x, weights = weights)
 
 \dontrun{
 
