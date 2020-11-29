@@ -47,7 +47,7 @@ context("Getter/Setter mode = 1")
 
 test_that("Getter/Setter mode = 1", {
   
-  self <- lazyarray(tempfile(), storage_format = 'double', dim = c(1,3,4))#, multipart = TRUE, multipart_mode = 1)
+  self <- lazyarray(tempfile(), storage_format = 'double', dim = c(1,3,4), type = 'fstarray')#, multipart = TRUE, multipart_mode = 1)
   private <- self$.__enclos_env__$private
   value <- array(1:4, c(1,2,2))
   

@@ -1,4 +1,4 @@
-remotes::install_github('dipterix/lazyarray@filearray')
+# remotes::install_github('dipterix/lazyarray@filearray')
 
 require(lazyarray)
 
@@ -10,7 +10,7 @@ data <- rnorm(prod(dim))
 pryr::object_size(data)
 
 fstarray <- fstarray(path1, dim)
-filearray <- filearray(path2, dim)
+filearray <- lazyarray(path2, dim)
 
 fstarray[] <- data
 filearray[] <- data
@@ -20,11 +20,11 @@ system.time({fstarray[,,,]})
 #  user  system elapsed 
 # 2.380   1.052   1.296
 
-system.time({filearray[,1,,]})
+system.time({filearray[,,,]})
 
 #  user  system elapsed 
 # 0.377   0.322   0.281
 
 
 # range(fstarray[,,,] - filearray[,,,])
-lazyarray:::setLazyBlockSize(10)
+lazyarray:::setLazyBlockSize(100)

@@ -13,7 +13,7 @@ on.exit({
 })
 
 x = array(1:prod(dim), dim)
-a = as.lazyarray(x, path = f)
+a = as.lazyarray(x, path = f, type = 'fstarray')
 loader_f <- function(..., samp, reshape, drop){
   lazyarray:::subsetFST(a$storage_path, environment(), dim, getSexpType(samp), reshape, drop)
 }
@@ -219,7 +219,7 @@ context("Loader2 with complex data")
 
 x = array(rnorm(prod(dim)), dim) + 1i * array(rnorm(prod(dim)), dim)
 unlink(f, recursive = TRUE)
-a = as.lazyarray(x, path = f)
+a = as.lazyarray(x, path = f, type = 'fstarray')
 
 test_that("Loader2 complex", {
   setLazyBlockSize(-1)
@@ -250,7 +250,7 @@ test_that("Loader2 complex", {
 context("Loader2 with matrix")
 test_that("Loader2 with matrix", {
   x <- matrix(1:16,4)
-  a <- as.lazyarray(x)
+  a <- as.lazyarray(x, type = 'fstarray')
   loader_f <- function(...){
     lazyarray:::subsetFST(a$storage_path, environment(), dim(x), getSexpType(1L), NULL, FALSE)
   }

@@ -8,6 +8,8 @@
 .onLoad <- function(libname, pkgname){
   options('lazyarray.parallel.strategy' = FALSE)
   options('lazyarray.chunk_memory' = 80)
+  options('lazyarray.fstarray.blocksize' = -1)
+  
   ncores <- parallel::detectCores(logical = TRUE)
   options('lazyarray.nthreads' = ncores)
   set_lazy_threads(ncores, TRUE)

@@ -1,6 +1,6 @@
 test_that("Subset lazyarray & lazymatrix", {
   a <- array(rnorm(80), c(2,4,2,5))
-  x <- as.lazyarray(a)
+  x <- as.lazyarray(a, type = 'fstarray')
   
   expect_equal(x[], a)
   
@@ -8,7 +8,7 @@ test_that("Subset lazyarray & lazymatrix", {
   expect_equal(x[idx], a[idx])
   
   # matrix
-  x <- as.lazymatrix(a)
+  x <- as.lazymatrix(a, type = 'fstarray')
   b <- x[]
   
   expect_equivalent(as.integer(dim(b)), c(16,5))
