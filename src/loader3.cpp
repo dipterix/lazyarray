@@ -424,8 +424,8 @@ SEXP subsetFMtemplate(const std::string& rootPath, const std::vector<int64_t>& d
       
       // std::ifstream input;
       // input.open( partition_path, std::ios::binary );
-      FILE* input = fopen( partition_path.c_str(), "rb" );
-      bool fileio_error = false;
+      // FILE* input = fopen( partition_path.c_str(), "rb" );
+      // bool fileio_error = false;
       
       // start OpenMP
 #pragma omp parallel num_threads(nThread) private(chunk_end, chunk_start, reader_start, reader_end)
@@ -433,6 +433,9 @@ SEXP subsetFMtemplate(const std::string& rootPath, const std::vector<int64_t>& d
 #pragma omp for schedule(static, 1) nowait
   for(int64_t current_thread = 0; current_thread < nThread; current_thread++)
   { // manually specify threads without using omp function(avoid handing in forked process)
+    
+    FILE* input = fopen( partition_path.c_str(), "rb" );
+    bool fileio_error = false;
     
     int64_t schedule_count = total_schedules / nThread;
     int64_t schedule_start = schedule_count * current_thread;
@@ -471,7 +474,7 @@ SEXP subsetFMtemplate(const std::string& rootPath, const std::vector<int64_t>& d
       reader_start = (chunk_start + block_schedule_start);
       reader_end = (chunk_start + block_schedule_end);
 
-#pragma omp critical
+//#pragma omp critical
 {
       try{
         cpp_readBin(input, (char*) buffer2, buffer_xlen, element_size, reader_start-1, false);
@@ -572,17 +575,20 @@ SEXP subsetFMtemplate(const std::string& rootPath, const std::vector<int64_t>& d
         
     }
     
+    if(input != NULL){
+      fclose( input );
+    }
     
   }
   
 } // end omp parallel num_threads(nThread)
       
-      if(fileio_error){
-        warning("Error while reading partition file(s)");
-      }
-      if(input != NULL){
-        fclose( input );
-      }
+      // if(fileio_error){
+      //   warning("Error while reading partition file(s)");
+      // }
+      // if(input != NULL){
+      //   fclose( input );
+      // }
       
       // make sure pointer is correct
       ptr_res += block_size;
