@@ -54,8 +54,8 @@ test_that("Subset filearray", {
   i <- sample(5,replace = TRUE)
   # TODO: R array drop=TRUE with 0 length doesn't actually drop the array
   
-  # i <- 1:5
-  # expect_equal(x[,j,,-i], a[,j,,-i[!is.na(i)]])
+  i <- 1:5
+  expect_equal(x[,j,,-i], a[,j,,-i[!is.na(i)]])
   # expect_equal(x[j,j,j,-i], a[j,j,j,-i[!is.na(i)]])
   
   expect_equal(x[,j,,-i,drop=FALSE], a[,j,,-i[!is.na(i)],drop=FALSE])
@@ -100,6 +100,9 @@ test_that("Subset fstarray", {
   
   j <- sample(2,replace = TRUE)
   i <- sample(5,replace = TRUE)
+  expect_equal(x[,j,,-i], a[,j,,-i[!is.na(i)]])
+  
+  i <- 1:5
   expect_equal(x[,j,,-i], a[,j,,-i[!is.na(i)]])
   
   x[,,,1] <- a[,,,2]

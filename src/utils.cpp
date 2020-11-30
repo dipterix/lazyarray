@@ -109,9 +109,12 @@ SEXP dropDimension(SEXP x){
   SEXP new_dim;
   R_xlen_t ndims = Rf_xlength(dim);
   R_xlen_t xlen = Rf_xlength(x);
-  if(ndims == 0 || xlen == 0){
+  if(ndims == 0){
     new_dim = R_NilValue;
     Rf_setAttrib(x, wrap("dim"), new_dim);
+    return x;
+  }
+  if(xlen == 0){
     return x;
   }
   
