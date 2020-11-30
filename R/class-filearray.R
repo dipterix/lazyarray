@@ -121,7 +121,9 @@ FileArray <- R6::R6Class(
   
   # set block size to be the first margin to maximize reading speed
   block_size <- dim(x)[[1]]
-  setLazyBlockSize(max(block_size, 1))
+  block_size <- max(block_size, 1)
+  block_size <- min(block_size, 16384)
+  setLazyBlockSize(block_size)
   
   on.exit({
     # reset block size for fst arrays
