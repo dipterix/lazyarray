@@ -63,7 +63,7 @@ partition_map(x, function(slice, part){
 }, partitions = c(1,2,4,5))
 
 # -------------------------- LazyArray ---------------------------
-x <- lazyarray(tempfile(), 'complex', c(2,3,4))
+x <- lazyarray(tempfile(), storage_format = 'complex', dim = c(2,3,4))
 x[] <- 1:24 + (24:1) * 1i
 
 partition_map(x, function(slice, part){

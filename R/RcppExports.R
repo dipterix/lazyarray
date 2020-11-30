@@ -25,24 +25,24 @@ checkFstMeta <- function(file, expect_nrows, cnames) {
     .Call(`_lazyarray_checkFstMeta`, file, expect_nrows, cnames)
 }
 
-loc2idx <- function(locations, parent_dim) {
-    .Call(`_lazyarray_loc2idx`, locations, parent_dim)
-}
-
-loc2idx2 <- function(locations, parent_dim) {
-    .Call(`_lazyarray_loc2idx2`, locations, parent_dim)
-}
-
 loc2idx3 <- function(locations, parent_dim) {
     .Call(`_lazyarray_loc2idx3`, locations, parent_dim)
 }
 
-subsetIdx <- function(expr_env, dim, pos_subscript = FALSE) {
-    .Call(`_lazyarray_subsetIdx`, expr_env, dim, pos_subscript)
+extractSlices <- function(listOrEnv, ndims) {
+    .Call(`_lazyarray_extractSlices`, listOrEnv, ndims)
 }
 
-subsetIdx2 <- function(sliceIdx, dim, pos_subscript = FALSE) {
-    .Call(`_lazyarray_subsetIdx2`, sliceIdx, dim, pos_subscript)
+parseSlices <- function(listOrEnv, dim, pos_subscript = TRUE) {
+    .Call(`_lazyarray_parseSlices`, listOrEnv, dim, pos_subscript)
+}
+
+parseAndScheduleBlocks2 <- function(sliceIdx, dim, forceSchedule = FALSE) {
+    .Call(`_lazyarray_parseAndScheduleBlocks2`, sliceIdx, dim, forceSchedule)
+}
+
+reshapeOrDrop <- function(x, reshape = NULL, drop = FALSE) {
+    .Call(`_lazyarray_reshapeOrDrop`, x, reshape, drop)
 }
 
 cpp_create_lazyarray <- function(x, dim, fileName, compression, uniformEncoding) {
@@ -57,12 +57,28 @@ lazyLoadOld <- function(files, partition_locations, partition_dim, ndim, value_t
     .Call(`_lazyarray_lazyLoadOld`, files, partition_locations, partition_dim, ndim, value_type)
 }
 
-lazySubsetBare <- function(files, dim, subparsed, dtype, reshape = NULL, drop = FALSE) {
-    .Call(`_lazyarray_lazySubsetBare`, files, dim, subparsed, dtype, reshape, drop)
+subsetFST <- function(rootPath, listOrEnv, dim, dtype, reshape = NULL, drop = FALSE) {
+    .Call(`_lazyarray_subsetFST`, rootPath, listOrEnv, dim, dtype, reshape, drop)
 }
 
-lazySubset <- function(files, env, dim, samp, reshape = NULL, drop = FALSE) {
-    .Call(`_lazyarray_lazySubset`, files, env, dim, samp, reshape, drop)
+scheduleFST <- function(listOrEnv, dim, forceSchedule = FALSE, hint = -1L) {
+    .Call(`_lazyarray_scheduleFST`, listOrEnv, dim, forceSchedule, hint)
+}
+
+executeScheduleFST <- function(rootPath, dtype, reshape, drop, partition) {
+    .Call(`_lazyarray_executeScheduleFST`, rootPath, dtype, reshape, drop, partition)
+}
+
+scheduleExistsFST <- function() {
+    .Call(`_lazyarray_scheduleExistsFST`)
+}
+
+freeScheduleFST <- function() {
+    .Call(`_lazyarray_freeScheduleFST`)
+}
+
+subsetFM <- function(rootPath, listOrEnv, dim, dtype, reshape, drop) {
+    .Call(`_lazyarray_subsetFM`, rootPath, listOrEnv, dim, dtype, reshape, drop)
 }
 
 getLazyThread <- function(max = FALSE) {
@@ -77,8 +93,8 @@ hasOpenMP <- function() {
     .Call(`_lazyarray_hasOpenMP`)
 }
 
-asi <- function(v, nt) {
-    .Call(`_lazyarray_asi`, v, nt)
+subsetAssignFST <- function(values, file, listOrEnv, dim, dtype, compression = 50L, uniformEncoding = TRUE) {
+    .Call(`_lazyarray_subsetAssignFST`, values, file, listOrEnv, dim, dtype, compression, uniformEncoding)
 }
 
 dropDimension <- function(x) {
@@ -95,6 +111,22 @@ parseDots <- function(env, eval) {
 
 stopIfNot <- function(isValid, message, stopIfError = TRUE) {
     .Call(`_lazyarray_stopIfNot`, isValid, message, stopIfError)
+}
+
+getSexpType <- function(x) {
+    .Call(`_lazyarray_getSexpType`, x)
+}
+
+tik <- function() {
+    .Call(`_lazyarray_tik`)
+}
+
+tok <- function(msg, stop = FALSE) {
+    .Call(`_lazyarray_tok`, msg, stop)
+}
+
+subsetAssignVector <- function(x, start, value) {
+    .Call(`_lazyarray_subsetAssignVector`, x, start, value)
 }
 
 # Register entry points for exported C++ functions

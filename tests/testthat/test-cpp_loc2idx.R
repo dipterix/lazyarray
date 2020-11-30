@@ -1,10 +1,11 @@
-test_that("Test loc2idx - validate", {
+test_that("Test loc2idx3 - validate", {
   # Case 1: small dset with NAs
   x = array(1:8,c(2,2,2))
   dim = dim(x)
   locs = list(0:1L,1L, 3:1)
   target_dim = sapply(locs, length)
-  tmp = loc2idx(locs, dim);# tmp
+  tmp = loc2idx3(locs, dim);# tmp
+  tmp[tmp < -9e18] <- NA
   # validate in R
   mfactor <- c(1, cumprod(dim))[seq_along(dim)]
   scaled_loc <- lapply(seq_along(locs), function(ii){
@@ -23,7 +24,8 @@ test_that("Test loc2idx - validate", {
   dim = dim(x)
   locs = list(0:1L,integer(0), 3:1)
   target_dim = sapply(locs, length)
-  tmp = loc2idx(locs, dim);# tmp
+  tmp = loc2idx3(locs, dim);# tmp
+  tmp[tmp < -9e18] <- NA
   # validate in R
   mfactor <- c(1, cumprod(dim))[seq_along(dim)]
   scaled_loc <- lapply(seq_along(locs), function(ii){
@@ -48,7 +50,8 @@ test_that("Test loc2idx - validate", {
     as.integer(sample(12)-1)
   )
   target_dim = sapply(locs, length)
-  tmp = loc2idx(locs, dim);# tmp
+  tmp = loc2idx3(locs, dim);# tmp
+  tmp[tmp < -9e18] <- NA
   dim(tmp) = target_dim
   
   # validate in R
@@ -78,13 +81,14 @@ test_that("Test loc2idx - validate", {
   
 })
 
-test_that("Test loc2idx2 - validate", {
+test_that("Test loc2idx3 - validate", {
   # Case 1: small dset with NAs
   x = array(1:8,c(2,2,2))
   dim = dim(x)
   locs = list(0:1L,1L, 3:1)
   target_dim = sapply(locs, length)
-  tmp = loc2idx2(locs, dim);# tmp
+  tmp = loc2idx3(locs, dim);# tmp
+  tmp[tmp < -9e18] <- NA
   # validate in R
   mfactor <- c(1, cumprod(dim))[seq_along(dim)]
   scaled_loc <- lapply(seq_along(locs), function(ii){
@@ -103,7 +107,8 @@ test_that("Test loc2idx2 - validate", {
   dim = dim(x)
   locs = list(0:1L,integer(0), 3:1)
   target_dim = sapply(locs, length)
-  tmp = loc2idx2(locs, dim);# tmp
+  tmp = loc2idx3(locs, dim);# tmp
+  tmp[tmp < -9e18] <- NA
   # validate in R
   mfactor <- c(1, cumprod(dim))[seq_along(dim)]
   scaled_loc <- lapply(seq_along(locs), function(ii){
@@ -128,7 +133,8 @@ test_that("Test loc2idx2 - validate", {
     as.integer(sample(12)-1)
   )
   target_dim = sapply(locs, length)
-  tmp = loc2idx2(locs, dim);# tmp
+  tmp = loc2idx3(locs, dim);# tmp
+  tmp[tmp < -9e18] <- NA
   dim(tmp) = target_dim
   
   # validate in R

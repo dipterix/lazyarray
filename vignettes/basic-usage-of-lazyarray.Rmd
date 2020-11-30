@@ -29,7 +29,7 @@ x <- rnorm(3e6); dim(x) <- c(10, 100, 100, 30)
 
 # Save array to a path
 path <- tempfile()
-arr <- create_lazyarray(path, 'double', dim(x), multipart = TRUE)
+arr <- lazyarray(path, dim = dim(x), storage_format = 'double')
 arr[] <- x
 ```
 
@@ -37,13 +37,19 @@ Load existing array
 
 ```{r}
 # Load existing array
-arr <- load_lazyarray(path)
+arr <- lazyarray(path)
 ```
 
-The loaded array is read-only by default. However, they can be set writable.
+To protect array from further changes, make it read-only.
 
 ```{r}
-# Make loaded array writable
+arr$make_readonly()
+arr$can_write
+```
+
+To make a read-only array writable:
+
+```{r}
 arr$make_writable()
 arr$can_write
 ```

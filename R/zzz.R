@@ -1,5 +1,6 @@
+# Rcpp::loadModule('LazyArrayModules', TRUE)
+
 .onUnload <- function (libpath) {
-  setLazyThread(1L, FALSE)
   library.dynam.unload("lazyarray", libpath)
 }
 
@@ -7,7 +8,11 @@
 .onLoad <- function(libname, pkgname){
   options('lazyarray.parallel.strategy' = FALSE)
   options('lazyarray.chunk_memory' = 80)
-  setLazyThread(4L, FALSE)
+  options('lazyarray.fstarray.blocksize' = -1)
+  
+  ncores <- parallel::detectCores(logical = TRUE)
+  options('lazyarray.nthreads' = ncores)
+  set_lazy_threads(ncores, TRUE)
 }
 
 
@@ -17,6 +22,7 @@
 #' @param enabled whether multiple-process strategy is enabled
 #' @param strategy strategies to apply, see \code{\link[future]{plan}} for
 #' some of the details. For \code{"callr"} plan, please install package
+#' @param workers number of 'CPU' cores to use. 
 #' \code{future.callr}.
 #' @param workers positive integer or \code{"auto"}, number of 'CPU' to use.
 #' The default value is \code{"auto"}, i.e. \code{future::availableCores()}
@@ -64,7 +70,8 @@ lazy_parallel <- function(
   invisible()
 }
 
-setOldClass(c('LazyMatrix', 'LazyArray', 'R6'))
+setOldClass(c('FstArray', 'AbstractLazyArray', 'R6'))
+setOldClass(c('FileArray', 'AbstractLazyArray', 'R6'))
 
 
 setGeneric("typeof")
@@ -74,13 +81,13 @@ setGeneric("typeof")
 #' @param x a \code{LazyArray} or an R object
 #' @return The type of data stored in the input
 #' @exportMethod typeof
-setMethod("typeof", signature(x="LazyArray"), function(x){
-  typeof(x$`@sample_data`())
+setMethod("typeof", signature(x="AbstractLazyArray"), function(x){
+  x$storage_format
 })
 
 
 setGeneric("crossprod")
-setGeneric("tcrossprod")
+# setGeneric("tcrossprod")
 
 #' Matrix Crossproduct
 #' @param x a \code{LazyArray} or an R matrix
@@ -102,7 +109,7 @@ setGeneric("tcrossprod")
 #' weights <- (1:50)/50
 #' 
 #' t(x) %*% diag(weights) %*% x
-#' lazy_crossprod(lazy_x, weights = weights)
+#' crossprod(lazy_x, weights = weights)
 #' 
 #' \dontrun{
 #' 
@@ -117,48 +124,85 @@ NULL
 
 #' @rdname crossprod
 #' @exportMethod crossprod
-setMethod("crossprod", signature(x="LazyMatrix", y = 'ANY'), function(x, y = NULL){
-  lazy_crossprod(x, y)
+setMethod("crossprod", signature(x="AbstractLazyArray", y = 'AbstractLazyArray'), function(x, y = NULL, weights = NULL, ...){
+  lazy_crossprod(x, y, weights = weights, ...)
 })
 
 #' @rdname crossprod
-#' @exportMethod tcrossprod
-setMethod("tcrossprod", signature(x="LazyMatrix", y = 'ANY'), function(x, y = NULL){
-  lazy_crossprod(t(x), y)
+#' @exportMethod crossprod
+setMethod("crossprod", signature(x="AbstractLazyArray", y = 'NULL'), function(x, y = NULL, weights = NULL, ...){
+  lazy_crossprod(x, NULL, weights = weights, ...)
 })
 
-
+#' @rdname crossprod
+#' @exportMethod crossprod
+setMethod("crossprod", signature(x="AbstractLazyArray", y = "missing"), function(x, y = NULL, weights = NULL, ...){
+  lazy_crossprod(x, NULL, weights = weights, ...)
+})
 
 #' @rdname crossprod
-#' @export
-lazy_crossprod <- function(x, y = NULL, weights = NULL, ...){
-  if(!is.null(y)){
-    y <- as.lazymatrix(y)
-    if(x$storage_path != y$storage_path || !xor(x$`@transposed`, y$`@transposed`) || x$`@transposed`){
-      return(lazy_matmul(t(x), y, weights = weights, ...))
-    }
-  }
-  x <- as.lazymatrix(x, read_only = TRUE)
-  
-  if(!x$`@transposed`){
-    # t(x) %*% y
-    
-    if(!is.null(weights)){
-      re <- chunk_map(x, function(chunk_x, ii, idx_range){
-        crossprod(chunk_x, chunk_x * weights[seq.int(idx_range[1], idx_range[2])])
-      }, reduce = function(mapped){
-        Reduce('+', mapped)
-      })
-    } else {
-      re <- chunk_map(x, function(chunk_x){
-        crossprod(chunk_x)
-      }, reduce = function(mapped){
-        Reduce('+', mapped)
-      })
-    }
-    return(re)
+#' @exportMethod crossprod
+setMethod("crossprod", signature(x="AbstractLazyArray", y = 'matrix'), function(x, y = NULL, weights = NULL, ...){
+  if(!is.null(weights)){
+    stopifnot(length(weights) == x$partition_length)
+    res <- lapply(seq_len(x$npart), function(ii){
+      x$get_partition_data(ii, reshape = c(1, x$partition_length)) %*% (y * weights)
+    })
   } else {
-    return(lazy_matmul(t(x), x, weights = weights, ...))
+    res <- lapply(seq_len(x$npart), function(ii){
+      x$get_partition_data(ii, reshape = c(1, x$partition_length)) %*% y
+    })
+  }
+  
+  do.call('rbind', res)
+})
+
+
+lazy_crossprod <- function(x, y = NULL, weights = NULL, ...){
+  
+  if(!is.null(weights)){
+    stopifnot(length(weights) == x$partition_length)
+  }
+  
+  new_x <- as.lazymatrix(x)
+  new_x$make_readonly()
+  if(is.null(y)){
+    yisx <- TRUE
+    new_y <- new_x
+  } else {
+    yisx <- isTRUE(x$storage_path == y$storage_path && x$get_file_format() == y$get_file_format())
+    new_y <- as.lazymatrix(y)
+  }
+  
+  if(length(weights)){
+    ftile <- filematrix::fm.create(tempfile(), nrow = length(weights), ncol = 1)
+    ftile[] <- weights
+    on.exit(filematrix::close(ftile))
+    
+    chunk_map(new_x, map_fun = function(data, ii, idx_range){
+      idx <- seq.int(idx_range[[1]], idx_range[[2]])
+      if(yisx){
+        return(crossprod(data, data * as.vector(ftile[idx,1])))
+      } else {
+        sub_y <- y[idx,,drop=FALSE] * as.vector(ftile[idx,1])
+        return(crossprod(data, sub_y))
+      }
+    }, reduce = function(mapped){
+      Reduce('+', mapped)
+    }, ...)
+    
+  } else {
+    chunk_map(new_x, map_fun = function(data, ii, idx_range){
+      
+      if(yisx){
+        return(crossprod(data))
+      } else {
+        sub_y <- y[seq.int(idx_range[[1]], idx_range[[2]]),,drop=FALSE]
+        return(crossprod(data, sub_y))
+      }
+    }, reduce = function(mapped){
+      Reduce('+', mapped)
+    }, ...)
   }
   
 }

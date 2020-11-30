@@ -27,8 +27,7 @@ ClassLazyMatrix <- R6::R6Class(
       cat("<LazyMatrix> (", private$storage_format, ')\n', sep = '')
       cat('Dimension:\t', paste(sprintf('%s ', self$dim), collapse = 'x '), 
           ifelse(self$`@transposed`, ' (transposed)', ''), '\n')
-      cat('Partitioned:\t', private$partitioned , '\n')
-      cat('File format:\t', sprintf('%s[part]%s', private$prefix, private$postfix), '\n')
+      cat('File format:\t', sprintf('[part]%s', private$postfix), '\n')
       invisible(self)
     },
     
@@ -75,14 +74,10 @@ ClassLazyMatrix <- R6::R6Class(
       if(prod(dim) == 0){
         stop("zero length array is not supported.")
       }
-      if(private$partitioned){
-        # dim is allowed to vary along the last dimension, like c(1,2,4,3) -> c(1,2,4,5)
-        if(!all(dif[-length(dif)] == 0)){
-          stop('For multi-part arrays, you can only increase/decrease the last dimension, like from c(12,3,1) to c(12,3,X)')
-        } 
-      } else if(!all(dif == 0)){
-        stop("For single data file arrays, you cannot change dimension once initialized")
-      }
+      # dim is allowed to vary along the last dimension, like c(1,2,4,3) -> c(1,2,4,5)
+      if(!all(dif[-length(dif)] == 0)){
+        stop('For multi-part arrays, you can only increase/decrease the last dimension, like from c(12,3,1) to c(12,3,X)')
+      } 
       # check dimension vs dim
       mis_dimnames <- missing(dimnames)
       if(mis_dimnames){

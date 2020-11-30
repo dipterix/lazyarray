@@ -1,7 +1,9 @@
+#include "loader1.h"
 // [[Rcpp::plugins("cpp11")]]
 
-#include "lazycommon.h"
-#include "loader1.h"
+
+#include "common.h"
+#include "indexConvert.h"
 #include "fstWrapper.h"
 using namespace Rcpp; 
 
@@ -310,9 +312,6 @@ SEXP lazyLoadOld(StringVector& files, List& partition_locations,
   // locations is to each partition
   // dim is total dim
   
-  Rcpp::Timer _rcpp_timer;
-  _rcpp_timer.step("start lazyLoadOld");
-  
   // Get partition dimension size
   R_xlen_t part_dim = partition_dim.size();
   if( part_dim != partition_locations.size() || part_dim < 2 ){
@@ -358,7 +357,6 @@ SEXP lazyLoadOld(StringVector& files, List& partition_locations,
     first_loc[ii] = partition_locations[ii];
   }
   
-  _rcpp_timer.step("calculated target_dim");
   
   // TODO: check whether first_len is needed
   int64_t first_len = std::accumulate(target_dim.begin(), target_dim.begin() + part_dim - 1, INTEGER64_ONE, std::multiplies<int64_t>());
@@ -371,21 +369,10 @@ SEXP lazyLoadOld(StringVector& files, List& partition_locations,
   IntegerVector row_indices = loc2idx(first_loc, first_dim);
   
   
-  _rcpp_timer.step("calculated loc2idx");
-  
   
   // print(partition_dim);
   SEXP re = lazyLoadBaseOld(files, partition_dim, target_dim, 
                         row_indices, column_indices, TYPEOF(value_type));
-  
-  _rcpp_timer.step("calculated cpp_load_lazyarray_base");
-  
-  // if( LAZYARRAY_DEBUG ){
-  //   
-  //   NumericVector _res(_rcpp_timer);
-  //   _res = _res / 1000.0;
-  //   Rcpp::print(_res);
-  // }
   return re;
 }
 

@@ -17,3 +17,4 @@ R_xlen_t getLazyBlockSize(){
   }
   return BLOCKSIZE;
 }
+

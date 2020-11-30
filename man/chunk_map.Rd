@@ -4,19 +4,19 @@
 \alias{chunk_map}
 \title{Apply functions to all partitions, but small chunks each time}
 \usage{
-chunk_map(x, map_function, reduce, max_nchunks, chunk_size, ...)
+chunk_map(x, map_fun, reduce, max_nchunks, chunk_size, ...)
 }
 \arguments{
 \item{x}{a \code{LazyArray} or R array}
 
-\item{map_function}{function to apply to each chunk}
+\item{map_fun}{function to apply to each chunk}
 
 \item{reduce}{similar to \code{reduce} in \code{\link{partition_map}}}
 
-\item{max_nchunks}{max number of chunks. If missing, then automatically 
-assigned based on array size}
+\item{max_nchunks}{maximum number of chunks. If number of chunks is too 
+large, then \code{chunk_size} will be re-calculated.}
 
-\item{chunk_size}{Integer chunk size. If \code{chunk_size} is too small, it 
+\item{chunk_size}{integer chunk size. If \code{chunk_size} is too small, it 
 will be ignored}
 
 \item{...}{ignored or passed to other methods}

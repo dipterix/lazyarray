@@ -6,7 +6,8 @@
 #include "loader2.h"
 #include "fstWrapper.h"
 
-#include "lazycommon.h"
+#include "common.h"
+#include "indexConvert.h"
 
 using namespace Rcpp; 
 
@@ -144,7 +145,7 @@ invisible(b(1:5,-c(1:2,NA),c(1,NA),))
 
 files <- x$get_partition_fpath()
 a <- function(i,...){
-  lazySubset(files, environment(), dim(x), 0.1)
+  subsetFST(files, environment(), dim(x), 0.1)
 }
 # e = a(c(3,1,7,NA,2,1, 27, 16, 15,14,NA, 27))
 e = a(1:5,c(1:2,NA),,)

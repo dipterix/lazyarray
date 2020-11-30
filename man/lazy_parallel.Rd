@@ -14,8 +14,7 @@ lazy_parallel(
 }
 \arguments{
 \item{strategy}{strategies to apply, see \code{\link[future]{plan}} for
-some of the details. For \code{"callr"} plan, please install package
-\code{future.callr}.}
+some of the details. For \code{"callr"} plan, please install package}
 
 \item{enabled}{whether multiple-process strategy is enabled}
 

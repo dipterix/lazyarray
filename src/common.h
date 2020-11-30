@@ -3,16 +3,16 @@
 
 // Common header that's required by all (most) files
 
-#include <vector>
-#include <iostream>
-#include <iterator>
-#include <complex>
-#include <cmath>
-#include <cstring>
+//include <vector>
+//include <iostream>
+//include <iterator>
+//include <complex>
+//include <cmath>
+//include <cstring>
 // #include <string>
 
 #include <Rcpp.h>
-#include <Rcpp/Benchmark/Timer.h>
+//include <Rcpp/Benchmark/Timer.h>
 
 using namespace Rcpp;
 
@@ -21,14 +21,27 @@ using namespace Rcpp;
  * We use it differently, basically 4x or 8x or 16x this number as our block size
  * to avoid repeating too many blocks
  */ 
-#ifdef NA_INTEGER64
-#undef NA_INTEGER64
+#ifndef NA_INTEGER64
+//undef NA_INTEGER64
+#define NA_INTEGER64 LLONG_MIN
 #endif // NA_INTEGER64
 
+// Lazyarray subset_mode - No index
+#ifndef LASUBMOD_NOIDX
+#define LASUBMOD_NOIDX 2
+#endif
 
-#define NA_INTEGER64 LLONG_MIN
+#ifndef LASUBMOD_SINGLE
+#define LASUBMOD_SINGLE 1
+#endif
 
-const bool LAZYARRAY_DEBUG = true;
+#ifndef LASUBMOD_MULTI
+#define LASUBMOD_MULTI 0
+#endif
+
+#ifdef LAZYARRAY_DEBUG
+#undef LAZYARRAY_DEBUG
+#endif
 
 /*
  * For array with dimension [287 x 200 x 601 x 84]
@@ -55,7 +68,7 @@ const bool LAZYARRAY_DEBUG = true;
 // Used to partition to sub-blocks
 static R_xlen_t BLOCKSIZE = 16384;
 // If sub-block size is too large, don't calculate indices (memory inefficient)
-// ~ 500 MB index set
+// ~ 250 MB index set
 static R_xlen_t BLOCKLARGE = 31250000;
 
 const static int64_t INTEGER64_ONE = 1;
@@ -67,8 +80,6 @@ R_xlen_t setLazyBlockSize(R_xlen_t size);
 
 // [[Rcpp::export]]
 R_xlen_t getLazyBlockSize();
-
-
 
 
 #endif // DIP_LAZYARRAY_COMMON_H

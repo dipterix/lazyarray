@@ -15,12 +15,12 @@ x
 a=x[,,,1:10]
 
 subf <- function(i, ...){
-  .Call(lazyarray:::`_lazyarray_lazySubset`, x$get_partition_fpath(), environment(), dim(x),
-        x$`@sample_data`(), reshape=NULL, drop=FALSE)
+  .Call(lazyarray:::`_lazyarray_subsetFST`, x$get_partition_fpath(), environment(), dim(x),
+        getSexpType(x$`@sample_data`()), reshape=NULL, drop=FALSE)
 }
 subf <- function(i, ...){
-  lazyarray:::lazySubset(x$get_partition_fpath(), environment(), dim(x),
-        x$`@sample_data`(), reshape=NULL, drop=FALSE)
+  lazyarray:::subsetFST(x$get_partition_fpath(), environment(), dim(x),
+                         getSexpType(x$`@sample_data`()), reshape=NULL, drop=FALSE)
 }
 
 (subf(,,,1))

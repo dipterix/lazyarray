@@ -5,51 +5,16 @@
     stop("`[.LazyArray`: x is no longer valid (data has been removed).")
   }
   
-  dim <- dim(x)
-  ndots <- ...length()
-  if(!ndots %in% c(0,1,length(dim))){
-    stop("Dimension not match: 0, 1, ", length(dim))
-  }
-  
   
   dots_value <- parseDots(environment(), TRUE)
   
-  files <- x$get_partition_fpath()
+  rootPath <- dirname(x$storage_path)
   
-  subf <- function(i, ...){
-    .Call(`_lazyarray_lazySubset`, files, environment(), dim,
-          x$`@sample_data`(), reshape, drop)
-  }
+  sexptype <- getSexpType(x$`@sample_data`())
   
-  if(length(dots_value) == 0){
-    return(subf())
-  }
-  
-  element_type <- attr(dots_value, 'element_type')
-  
-  # element_type is SEXP type
-  # 13: integer
-  # 14: double
-  # 10: logical
-  
-  is_logical <- element_type == 10
-  if(any(is_logical)){
-    logical_dim <- which(is_logical)
-    
-    dots_value[is_logical] <- lapply(logical_dim, function(ii){
-      seq_len(dim[ii])[dots_value[[ii]]]
-    })
-  }
-  do.call('subf', dots_value)
-  
+  .Call(`_lazyarray_subsetFST`, rootPath, environment(), x$dim, sexptype, reshape, drop)
 }
 
-
-get_missing_value <- function(){
-  (function(...){
-    parseDots(environment(), FALSE)[[1]]
-  })(,)
-}
 
 
 #' @export

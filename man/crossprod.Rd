@@ -2,16 +2,19 @@
 % Please edit documentation in R/zzz.R
 \name{crossprod}
 \alias{crossprod}
-\alias{crossprod,LazyMatrix-method}
-\alias{tcrossprod,LazyMatrix-method}
-\alias{lazy_crossprod}
+\alias{crossprod,AbstractLazyArray,AbstractLazyArray-method}
+\alias{crossprod,AbstractLazyArray,NULL-method}
+\alias{crossprod,AbstractLazyArray,missing-method}
+\alias{crossprod,AbstractLazyArray,matrix-method}
 \title{Matrix Crossproduct}
 \usage{
-\S4method{crossprod}{LazyMatrix}(x, y = NULL)
+\S4method{crossprod}{AbstractLazyArray,AbstractLazyArray}(x, y = NULL, weights = NULL, ...)
 
-\S4method{tcrossprod}{LazyMatrix}(x, y = NULL)
+\S4method{crossprod}{AbstractLazyArray,`NULL`}(x, y = NULL, weights = NULL, ...)
 
-lazy_crossprod(x, y = NULL, weights = NULL, ...)
+\S4method{crossprod}{AbstractLazyArray,missing}(x, y = NULL, weights = NULL, ...)
+
+\S4method{crossprod}{AbstractLazyArray,matrix}(x, y = NULL, weights = NULL, ...)
 }
 \arguments{
 \item{x}{a \code{LazyArray} or an R matrix}
@@ -40,7 +43,7 @@ crossprod(lazy_x)[]
 weights <- (1:50)/50
 
 t(x) \%*\% diag(weights) \%*\% x
-lazy_crossprod(lazy_x, weights = weights)
+crossprod(lazy_x, weights = weights)
 
 \dontrun{
 

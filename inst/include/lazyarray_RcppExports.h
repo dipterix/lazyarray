@@ -66,48 +66,6 @@ namespace lazyarray {
         return Rcpp::as<R_xlen_t >(rcpp_result_gen);
     }
 
-    inline Rcpp::IntegerVector loc2idx(Rcpp::List& locations, Rcpp::IntegerVector& parent_dim) {
-        typedef SEXP(*Ptr_loc2idx)(SEXP,SEXP);
-        static Ptr_loc2idx p_loc2idx = NULL;
-        if (p_loc2idx == NULL) {
-            validateSignature("Rcpp::IntegerVector(*loc2idx)(Rcpp::List&,Rcpp::IntegerVector&)");
-            p_loc2idx = (Ptr_loc2idx)R_GetCCallable("lazyarray", "_lazyarray_loc2idx");
-        }
-        RObject rcpp_result_gen;
-        {
-            RNGScope RCPP_rngScope_gen;
-            rcpp_result_gen = p_loc2idx(Shield<SEXP>(Rcpp::wrap(locations)), Shield<SEXP>(Rcpp::wrap(parent_dim)));
-        }
-        if (rcpp_result_gen.inherits("interrupted-error"))
-            throw Rcpp::internal::InterruptedException();
-        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
-            throw Rcpp::LongjumpException(rcpp_result_gen);
-        if (rcpp_result_gen.inherits("try-error"))
-            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
-        return Rcpp::as<Rcpp::IntegerVector >(rcpp_result_gen);
-    }
-
-    inline Rcpp::NumericVector loc2idx2(Rcpp::List& locations, Rcpp::NumericVector& parent_dim) {
-        typedef SEXP(*Ptr_loc2idx2)(SEXP,SEXP);
-        static Ptr_loc2idx2 p_loc2idx2 = NULL;
-        if (p_loc2idx2 == NULL) {
-            validateSignature("Rcpp::NumericVector(*loc2idx2)(Rcpp::List&,Rcpp::NumericVector&)");
-            p_loc2idx2 = (Ptr_loc2idx2)R_GetCCallable("lazyarray", "_lazyarray_loc2idx2");
-        }
-        RObject rcpp_result_gen;
-        {
-            RNGScope RCPP_rngScope_gen;
-            rcpp_result_gen = p_loc2idx2(Shield<SEXP>(Rcpp::wrap(locations)), Shield<SEXP>(Rcpp::wrap(parent_dim)));
-        }
-        if (rcpp_result_gen.inherits("interrupted-error"))
-            throw Rcpp::internal::InterruptedException();
-        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
-            throw Rcpp::LongjumpException(rcpp_result_gen);
-        if (rcpp_result_gen.inherits("try-error"))
-            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
-        return Rcpp::as<Rcpp::NumericVector >(rcpp_result_gen);
-    }
-
     inline std::vector<int64_t> loc2idx3(SEXP locations, std::vector<int64_t>& parent_dim) {
         typedef SEXP(*Ptr_loc2idx3)(SEXP,SEXP);
         static Ptr_loc2idx3 p_loc2idx3 = NULL;
@@ -129,17 +87,80 @@ namespace lazyarray {
         return Rcpp::as<std::vector<int64_t> >(rcpp_result_gen);
     }
 
-    inline SEXP subsetIdx(Rcpp::Environment expr_env, Rcpp::NumericVector dim, bool pos_subscript = false) {
-        typedef SEXP(*Ptr_subsetIdx)(SEXP,SEXP,SEXP);
-        static Ptr_subsetIdx p_subsetIdx = NULL;
-        if (p_subsetIdx == NULL) {
-            validateSignature("SEXP(*subsetIdx)(Rcpp::Environment,Rcpp::NumericVector,bool)");
-            p_subsetIdx = (Ptr_subsetIdx)R_GetCCallable("lazyarray", "_lazyarray_subsetIdx");
+    inline Rcpp::List extractSlices(SEXP listOrEnv, const R_xlen_t& ndims) {
+        typedef SEXP(*Ptr_extractSlices)(SEXP,SEXP);
+        static Ptr_extractSlices p_extractSlices = NULL;
+        if (p_extractSlices == NULL) {
+            validateSignature("Rcpp::List(*extractSlices)(SEXP,const R_xlen_t&)");
+            p_extractSlices = (Ptr_extractSlices)R_GetCCallable("lazyarray", "_lazyarray_extractSlices");
         }
         RObject rcpp_result_gen;
         {
             RNGScope RCPP_rngScope_gen;
-            rcpp_result_gen = p_subsetIdx(Shield<SEXP>(Rcpp::wrap(expr_env)), Shield<SEXP>(Rcpp::wrap(dim)), Shield<SEXP>(Rcpp::wrap(pos_subscript)));
+            rcpp_result_gen = p_extractSlices(Shield<SEXP>(Rcpp::wrap(listOrEnv)), Shield<SEXP>(Rcpp::wrap(ndims)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<Rcpp::List >(rcpp_result_gen);
+    }
+
+    inline Rcpp::List parseSlices(SEXP listOrEnv, const std::vector<int64_t>& dim, bool pos_subscript = true) {
+        typedef SEXP(*Ptr_parseSlices)(SEXP,SEXP,SEXP);
+        static Ptr_parseSlices p_parseSlices = NULL;
+        if (p_parseSlices == NULL) {
+            validateSignature("Rcpp::List(*parseSlices)(SEXP,const std::vector<int64_t>&,bool)");
+            p_parseSlices = (Ptr_parseSlices)R_GetCCallable("lazyarray", "_lazyarray_parseSlices");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_parseSlices(Shield<SEXP>(Rcpp::wrap(listOrEnv)), Shield<SEXP>(Rcpp::wrap(dim)), Shield<SEXP>(Rcpp::wrap(pos_subscript)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<Rcpp::List >(rcpp_result_gen);
+    }
+
+    inline Rcpp::List parseAndScheduleBlocks2(SEXP sliceIdx, Rcpp::NumericVector dim, bool forceSchedule = false) {
+        typedef SEXP(*Ptr_parseAndScheduleBlocks2)(SEXP,SEXP,SEXP);
+        static Ptr_parseAndScheduleBlocks2 p_parseAndScheduleBlocks2 = NULL;
+        if (p_parseAndScheduleBlocks2 == NULL) {
+            validateSignature("Rcpp::List(*parseAndScheduleBlocks2)(SEXP,Rcpp::NumericVector,bool)");
+            p_parseAndScheduleBlocks2 = (Ptr_parseAndScheduleBlocks2)R_GetCCallable("lazyarray", "_lazyarray_parseAndScheduleBlocks2");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_parseAndScheduleBlocks2(Shield<SEXP>(Rcpp::wrap(sliceIdx)), Shield<SEXP>(Rcpp::wrap(dim)), Shield<SEXP>(Rcpp::wrap(forceSchedule)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<Rcpp::List >(rcpp_result_gen);
+    }
+
+    inline SEXP reshapeOrDrop(SEXP x, SEXP reshape = R_NilValue, bool drop = false) {
+        typedef SEXP(*Ptr_reshapeOrDrop)(SEXP,SEXP,SEXP);
+        static Ptr_reshapeOrDrop p_reshapeOrDrop = NULL;
+        if (p_reshapeOrDrop == NULL) {
+            validateSignature("SEXP(*reshapeOrDrop)(SEXP,SEXP,bool)");
+            p_reshapeOrDrop = (Ptr_reshapeOrDrop)R_GetCCallable("lazyarray", "_lazyarray_reshapeOrDrop");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_reshapeOrDrop(Shield<SEXP>(Rcpp::wrap(x)), Shield<SEXP>(Rcpp::wrap(reshape)), Shield<SEXP>(Rcpp::wrap(drop)));
         }
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();
@@ -150,17 +171,17 @@ namespace lazyarray {
         return Rcpp::as<SEXP >(rcpp_result_gen);
     }
 
-    inline SEXP subsetIdx2(const Rcpp::List sliceIdx, Rcpp::NumericVector dim, bool pos_subscript = false) {
-        typedef SEXP(*Ptr_subsetIdx2)(SEXP,SEXP,SEXP);
-        static Ptr_subsetIdx2 p_subsetIdx2 = NULL;
-        if (p_subsetIdx2 == NULL) {
-            validateSignature("SEXP(*subsetIdx2)(const Rcpp::List,Rcpp::NumericVector,bool)");
-            p_subsetIdx2 = (Ptr_subsetIdx2)R_GetCCallable("lazyarray", "_lazyarray_subsetIdx2");
+    inline SEXP subsetFST(const std::string& rootPath, SEXP listOrEnv, const std::vector<int64_t>& dim, SEXPTYPE dtype, SEXP reshape = R_NilValue, bool drop = false) {
+        typedef SEXP(*Ptr_subsetFST)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
+        static Ptr_subsetFST p_subsetFST = NULL;
+        if (p_subsetFST == NULL) {
+            validateSignature("SEXP(*subsetFST)(const std::string&,SEXP,const std::vector<int64_t>&,SEXPTYPE,SEXP,bool)");
+            p_subsetFST = (Ptr_subsetFST)R_GetCCallable("lazyarray", "_lazyarray_subsetFST");
         }
         RObject rcpp_result_gen;
         {
             RNGScope RCPP_rngScope_gen;
-            rcpp_result_gen = p_subsetIdx2(Shield<SEXP>(Rcpp::wrap(sliceIdx)), Shield<SEXP>(Rcpp::wrap(dim)), Shield<SEXP>(Rcpp::wrap(pos_subscript)));
+            rcpp_result_gen = p_subsetFST(Shield<SEXP>(Rcpp::wrap(rootPath)), Shield<SEXP>(Rcpp::wrap(listOrEnv)), Shield<SEXP>(Rcpp::wrap(dim)), Shield<SEXP>(Rcpp::wrap(dtype)), Shield<SEXP>(Rcpp::wrap(reshape)), Shield<SEXP>(Rcpp::wrap(drop)));
         }
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();
@@ -171,17 +192,17 @@ namespace lazyarray {
         return Rcpp::as<SEXP >(rcpp_result_gen);
     }
 
-    inline SEXP lazySubsetBare(Rcpp::StringVector& files, Rcpp::NumericVector& dim, const List& subparsed, SEXPTYPE dtype, SEXP reshape = R_NilValue, bool drop = false) {
-        typedef SEXP(*Ptr_lazySubsetBare)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
-        static Ptr_lazySubsetBare p_lazySubsetBare = NULL;
-        if (p_lazySubsetBare == NULL) {
-            validateSignature("SEXP(*lazySubsetBare)(Rcpp::StringVector&,Rcpp::NumericVector&,const List&,SEXPTYPE,SEXP,bool)");
-            p_lazySubsetBare = (Ptr_lazySubsetBare)R_GetCCallable("lazyarray", "_lazyarray_lazySubsetBare");
+    inline SEXP scheduleFST(SEXP listOrEnv, const std::vector<int64_t>& dim, bool forceSchedule = false, int64_t hint = -1) {
+        typedef SEXP(*Ptr_scheduleFST)(SEXP,SEXP,SEXP,SEXP);
+        static Ptr_scheduleFST p_scheduleFST = NULL;
+        if (p_scheduleFST == NULL) {
+            validateSignature("SEXP(*scheduleFST)(SEXP,const std::vector<int64_t>&,bool,int64_t)");
+            p_scheduleFST = (Ptr_scheduleFST)R_GetCCallable("lazyarray", "_lazyarray_scheduleFST");
         }
         RObject rcpp_result_gen;
         {
             RNGScope RCPP_rngScope_gen;
-            rcpp_result_gen = p_lazySubsetBare(Shield<SEXP>(Rcpp::wrap(files)), Shield<SEXP>(Rcpp::wrap(dim)), Shield<SEXP>(Rcpp::wrap(subparsed)), Shield<SEXP>(Rcpp::wrap(dtype)), Shield<SEXP>(Rcpp::wrap(reshape)), Shield<SEXP>(Rcpp::wrap(drop)));
+            rcpp_result_gen = p_scheduleFST(Shield<SEXP>(Rcpp::wrap(listOrEnv)), Shield<SEXP>(Rcpp::wrap(dim)), Shield<SEXP>(Rcpp::wrap(forceSchedule)), Shield<SEXP>(Rcpp::wrap(hint)));
         }
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();
@@ -192,17 +213,59 @@ namespace lazyarray {
         return Rcpp::as<SEXP >(rcpp_result_gen);
     }
 
-    inline SEXP lazySubset(Rcpp::StringVector& files, Rcpp::Environment& env, Rcpp::NumericVector& dim, SEXP samp, SEXP reshape = R_NilValue, bool drop = false) {
-        typedef SEXP(*Ptr_lazySubset)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
-        static Ptr_lazySubset p_lazySubset = NULL;
-        if (p_lazySubset == NULL) {
-            validateSignature("SEXP(*lazySubset)(Rcpp::StringVector&,Rcpp::Environment&,Rcpp::NumericVector&,SEXP,SEXP,bool)");
-            p_lazySubset = (Ptr_lazySubset)R_GetCCallable("lazyarray", "_lazyarray_lazySubset");
+    inline SEXP executeScheduleFST(const std::string& rootPath, SEXPTYPE dtype, SEXP reshape, bool drop, int64_t partition) {
+        typedef SEXP(*Ptr_executeScheduleFST)(SEXP,SEXP,SEXP,SEXP,SEXP);
+        static Ptr_executeScheduleFST p_executeScheduleFST = NULL;
+        if (p_executeScheduleFST == NULL) {
+            validateSignature("SEXP(*executeScheduleFST)(const std::string&,SEXPTYPE,SEXP,bool,int64_t)");
+            p_executeScheduleFST = (Ptr_executeScheduleFST)R_GetCCallable("lazyarray", "_lazyarray_executeScheduleFST");
         }
         RObject rcpp_result_gen;
         {
             RNGScope RCPP_rngScope_gen;
-            rcpp_result_gen = p_lazySubset(Shield<SEXP>(Rcpp::wrap(files)), Shield<SEXP>(Rcpp::wrap(env)), Shield<SEXP>(Rcpp::wrap(dim)), Shield<SEXP>(Rcpp::wrap(samp)), Shield<SEXP>(Rcpp::wrap(reshape)), Shield<SEXP>(Rcpp::wrap(drop)));
+            rcpp_result_gen = p_executeScheduleFST(Shield<SEXP>(Rcpp::wrap(rootPath)), Shield<SEXP>(Rcpp::wrap(dtype)), Shield<SEXP>(Rcpp::wrap(reshape)), Shield<SEXP>(Rcpp::wrap(drop)), Shield<SEXP>(Rcpp::wrap(partition)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<SEXP >(rcpp_result_gen);
+    }
+
+    inline SEXP scheduleExistsFST() {
+        typedef SEXP(*Ptr_scheduleExistsFST)();
+        static Ptr_scheduleExistsFST p_scheduleExistsFST = NULL;
+        if (p_scheduleExistsFST == NULL) {
+            validateSignature("SEXP(*scheduleExistsFST)()");
+            p_scheduleExistsFST = (Ptr_scheduleExistsFST)R_GetCCallable("lazyarray", "_lazyarray_scheduleExistsFST");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_scheduleExistsFST();
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<SEXP >(rcpp_result_gen);
+    }
+
+    inline SEXP freeScheduleFST() {
+        typedef SEXP(*Ptr_freeScheduleFST)();
+        static Ptr_freeScheduleFST p_freeScheduleFST = NULL;
+        if (p_freeScheduleFST == NULL) {
+            validateSignature("SEXP(*freeScheduleFST)()");
+            p_freeScheduleFST = (Ptr_freeScheduleFST)R_GetCCallable("lazyarray", "_lazyarray_freeScheduleFST");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_freeScheduleFST();
         }
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();
@@ -274,6 +337,27 @@ namespace lazyarray {
         if (rcpp_result_gen.inherits("try-error"))
             throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
         return Rcpp::as<bool >(rcpp_result_gen);
+    }
+
+    inline SEXP subsetAssignFST(const SEXP values, const std::string& file, SEXP listOrEnv, const std::vector<int64_t>& dim, const SEXPTYPE& dtype, int compression = 50, bool uniformEncoding = true) {
+        typedef SEXP(*Ptr_subsetAssignFST)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
+        static Ptr_subsetAssignFST p_subsetAssignFST = NULL;
+        if (p_subsetAssignFST == NULL) {
+            validateSignature("SEXP(*subsetAssignFST)(const SEXP,const std::string&,SEXP,const std::vector<int64_t>&,const SEXPTYPE&,int,bool)");
+            p_subsetAssignFST = (Ptr_subsetAssignFST)R_GetCCallable("lazyarray", "_lazyarray_subsetAssignFST");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_subsetAssignFST(Shield<SEXP>(Rcpp::wrap(values)), Shield<SEXP>(Rcpp::wrap(file)), Shield<SEXP>(Rcpp::wrap(listOrEnv)), Shield<SEXP>(Rcpp::wrap(dim)), Shield<SEXP>(Rcpp::wrap(dtype)), Shield<SEXP>(Rcpp::wrap(compression)), Shield<SEXP>(Rcpp::wrap(uniformEncoding)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<SEXP >(rcpp_result_gen);
     }
 
     inline SEXP dropDimension(SEXP x) {
@@ -358,6 +442,90 @@ namespace lazyarray {
         if (rcpp_result_gen.inherits("try-error"))
             throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
         return Rcpp::as<bool >(rcpp_result_gen);
+    }
+
+    inline SEXPTYPE getSexpType(SEXP x) {
+        typedef SEXP(*Ptr_getSexpType)(SEXP);
+        static Ptr_getSexpType p_getSexpType = NULL;
+        if (p_getSexpType == NULL) {
+            validateSignature("SEXPTYPE(*getSexpType)(SEXP)");
+            p_getSexpType = (Ptr_getSexpType)R_GetCCallable("lazyarray", "_lazyarray_getSexpType");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_getSexpType(Shield<SEXP>(Rcpp::wrap(x)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<SEXPTYPE >(rcpp_result_gen);
+    }
+
+    inline SEXP tik() {
+        typedef SEXP(*Ptr_tik)();
+        static Ptr_tik p_tik = NULL;
+        if (p_tik == NULL) {
+            validateSignature("SEXP(*tik)()");
+            p_tik = (Ptr_tik)R_GetCCallable("lazyarray", "_lazyarray_tik");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_tik();
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<SEXP >(rcpp_result_gen);
+    }
+
+    inline SEXP tok(std::string msg, bool stop = false) {
+        typedef SEXP(*Ptr_tok)(SEXP,SEXP);
+        static Ptr_tok p_tok = NULL;
+        if (p_tok == NULL) {
+            validateSignature("SEXP(*tok)(std::string,bool)");
+            p_tok = (Ptr_tok)R_GetCCallable("lazyarray", "_lazyarray_tok");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_tok(Shield<SEXP>(Rcpp::wrap(msg)), Shield<SEXP>(Rcpp::wrap(stop)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<SEXP >(rcpp_result_gen);
+    }
+
+    inline SEXP subsetAssignVector(SEXP x, int64_t start, SEXP value) {
+        typedef SEXP(*Ptr_subsetAssignVector)(SEXP,SEXP,SEXP);
+        static Ptr_subsetAssignVector p_subsetAssignVector = NULL;
+        if (p_subsetAssignVector == NULL) {
+            validateSignature("SEXP(*subsetAssignVector)(SEXP,int64_t,SEXP)");
+            p_subsetAssignVector = (Ptr_subsetAssignVector)R_GetCCallable("lazyarray", "_lazyarray_subsetAssignVector");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_subsetAssignVector(Shield<SEXP>(Rcpp::wrap(x)), Shield<SEXP>(Rcpp::wrap(start)), Shield<SEXP>(Rcpp::wrap(value)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<SEXP >(rcpp_result_gen);
     }
 
 }

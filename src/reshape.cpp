@@ -1,4 +1,8 @@
 #include "reshape.h"
+
+#include "common.h"
+#include "indexConvert.h"
+
 using namespace Rcpp; 
 
 template <class T, typename I>

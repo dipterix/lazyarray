@@ -1,41 +1,16 @@
 #include <Rcpp.h>
-#include <Rcpp/Benchmark/Timer.h>
-#include "openMPInterface.h"
+#include "utils.h"
 using namespace Rcpp;
-
-
-// [[Rcpp::export]]
-NumericVector asi(SEXP v, int nt) {
-  // NumericVector x(l);
-  R_xlen_t l = Rf_xlength(v);
-  SEXP x = PROTECT(Rf_allocVector(REALSXP, l));
-  double* ptr = REAL(x);
-  Rcpp::Timer _rcpp_timer;
-  _rcpp_timer.step("start assignment");
-  
-#pragma omp parallel num_threads(nt)
-{
-#pragma omp for
-  for(int file_idx = 0; file_idx < l; file_idx++ ){
-    *(ptr + file_idx) = REAL(v)[file_idx];
-  }
-} 
-  UNPROTECT(1);
-
-  _rcpp_timer.step("finished");
-  
-  // return NumericVector(data,data+sizeof(data)/sizeof(int));
-  
-  NumericVector _res(_rcpp_timer);
-  _res = _res / 1000000.0;
-
-  return _res;
-}
 
 
 
 /*** R
-dropDimension(matrix(1:16,1))
-# asi(rnorm(1000000), 4L)
-# asi(rnorm(1000000), 1L)
+a = 100000
+b = 1024
+bench::mark(
+  mod2(a, b),
+  mod3(a, b),
+  mod4(a, b)
+)
+
 */

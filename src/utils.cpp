@@ -1,7 +1,57 @@
-
 #include "utils.h"
 
+#include <chrono>
+#include <string>
+#include "common.h"
 using namespace Rcpp; 
+
+static std::chrono::time_point<std::chrono::high_resolution_clock> _timer;
+static std::vector<double> _times = std::vector<double>(0);
+static std::vector<std::string> _timer_msg = std::vector<std::string>(0);
+static bool _timer_enabled = false;
+
+
+std::string as_dirpath(std::string x){
+  std::string re = "./";
+  if(x.size() > 0){
+    std::string ending = "/";
+    if(std::equal(ending.rbegin(), ending.rend(), x.rbegin())){
+      re = x;
+    } else {
+      re = x + ending;
+    }
+  }
+  return re;
+}
+
+SEXP tik(){
+  if(!_timer_enabled){
+    _timer = std::chrono::high_resolution_clock::now();
+    _times.clear();
+    _timer_msg.clear();
+    _timer_enabled = true;
+    return wrap(true);
+  }
+  return wrap(false);
+}
+
+SEXP tok(std::string msg, bool stop){
+  if(!_timer_enabled){ return R_NilValue; }
+  std::chrono::time_point<std::chrono::high_resolution_clock> now = std::chrono::high_resolution_clock::now();
+  uint64_t delta = std::chrono::duration_cast<std::chrono::nanoseconds>(now - _timer).count();
+  _times.push_back((double)(delta) / 1000000.0);
+  _timer_msg.push_back(msg);
+  if(!stop){
+    return wrap(delta);
+  } else {
+    Rcpp::List re = Rcpp::List::create(
+      _["messages"] = wrap(_timer_msg),
+      _["time"] = wrap(_times)
+    );
+    _timer_enabled = false;
+    return wrap(re);
+  }
+}
 
 
 template <typename T, typename I>
@@ -15,7 +65,29 @@ bool contains(T vec, SEXP el){
 }
 
 SEXP getListElement(SEXP list, const char *str){
-  SEXP elmt = R_NilValue, names = Rf_getAttrib(list, R_NamesSymbol);
+  if( Rf_isNull(list) ){
+    return R_NilValue;
+  }
+  SEXP elmt = R_NilValue;
+  SEXP names = Rf_getAttrib(list, R_NamesSymbol);
+  
+  const String str_copy(str);
+  
+  for (R_len_t i = 0; i < Rf_length(list); i++){
+    if(str_copy == String(CHAR(STRING_ELT(names, i)))) {
+      elmt = VECTOR_ELT(list, i);
+      break;
+    }
+  }
+  return elmt;
+}
+
+SEXP getListElement2(SEXP list, const char *str, const SEXP ifNull){
+  if( Rf_isNull(list) ){
+    return ifNull;
+  }
+  SEXP elmt = ifNull;
+  SEXP names = Rf_getAttrib(list, R_NamesSymbol);
   
   const String str_copy(str);
   
@@ -60,7 +132,6 @@ SEXP dropDimension(SEXP x){
     break;
   }
   case REALSXP: {
-    Rf_setAttrib(new_dim, wrap("class"), wrap("integer64"));
     double *ptr_orig = REAL(dim);
     double *ptr_new = REAL(new_dim);
     for(ii = 0; ptr_orig != REAL(dim) + ndims; ptr_orig++ ){
@@ -74,7 +145,7 @@ SEXP dropDimension(SEXP x){
   default:
     stop("unknown dimension storage type");
   }
-  if(ii >= 2){
+  if(ii == ndims){} else if(ii >= 2){
     SETLENGTH(new_dim, ii);
     
     Rf_setAttrib(x, wrap("dim"), new_dim);
@@ -176,6 +247,74 @@ bool stopIfNot(const bool isValid, const std::string& message, bool stopIfError)
     return false;
   }
   return true;
+}
+
+SEXPTYPE getSexpType(SEXP x){
+  return TYPEOF(x);
+}
+
+SEXP captureException( const std::exception& e ){
+  std::ostringstream msg;
+  msg << "c++: Captured error: " << e.what();
+  StringVector re = {msg.str()};
+  re.attr("class") = "lazyarray-error";
+  return wrap(re);
+}
+
+SEXP makeException( std::string msg ){
+  StringVector re = {msg};
+  re.attr("class") = "lazyarray-error";
+  return wrap(re);
+}
+
+
+SEXP subsetAssignVector(SEXP x, int64_t start, SEXP value){
+  R_xlen_t xlen = Rf_xlength(x);
+  R_xlen_t vlen = Rf_xlength(value);
+  if(xlen < start + vlen - 1){
+    Rcpp::stop("c++: cannot subset-assign: value too lengthy");
+  }
+  SEXPTYPE typex = TYPEOF(x);
+  
+  SEXP value_alt = PROTECT(value);
+  if(TYPEOF(value) != typex){
+    UNPROTECT(1);
+    value_alt = PROTECT(Rf_coerceVector(value, typex));
+  }
+  SEXP x_alt = PROTECT(x);
+  
+  switch(typex){
+  case REALSXP: {
+    std::memcpy( REAL(x_alt) + start - 1, REAL(value_alt), vlen * sizeof(double));
+    break;
+  }
+  case INTSXP: {
+    std::memcpy( INTEGER(x_alt) + start - 1, INTEGER(value_alt), vlen * sizeof(int));
+    break;
+  }
+  default:
+    Rcpp::stop("c++: un-supported data types.");
+  }
+  UNPROTECT(2);
+  
+  return R_NilValue;
+}
+
+
+void setReIm(ComplexVector x, NumericVector v, bool is_real){
+  if(x.size() != v.size()){
+    stop("Cannot copy values: length mismatch");
+  }
+  NumericVector::iterator ptr_v = v.begin();
+  if(is_real) {
+    for(ComplexVector::iterator ptr_x = x.begin(); ptr_x != x.end(); ){
+      (*ptr_x++).r = *ptr_v++;
+    }
+  } else {
+    for(ComplexVector::iterator ptr_x = x.begin(); ptr_x != x.end(); ){
+      (*ptr_x++).i = *ptr_v++;
+    }
+  }
 }
 
 /*** R

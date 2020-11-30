@@ -1,3 +1,4 @@
+# devtools::load_all()
 
 require(testthat)
 
@@ -7,14 +8,14 @@ dim <- c(10,20,50)
 
 f <- normalizePath(tempfile(), mustWork = FALSE)
 on.exit({
-  setLazyBlockSize(0)
+  setLazyBlockSize(-1)
   unlink(f)
 })
 
 x = array(1:prod(dim), dim)
-a = as.lazyarray(x, path = f)
-loader_f <- function(i, ..., samp, reshape, drop){
-  lazyarray:::lazySubset(a$get_partition_fpath(), environment(), dim, samp, reshape, drop)
+a = as.lazyarray(x, path = f, type = 'fstarray')
+loader_f <- function(..., samp, reshape, drop){
+  lazyarray:::subsetFST(a$storage_path, environment(), dim, getSexpType(samp), reshape, drop)
 }
 
 lazy_test_unit <- function(samp_data, x_alt){
@@ -29,7 +30,7 @@ lazy_test_unit <- function(samp_data, x_alt){
   re <- loader_double()
   expect_equal(storage.mode(re), storage.mode(samp_data))
   expect_equivalent(re, x)
-  expect_equivalent(dim(re), structure(dim(x), class='integer64'))
+  expect_equivalent(dim(re), dim(x))
   
   # 2. a(i)
   idx <- sample(length(x), size = 200, replace = TRUE)
@@ -65,7 +66,7 @@ lazy_test_unit <- function(samp_data, x_alt){
   re <- do.call(loader_double, idx)
   cp <- eval(as.call(c(list(quote(`[`), quote(x)), idx)))
   expect_equivalent(re, cp)
-  expect_equivalent(dim(re), structure(dim(cp), class='integer64'))
+  expect_equivalent(dim(re), dim(cp))
   
   # 5. negative subscripts
   ii <- sample(2)[[1]] + 1
@@ -73,34 +74,34 @@ lazy_test_unit <- function(samp_data, x_alt){
   re <- do.call(loader_double, idx)
   cp <- eval(as.call(c(list(quote(`[`), quote(x)), idx)))
   expect_equivalent(re, cp)
-  expect_equivalent(dim(re), structure(dim(cp), class='integer64'))
+  expect_equivalent(dim(re), dim(cp))
   ii <- 1
   idx[[ii]] <- -idx[[ii]]
   re <- do.call(loader_double, idx)
   cp <- eval(as.call(c(list(quote(`[`), quote(x)), idx)))
   expect_equivalent(re, cp)
-  expect_equivalent(dim(re), structure(dim(cp), class='integer64'))
+  expect_equivalent(dim(re), dim(cp))
   
   # 6. With missing
   re <- loader_double(,c(NA,1:0),c(2,NA,1))
   cp <- x[,c(NA,1:0),c(2,NA,1),drop = FALSE]
   expect_equivalent(re, cp)
-  expect_equivalent(dim(re), structure(dim(cp), class='integer64'))
+  expect_equivalent(dim(re), dim(cp))
   
   re <- loader_double(c(NA,1:0),c(2,NA,1),)
   cp <- x[c(NA,1:0),c(2,NA,1),,drop = FALSE]
   expect_equivalent(re, cp)
-  expect_equivalent(dim(re), structure(dim(cp), class='integer64'))
+  expect_equivalent(dim(re), dim(cp))
   
   re <- loader_double(c(NA,1:0),,c(2,NA,1))
   cp <- x[c(NA,1:0),,c(2,NA,1),drop = FALSE]
   expect_equivalent(re, cp)
-  expect_equivalent(dim(re), structure(dim(cp), class='integer64'))
+  expect_equivalent(dim(re), dim(cp))
   
   re <- loader_double(,,)
   cp <- x[,,,drop = FALSE]
   expect_equivalent(re, cp)
-  expect_equivalent(dim(re), structure(dim(cp), class='integer64'))
+  expect_equivalent(dim(re), dim(cp))
   
   # 7. drop
   re <- loader_double(,c(NA,1:0),c(2,NA,1), drop = TRUE)
@@ -124,32 +125,32 @@ lazy_test_unit <- function(samp_data, x_alt){
   re <- loader_double(,-c(NA,1:0),c(2,NA,1))
   cp <- x[,-c(1:0),c(2,NA,1),drop = FALSE]
   expect_equivalent(re, cp)
-  expect_equivalent(dim(re), structure(dim(cp), class='integer64'))
+  expect_equivalent(dim(re), dim(cp))
   
   re <- loader_double(-c(NA,1:0),c(2,NA,1),)
   cp <- x[-c(1:0),c(2,NA,1),,drop = FALSE]
   expect_equivalent(re, cp)
-  expect_equivalent(dim(re), structure(dim(cp), class='integer64'))
+  expect_equivalent(dim(re), dim(cp))
   
   re <- loader_double(c(NA,1:0),,-c(2,NA,1))
   cp <- x[c(NA,1:0),,-c(2,1),drop = FALSE]
   expect_equivalent(re, cp)
-  expect_equivalent(dim(re), structure(dim(cp), class='integer64'))
+  expect_equivalent(dim(re), dim(cp))
   
   re <- loader_double(,,-1000)
   cp <- x[,,-1000,drop = FALSE]
   expect_equivalent(re, cp)
-  expect_equivalent(dim(re), structure(dim(cp), class='integer64'))
+  expect_equivalent(dim(re), dim(cp))
   
   re <- loader_double(,-1000,1)
   cp <- x[,-1000,1,drop = FALSE]
   expect_equivalent(re, cp)
-  expect_equivalent(dim(re), structure(dim(cp), class='integer64'))
+  expect_equivalent(dim(re), dim(cp))
   
   re <- loader_double(-1000,,)
   cp <- x[-1000,,,drop = FALSE]
   expect_equivalent(re, cp)
-  expect_equivalent(dim(re), structure(dim(cp), class='integer64'))
+  expect_equivalent(dim(re), dim(cp))
   
   
   # Wrong usages
@@ -169,7 +170,7 @@ lazy_test_unit <- function(samp_data, x_alt){
 test_that("Loader2 no sub-blocks", {
   lazy_test_unit(0.1)
   lazy_test_unit(1L)
-  lazy_test_unit("")
+  # lazy_test_unit("")
 })
 
 
@@ -179,30 +180,38 @@ test_that("Loader2 sub-blocks", {
   setLazyBlockSize(1)
   lazy_test_unit(0.1)
   lazy_test_unit(1L)
-  lazy_test_unit("")
+  # lazy_test_unit("")
   
   setLazyBlockSize(11)
   lazy_test_unit(0.1)
   lazy_test_unit(1L)
-  lazy_test_unit("")
+  # lazy_test_unit("")
   
   setLazyBlockSize(201)
   lazy_test_unit(0.1)
   lazy_test_unit(1L)
-  lazy_test_unit("")
+  # lazy_test_unit("")
   
-  setLazyBlockSize(0)
+  setLazyBlockSize(-1)
 })
 
 context("Loader2 with NAs")
 
 test_that("Loader2 with NAs", {
   unlink(a$get_partition_fpath(2))
+  setLazyBlockSize(1)
   x[,,2] <- NA
   expect_equal(x[], a[])
   lazy_test_unit(0.1, x)
   lazy_test_unit(1L, x)
-  lazy_test_unit("", x)
+  # lazy_test_unit("", x)
+  
+  setLazyBlockSize(-1)
+  x[,,2] <- NA
+  expect_equal(x[], a[])
+  lazy_test_unit(0.1, x)
+  lazy_test_unit(1L, x)
+  # lazy_test_unit("", x)
 })
 
 
@@ -210,10 +219,10 @@ context("Loader2 with complex data")
 
 x = array(rnorm(prod(dim)), dim) + 1i * array(rnorm(prod(dim)), dim)
 unlink(f, recursive = TRUE)
-a = as.lazyarray(x, path = f)
+a = as.lazyarray(x, path = f, type = 'fstarray')
 
 test_that("Loader2 complex", {
-  setLazyBlockSize(0)
+  setLazyBlockSize(-1)
   lazy_test_unit(x[[1]])
   
   setLazyBlockSize(1)
@@ -225,7 +234,13 @@ test_that("Loader2 complex", {
   setLazyBlockSize(201)
   lazy_test_unit(x[[1]])
   
-  setLazyBlockSize(0)
+  setLazyBlockSize(1)
+  unlink(a$get_partition_fpath(2))
+  x[,,2] <- NA
+  expect_equal(x[], a[])
+  lazy_test_unit(x[[1]], x)
+  
+  setLazyBlockSize(-1)
   unlink(a$get_partition_fpath(2))
   x[,,2] <- NA
   expect_equal(x[], a[])
@@ -235,9 +250,9 @@ test_that("Loader2 complex", {
 context("Loader2 with matrix")
 test_that("Loader2 with matrix", {
   x <- matrix(1:16,4)
-  a <- as.lazyarray(x)
-  loader_f <- function(i, ...){
-    lazyarray:::lazySubset(a$get_partition_fpath(), environment(), dim(x), 1L, NULL, FALSE)
+  a <- as.lazyarray(x, type = 'fstarray')
+  loader_f <- function(...){
+    lazyarray:::subsetFST(a$storage_path, environment(), dim(x), getSexpType(1L), NULL, FALSE)
   }
   
   expect_equivalent(loader_f(), x)

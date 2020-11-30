@@ -1,6 +1,6 @@
-#include <Rcpp.h>
-#include <algorithm>
 #include "openMPInterface.h"
+
+#include <algorithm>
 
 #ifdef _OPENMP
 #include <pthread.h>
