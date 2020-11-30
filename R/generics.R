@@ -1,10 +1,10 @@
 
 #' Generate partition summary statistics for array objects along the last 
 #' dimension
-#' @param x An array or \code{LazyArray}
+#' @param x an array or \code{LazyArray}
 #' @param na.rm whether to remove \code{NA} when calculating summary statistics
 #' @param ... passed to other methods or ignored
-#' @return A data frame with the flowwing possible columns: \code{Min}, 
+#' @return A data frame with the following possible columns: \code{Min}, 
 #' \code{Max}, \code{Mean}, \code{Standard Deviation}, \code{NAs} (total number
 #'  of \code{NA}), and \code{Length}.
 #' @name partition_table
@@ -186,7 +186,9 @@ partition_map.AbstractLazyArray <- function(x, map_fun, reduce, partitions, furt
 #' @param x a \code{LazyArray} or R array
 #' @param map_fun function to apply to each chunk
 #' @param reduce similar to \code{reduce} in \code{\link{partition_map}}
-#' @param chunk_size Integer chunk size. If \code{chunk_size} is too small, it 
+#' @param max_nchunks maximum number of chunks. If number of chunks is too 
+#' large, then \code{chunk_size} will be re-calculated.
+#' @param chunk_size integer chunk size. If \code{chunk_size} is too small, it 
 #' will be ignored
 #' @param ... ignored or passed to other methods
 #' @return If \code{reduce} is missing, returns a list of results. Each result

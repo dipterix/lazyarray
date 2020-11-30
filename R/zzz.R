@@ -85,7 +85,7 @@ setMethod("typeof", signature(x="AbstractLazyArray"), function(x){
 
 
 setGeneric("crossprod")
-setGeneric("tcrossprod")
+# setGeneric("tcrossprod")
 
 #' Matrix Crossproduct
 #' @param x a \code{LazyArray} or an R matrix
@@ -126,14 +126,20 @@ setMethod("crossprod", signature(x="AbstractLazyArray", y = 'AbstractLazyArray')
   lazy_crossprod(x, y, weights = weights, ...)
 })
 
+#' @rdname crossprod
+#' @exportMethod crossprod
 setMethod("crossprod", signature(x="AbstractLazyArray", y = 'NULL'), function(x, y = NULL, weights = NULL, ...){
   lazy_crossprod(x, NULL, weights = weights, ...)
 })
 
+#' @rdname crossprod
+#' @exportMethod crossprod
 setMethod("crossprod", signature(x="AbstractLazyArray", y = "missing"), function(x, y = NULL, weights = NULL, ...){
   lazy_crossprod(x, NULL, weights = weights, ...)
 })
 
+#' @rdname crossprod
+#' @exportMethod crossprod
 setMethod("crossprod", signature(x="AbstractLazyArray", y = 'matrix'), function(x, y = NULL, weights = NULL, ...){
   if(!is.null(weights)){
     stopifnot(length(weights) == x$partition_length)

@@ -7,7 +7,8 @@ FstArray <- R6::R6Class(
   portable = TRUE,
   inherit = AbstractLazyArray,
   private = list(
-    .compress_level = 50
+    .compress_level = 50,
+    .backend = "fstarray"
   ),
   public = list(
     print = function(...){
@@ -158,6 +159,12 @@ FstArray <- R6::R6Class(
     stopifnot(all(reshape>=0))
   }
   drop <- isTRUE(drop)
+  
+  bsize <- getOption('lazyarray.fstarray.blocksize', -1)
+  if(bsize <= 1) {
+    bsize = -1
+  }
+  setLazyBlockSize(bsize)
   
   subsetFST(rootPath = x$storage_path,listOrEnv = environment(),
             dim = x$dim,dtype = x$sexptype,reshape = reshape,drop = drop)

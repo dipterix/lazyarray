@@ -29,7 +29,7 @@ x <- rnorm(3e6); dim(x) <- c(10, 100, 100, 30)
 
 # Save array to a path
 path <- tempfile()
-arr <- lazyarray(path, storage_format = 'double', dim(x))
+arr <- lazyarray(path, dim = dim(x), storage_format = 'double')
 arr[] <- x
 ```
 

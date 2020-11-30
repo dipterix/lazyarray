@@ -3,9 +3,18 @@
 \name{crossprod}
 \alias{crossprod}
 \alias{crossprod,AbstractLazyArray,AbstractLazyArray-method}
+\alias{crossprod,AbstractLazyArray,NULL-method}
+\alias{crossprod,AbstractLazyArray,missing-method}
+\alias{crossprod,AbstractLazyArray,matrix-method}
 \title{Matrix Crossproduct}
 \usage{
 \S4method{crossprod}{AbstractLazyArray,AbstractLazyArray}(x, y = NULL, weights = NULL, ...)
+
+\S4method{crossprod}{AbstractLazyArray,`NULL`}(x, y = NULL, weights = NULL, ...)
+
+\S4method{crossprod}{AbstractLazyArray,missing}(x, y = NULL, weights = NULL, ...)
+
+\S4method{crossprod}{AbstractLazyArray,matrix}(x, y = NULL, weights = NULL, ...)
 }
 \arguments{
 \item{x}{a \code{LazyArray} or an R matrix}

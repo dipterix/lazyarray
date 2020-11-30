@@ -13,7 +13,10 @@ chunk_map(x, map_fun, reduce, max_nchunks, chunk_size, ...)
 
 \item{reduce}{similar to \code{reduce} in \code{\link{partition_map}}}
 
-\item{chunk_size}{Integer chunk size. If \code{chunk_size} is too small, it 
+\item{max_nchunks}{maximum number of chunks. If number of chunks is too 
+large, then \code{chunk_size} will be re-calculated.}
+
+\item{chunk_size}{integer chunk size. If \code{chunk_size} is too small, it 
 will be ignored}
 
 \item{...}{ignored or passed to other methods}

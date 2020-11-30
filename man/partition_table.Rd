@@ -14,14 +14,14 @@ partition_table(x, na.rm = FALSE, ...)
 \method{partition_table}{AbstractLazyArray}(x, na.rm = FALSE, ...)
 }
 \arguments{
-\item{x}{An array or \code{LazyArray}}
+\item{x}{an array or \code{LazyArray}}
 
 \item{na.rm}{whether to remove \code{NA} when calculating summary statistics}
 
 \item{...}{passed to other methods or ignored}
 }
 \value{
-A data frame with the flowwing possible columns: \code{Min}, 
+A data frame with the following possible columns: \code{Min}, 
 \code{Max}, \code{Mean}, \code{Standard Deviation}, \code{NAs} (total number
  of \code{NA}), and \code{Length}.
 }

@@ -6,6 +6,7 @@ AbstractLazyArray <- R6::R6Class(
   classname = "AbstractLazyArray",
   portable = TRUE,
   private = list(
+    .backend = "abstract",
     .valid = TRUE,
     .path = character(0),
     .meta_name = 'lazyarray.meta',
@@ -51,10 +52,23 @@ AbstractLazyArray <- R6::R6Class(
         if(force || file.exists(private$.path)){
           
           # list all files within .dir
-          fs <-
-            c(private$.meta_name,
+          fs <- switch(
+            self$backend,
+            'filearray' = c(
+              private$.meta_name,
               self$get_partition_fpath(full_path = FALSE),
-              self$get_partition_fpath(full_path = FALSE, summary_file = TRUE))
+              self$get_partition_fpath(full_path = FALSE, summary_file = TRUE),
+              self$get_partition_fpath(full_path = FALSE, type = 'desc')
+            ),
+            {
+              c(
+                private$.meta_name,
+                self$get_partition_fpath(full_path = FALSE),
+                self$get_partition_fpath(full_path = FALSE, summary_file = TRUE)
+              )
+            }
+          )
+          
           all_fs <- list.files(private$.path, all.files = TRUE, 
                                recursive = FALSE, full.names = FALSE, 
                                include.dirs = TRUE)
@@ -68,7 +82,7 @@ AbstractLazyArray <- R6::R6Class(
             unlink(private$.path, recursive = TRUE)
           } else {
             lapply(fs, function(f){
-              f <- file.path(private$.dir, f)
+              f <- file.path(private$.path, f)
               if(file.exists(f)){
                 unlink(f)
               }
@@ -240,7 +254,9 @@ AbstractLazyArray <- R6::R6Class(
         map_f <- map_function
       }
       
-      nrows <- self$partition_length
+      # make a temp matrix version
+      self_m <- as.lazymatrix(self, type = self$backend)
+      nrows <- self_m$partition_length
       # ncols <- self$npart
       # get chunk size
       chunkf <- make_chunks(nrows, max_nchunks = max_nchunks, ...)
@@ -249,12 +265,12 @@ AbstractLazyArray <- R6::R6Class(
         idx_range <- chunkf$get_indices(ii, as_numeric = TRUE)[[1]]
         if(isTRUE(partitions == 'all')){
           map_f(
-            self[seq.int(idx_range[[1]], idx_range[[2]]),,drop=FALSE],
+            self_m[seq.int(idx_range[[1]], idx_range[[2]]),,drop=FALSE],
             ii, idx_range
           )
         } else {
           map_f(
-            self[seq.int(idx_range[[1]], idx_range[[2]]),partitions,drop=FALSE],
+            self_m[seq.int(idx_range[[1]], idx_range[[2]]),partitions,drop=FALSE],
             ii, idx_range
           )
         }
@@ -325,6 +341,11 @@ AbstractLazyArray <- R6::R6Class(
     
   ),
   active = list(
+    
+    backend = function(){
+      return(private$.backend)
+    },
+    
     meta_name = function(){
       private$.meta_name
     },

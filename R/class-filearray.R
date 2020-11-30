@@ -6,6 +6,9 @@ FileArray <- R6::R6Class(
   classname = "FileArray",
   portable = TRUE,
   inherit = AbstractLazyArray,
+  private = list(
+    .backend = "filearray"
+  ),
   public = list(
     print = function(...){
       cat("<FileArray> (", private$.storage_format, ')\n', sep = '')
