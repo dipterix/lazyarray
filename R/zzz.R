@@ -24,6 +24,8 @@
 #' some of the details. For \code{"callr"} plan, please install package
 #' @param workers number of 'CPU' cores to use. 
 #' \code{future.callr}.
+#' @param workers positive integer or \code{"auto"}, number of 'CPU' to use.
+#' The default value is \code{"auto"}, i.e. \code{future::availableCores()}
 #' @param ... Further passed to \code{\link[future]{plan}}
 #' 
 #' @export

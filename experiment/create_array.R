@@ -95,7 +95,7 @@ create_lazyarray <- function(
 #' x[2,3:4, 2:1] <- 1:4
 #' x[ , , 2]
 #' 
-#' # Expend dimension for multiple partition data only
+#' # Changing dimension for multiple partition data only
 #' dim(x) <- c(3,4,6)
 #' dimnames(x) <- list(dim1 = as.character(1:3),
 #'                     dim2 = letters[1:4], 

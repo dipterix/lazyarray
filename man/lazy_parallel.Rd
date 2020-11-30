@@ -18,8 +18,8 @@ some of the details. For \code{"callr"} plan, please install package}
 
 \item{enabled}{whether multiple-process strategy is enabled}
 
-\item{workers}{number of 'CPU' cores to use. 
-\code{future.callr}.}
+\item{workers}{positive integer or \code{"auto"}, number of 'CPU' to use.
+The default value is \code{"auto"}, i.e. \code{future::availableCores()}}
 
 \item{...}{Further passed to \code{\link[future]{plan}}}
 }
