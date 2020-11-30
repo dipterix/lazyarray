@@ -196,7 +196,7 @@ SEXP parseDots(Environment& env, bool eval){
   R_xlen_t idx_size = 0;
   SEXP el;
   
-  for(; dots != R_NilValue & dots != R_MissingArg; dots = CDR(dots) ){
+  for(; (dots != R_NilValue) && (dots != R_MissingArg); dots = CDR(dots) ){
     el = CAR(dots);
     
     // el might be promise SEXP, if so, evaluate

@@ -42,7 +42,7 @@ SEXP subsetIdx(Environment expr_env, NumericVector dim, bool pos_subscript){
   NumericVector sidx;
   NumericVector neg_sidx;
   
-  for(; dots != R_NilValue & dots != R_MissingArg; dots = CDR(dots) ){
+  for(; (dots != R_NilValue) && (dots != R_MissingArg); dots = CDR(dots) ){
     
     if( idx_size > ndims ){
       stop("Incorrect dimension while subsetting an array");
@@ -72,11 +72,11 @@ SEXP subsetIdx(Environment expr_env, NumericVector dim, bool pos_subscript){
     
     sidx = as<NumericVector>(el);
     
-    neg_sidx = sidx[ !(is_na(sidx) | sidx >= 0) ];
+    neg_sidx = sidx[ !((is_na(sidx)) | (sidx >= 0)) ];
     
     
     if( neg_sidx.length() > 0 ){
-      if( is_true( any( !(is_na(sidx) | sidx <= 0) ) ) ){
+      if( is_true( any( !((is_na(sidx)) | (sidx <= 0)) ) ) ){
         stop("only 0's may be mixed with negative subscripts");
       }
       neg_sidx = neg_sidx * (-1);
@@ -86,7 +86,7 @@ SEXP subsetIdx(Environment expr_env, NumericVector dim, bool pos_subscript){
         NumericVector tmp = no_init( di - sidx.size() );
         NumericVector::iterator ptr_neg_sidx = tmp.begin();
         NumericVector::iterator ptr_sidx = sidx.begin();
-        for(int64_t el = 1; el <= di & ptr_neg_sidx != tmp.end(); el++){
+        for(int64_t el = 1; (el <= di) && (ptr_neg_sidx != tmp.end()); el++){
           if( ptr_sidx != sidx.end() && el - *ptr_sidx >= 0 ){
             ptr_sidx++;
           } else {
@@ -108,7 +108,7 @@ SEXP subsetIdx(Environment expr_env, NumericVector dim, bool pos_subscript){
         stop("incorrect number of dimensions");
       }
       
-      sidx = sidx[ is_na(sidx) | sidx > 0];
+      sidx = sidx[ (is_na(sidx)) | (sidx > 0)];
       
       neg_subscr[ idx_size ] = false;
       target_dim[ idx_size ] = sidx.size();
@@ -138,10 +138,10 @@ SEXP subsetIdx(Environment expr_env, NumericVector dim, bool pos_subscript){
     
   } else if(i != R_MissingArg){
     sidx = as<NumericVector>( i );
-    neg_sidx = sidx[ !(is_na(sidx) | sidx >= 0) ];
+    neg_sidx = sidx[ !((is_na(sidx)) | (sidx >= 0)) ];
     
     if( neg_sidx.length() > 0 ){
-      if( is_true( any( !(is_na(sidx) | sidx <= 0) ) ) ){
+      if( is_true( any( !((is_na(sidx)) | (sidx <= 0)) ) ) ){
         stop("only 0's may be mixed with negative subscripts");
       }
       neg_sidx = neg_sidx * (-1);
@@ -165,7 +165,7 @@ SEXP subsetIdx(Environment expr_env, NumericVector dim, bool pos_subscript){
           NumericVector tmp = no_init( total_length - sidx.size() );
           NumericVector::iterator ptr_neg_sidx = tmp.begin();
           NumericVector::iterator ptr_sidx = sidx.begin();
-          for(int64_t el = 1; el <= total_length & ptr_neg_sidx != tmp.end(); el++){
+          for(int64_t el = 1; (el <= total_length) && (ptr_neg_sidx != tmp.end()); el++){
             if( ptr_sidx != sidx.end() && el - *ptr_sidx >= 0 ){
               ptr_sidx++;
             } else {
@@ -183,8 +183,8 @@ SEXP subsetIdx(Environment expr_env, NumericVector dim, bool pos_subscript){
         }
         
       } else {
-        sidx = sidx[is_na(sidx) | sidx > 0];
-        sidx[ is_na(sidx) | sidx > total_length ] = NA_REAL;
+        sidx = sidx[(is_na(sidx)) | (sidx > 0)];
+        sidx[ (is_na(sidx)) | (sidx > total_length) ] = NA_REAL;
         expected_len = sidx.size();
       }
       
@@ -199,7 +199,7 @@ SEXP subsetIdx(Environment expr_env, NumericVector dim, bool pos_subscript){
           NumericVector tmp = no_init( di - sidx.size() );
           NumericVector::iterator ptr_neg_sidx = tmp.begin();
           NumericVector::iterator ptr_sidx = sidx.begin();
-          for(int64_t el = 1; el <= di & ptr_neg_sidx != tmp.end(); el++){
+          for(int64_t el = 1; (el <= di) && (ptr_neg_sidx != tmp.end()); el++){
             if( ptr_sidx != sidx.end() && el - *ptr_sidx >= 0 ){
               ptr_sidx++;
             } else {
@@ -220,7 +220,7 @@ SEXP subsetIdx(Environment expr_env, NumericVector dim, bool pos_subscript){
         if( is_true( any( sidx > di ) ) ){
           stop("incorrect number of dimensions");
         }
-        sidx = sidx[is_na(sidx) | sidx > 0];
+        sidx = sidx[(is_na(sidx)) | (sidx > 0)];
         target_dim[ 0 ] = sidx.size();
       }
       
@@ -587,7 +587,7 @@ List extractSlices(SEXP listOrEnv, const R_xlen_t& ndims){
       // i is missing, scenario 1
     SEXP dots = Rf_findVarInFrame(listOrEnv, R_DotsSymbol);
     R_xlen_t idx_size = 0;
-    for(; dots != R_NilValue & dots != R_MissingArg; dots = CDR(dots), idx_size++ ){
+    for(; (dots != R_NilValue) && (dots != R_MissingArg); dots = CDR(dots), idx_size++ ){
       if(idx_size >= ndims){
         stop("Incorrect subscript dimensions, required: 0, 1, ndim.");
       }

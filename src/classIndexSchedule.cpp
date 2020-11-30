@@ -293,7 +293,7 @@ ParsedIndex::ParsedIndex(const SEXP listOrEnv, const std::vector<int64_t>& dim, 
     int64_t idx_size = 0;
     R_xlen_t ndims = dim.size();
     sliceIdx = List::create();
-    for(; dots != R_NilValue & dots != R_MissingArg; dots = CDR(dots), idx_size++ ){
+    for(; (dots != R_NilValue) && (dots != R_MissingArg); dots = CDR(dots), idx_size++ ){
       if(idx_size >= ndims){
         stop("Incorrect subscript dimensions, required: 0, 1, ndim.");
       }
@@ -364,11 +364,15 @@ ParsedIndex::ParsedIndex(const SEXP listOrEnv, const std::vector<int64_t>& dim, 
     
     sidx = as<NumericVector>(el);
     
-    neg_sidx = sidx[ !(is_na(sidx) | sidx >= 0) ];
+    neg_sidx = sidx[ !(
+      (is_na(sidx)) | (sidx >= 0)
+    ) ];
     
     
     if( neg_sidx.size() > 0 ){
-      if( is_true( any( !(is_na(sidx) | sidx <= 0) ) ) ){
+      if( is_true( any( !(
+          (is_na(sidx)) | (sidx <= 0)
+      ) ) ) ){
         stop("only 0's may be mixed with negative subscripts");
       }
       neg_sidx = neg_sidx * (-1);
@@ -378,7 +382,7 @@ ParsedIndex::ParsedIndex(const SEXP listOrEnv, const std::vector<int64_t>& dim, 
         NumericVector tmp = no_init( di - sidx.size() );
         NumericVector::iterator ptr_neg_sidx = tmp.begin();
         NumericVector::iterator ptr_sidx = sidx.begin();
-        for(int64_t el = 1; el <= di & ptr_neg_sidx != tmp.end(); el++){
+        for(int64_t el = 1; (el <= di) && (ptr_neg_sidx != tmp.end()); el++){
           if( ptr_sidx != sidx.end() && el - *ptr_sidx >= 0 ){
             ptr_sidx++;
           } else {
@@ -396,7 +400,9 @@ ParsedIndex::ParsedIndex(const SEXP listOrEnv, const std::vector<int64_t>& dim, 
       
     } else {
       
-      if( is_true( any( !(is_na(sidx) | sidx <= di) ) ) ){
+      if( is_true( any( !(
+          (is_na(sidx)) | (sidx <= di)
+      ) ) ) ){
         if(idx_size == 0){
           // in subset mode 1, indices can overflow dim1, but it can't overflow total length
           // flag the error and deal with it later
@@ -407,7 +413,7 @@ ParsedIndex::ParsedIndex(const SEXP listOrEnv, const std::vector<int64_t>& dim, 
         
       }
       
-      sidx = sidx[ is_na(sidx) | sidx > 0];
+      sidx = sidx[ (is_na(sidx)) | (sidx > 0)];
       
       neg_subscr[ idx_size ] = false;
       target_dim[ idx_size ] = sidx.size();
@@ -426,7 +432,7 @@ ParsedIndex::ParsedIndex(const SEXP listOrEnv, const std::vector<int64_t>& dim, 
       // need to re-calculate first_el as all previous filterings are probably wrong
       sidx = as<NumericVector>(first_el);
       
-      neg_sidx = sidx[ !(is_na(sidx) | sidx >= 0) ];
+      neg_sidx = sidx[ !((is_na(sidx)) | (sidx >= 0)) ];
       int64_t total_length = std::accumulate(dim.begin(), dim.end(), INTEGER64_ONE, std::multiplies<int64_t>());
       if( neg_sidx.size() > 0 ){
         // already checked
@@ -440,7 +446,7 @@ ParsedIndex::ParsedIndex(const SEXP listOrEnv, const std::vector<int64_t>& dim, 
           NumericVector tmp = no_init( total_length - sidx.size() );
           NumericVector::iterator ptr_neg_sidx = tmp.begin();
           NumericVector::iterator ptr_sidx = sidx.begin();
-          for(int64_t el = 1; el <= total_length & ptr_neg_sidx != tmp.end(); el++){
+          for(int64_t el = 1; (el <= total_length) && (ptr_neg_sidx != tmp.end()); el++){
             if( ptr_sidx != sidx.end() && el - *ptr_sidx >= 0 ){
               ptr_sidx++;
             } else {
@@ -461,9 +467,9 @@ ParsedIndex::ParsedIndex(const SEXP listOrEnv, const std::vector<int64_t>& dim, 
         // if( is_true( any( !(is_na(sidx) | sidx == NA_INTEGER64 | sidx <= total_length) ) ) ){
         //   stop("incorrect size of subscript: exceed max length");
         // }
-        sidx = sidx[ is_na(sidx) | sidx == NA_INTEGER64 | sidx > 0 ];
+        sidx = sidx[ (is_na(sidx)) | (sidx == NA_INTEGER64) | (sidx > 0) ];
         
-        sidx[ is_na(sidx) | sidx == NA_INTEGER64 | sidx > total_length ] = NA_REAL;
+        sidx[ (is_na(sidx)) | (sidx == NA_INTEGER64) | (sidx > total_length) ] = NA_REAL;
         
         neg_subscr[ 0 ] = false;
         target_dim[ 0 ] = sidx.size();
