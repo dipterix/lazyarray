@@ -104,7 +104,7 @@ SEXP subsetIdx(Environment expr_env, NumericVector dim, bool pos_subscript){
       
     } else {
       
-      if( is_true( any( !(is_na(sidx) | sidx <= di) ) ) ){
+      if( is_true( any( !((is_na(sidx)) | (sidx <= di)) ) ) ){
         stop("incorrect number of dimensions");
       }
       

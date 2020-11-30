@@ -42,13 +42,15 @@ int64_t cpp_readBin(FILE* conn, char* buffer, int64_t n,
         // pbuf->pubseekpos (skip * size, input.beg);
         // pbuf->sgetn (buffer, n_byte);
         fseek(conn, skip * size, SEEK_SET);
-        (void) std::fread(buffer, 1, n_byte, conn);
+        // fsize not used to suppress warnings
+        fsize = std::fread(buffer, 1, n_byte, conn);
       }
     } else {
       // pbuf->pubseekpos (skip * size, input.beg);
       // pbuf->sgetn (buffer, n_byte);
       fseek(conn, skip * size, SEEK_SET);
-      (void) std::fread(buffer, 1, n_byte, conn);
+      // fsize not used to suppress warnings
+      fsize = std::fread(buffer, 1, n_byte, conn);
     }
   } catch (...) {
     n_byte = 0;
