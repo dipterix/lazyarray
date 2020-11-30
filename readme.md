@@ -2,7 +2,11 @@
 
 Zhengjia Wang
 
+<!-- badges: start -->
 [![Travis build status](https://travis-ci.org/dipterix/lazyarray.svg?branch=master)](https://travis-ci.org/dipterix/lazyarray)
+[![R-CMD-check](https://github.com/dipterix/lazyarray/workflows/R-CMD-check/badge.svg)](https://github.com/dipterix/lazyarray/actions)
+<!-- badges: end -->
+
 
 ## Overview
 
